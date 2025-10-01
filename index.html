@@ -5,10 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Absensi Sekolah Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Menambahkan Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Menambahkan Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    
     <style>
-        /* Custom styles for toast notifications */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
         #toast {
             transition: opacity 0.3s, transform 0.3s;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; /* slate-100 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* slate-300 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-400 */
         }
     </style>
     <script type="module">
@@ -16,17 +41,12 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
         // --- KONFIGURASI SUPABASE ---
-        // Ganti dengan URL dan Anon Key dari proyek Supabase Anda.
-        // Ini adalah langkah paling penting. Tanpa ini, aplikasi tidak akan berjalan.
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
         // -------------------------
 
-        // Inisialisasi Supabase Client
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- ELEMEN UI ---
-        // Mengambil semua elemen UI sekali untuk performa yang lebih baik
         const UIElements = {
             loadingScreen: document.getElementById('loading-screen'),
             loginPage: document.getElementById('login-page'),
@@ -47,40 +67,34 @@
             saveScheduleButton: document.getElementById('save-schedule-button'),
             toast: document.getElementById('toast'),
             toastMessage: document.getElementById('toast-message'),
-            // Elemen Baru untuk Laporan Absensi Admin
             adminAttendanceLogBody: document.getElementById('admin-attendance-log-body'),
             refreshAttendanceButton: document.getElementById('refresh-attendance-button'),
             searchStudentInput: document.getElementById('search-student-input'),
         };
 
-        // --- STATE APLIKASI ---
         const appState = {
             currentUser: null,
             scheduleData: null,
             attendanceLogs: [],
-            allAttendanceLogs: [], // Semua log untuk tampilan admin
+            allAttendanceLogs: [],
             toastTimeout: null,
         };
-
-        // --- FUNGSI UTILITAS & UI ---
-
-        /** Menampilkan atau menyembunyikan layar loading */
+        
         function showLoading(isLoading) {
             UIElements.loadingScreen.classList.toggle('hidden', !isLoading);
         }
 
-        /** Menampilkan notifikasi toast (pengganti alert) */
         function showToast(message, type = 'success') {
             clearTimeout(appState.toastTimeout);
             UIElements.toastMessage.textContent = message;
             
-            const toastColors = {
-                success: 'bg-green-500',
+            const toastStyles = {
+                success: 'bg-emerald-500',
                 error: 'bg-red-500',
-                info: 'bg-blue-500',
+                info: 'bg-sky-500',
             };
 
-            UIElements.toast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl ${toastColors[type] || toastColors.info}`;
+            UIElements.toast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl ${toastStyles[type] || toastStyles.info}`;
             UIElements.toast.classList.remove('opacity-0', 'translate-y-10');
 
             appState.toastTimeout = setTimeout(() => {
@@ -88,7 +102,6 @@
             }, 3000);
         }
 
-        /** Mengatur tampilan aplikasi berdasarkan view yang aktif */
         function navigateTo(view) {
             UIElements.loginPage.classList.add('hidden');
             UIElements.mainApp.classList.add('hidden');
@@ -97,14 +110,12 @@
                 UIElements.loginPage.classList.remove('hidden');
             } else if (view === 'app') {
                 UIElements.mainApp.classList.remove('hidden');
-                // Tentukan view spesifik (siswa/admin) di dalam app
                 const isAdmin = appState.currentUser?.email.includes('@admin.sekolah.id');
                 UIElements.studentView.classList.toggle('hidden', isAdmin);
                 UIElements.adminView.classList.toggle('hidden', !isAdmin);
             }
         }
 
-        /** Mengupdate jam digital dan tanggal */
         function updateClock() {
             const now = new Date();
             const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -113,47 +124,39 @@
             UIElements.clock.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             UIElements.date.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
             
-            // Perbarui status tombol setiap menit sekali untuk efisiensi
             if (now.getSeconds() === 0) {
                 updateAttendanceButtons();
             }
         }
 
-        // --- FUNGSI INTI APLIKASI ---
-        
-        /** Inisialisasi dan menampilkan aplikasi utama setelah login */
         async function initializeMainApp(user) {
             appState.currentUser = user;
-            UIElements.welcomeMessage.textContent = `Selamat datang, ${user.email}`;
+            UIElements.welcomeMessage.textContent = `Hai, ${user.email.split('@')[0]}`;
             
             showLoading(true);
             try {
                 const isAdmin = user.email.includes('@admin.sekolah.id');
-                // Pilih fungsi fetch absensi berdasarkan peran pengguna
                 const attendanceFetcher = isAdmin ? fetchAllTodayAttendance() : fetchTodayAttendance();
-
-                // Mengambil data jadwal dan absensi secara paralel
                 await Promise.all([fetchSchedule(), attendanceFetcher]);
                 
                 if (isAdmin) {
                     renderSchedule(UIElements.adminScheduleTableBody, true);
-                    renderAllAttendanceLog(); // Render laporan absensi admin
+                    renderAllAttendanceLog();
                 } else {
                     renderSchedule(UIElements.scheduleTableBody, false);
-                    renderAttendanceLog(); // Render log absensi siswa
+                    renderAttendanceLog();
                     updateAttendanceButtons();
                 }
                 navigateTo('app');
             } catch (error) {
                 console.error("Initialization error:", error);
                 showToast("Gagal memuat data aplikasi.", "error");
-                handleLogout(); // Logout jika data gagal dimuat
+                handleLogout();
             } finally {
                 showLoading(false);
             }
         }
 
-        /** Mengambil data jadwal dari Supabase */
         async function fetchSchedule() {
             const { data, error } = await supabase.from('schedules').select('data').limit(1).single();
             if (error) {
@@ -165,7 +168,6 @@
             }
         }
 
-        /** Merender jadwal ke dalam tabel */
         function renderSchedule(tbody, isEditable) {
             if (!appState.scheduleData) return;
             tbody.innerHTML = '';
@@ -176,20 +178,24 @@
 
             times.forEach((time, i) => {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td class="border px-4 py-2 font-mono bg-gray-100">${time}</td>`;
+                row.className = 'border-b border-slate-200';
+                row.innerHTML = `<td class="p-3 font-mono bg-slate-100 text-slate-600 text-sm">${time}</td>`;
                 days.forEach((day, j) => {
                     const subject = appState.scheduleData[day]?.[i] || '';
                     const cell = document.createElement('td');
-                    cell.className = 'border px-4 py-2 text-center transition-colors';
+                    cell.className = 'p-3 text-center text-slate-700 transition-colors text-sm';
                     cell.textContent = subject;
 
                     if (j === todayIndex && !isEditable) {
-                        cell.classList.add('bg-blue-100', 'font-bold');
+                        cell.classList.add('bg-sky-50', 'font-semibold', 'text-sky-700');
+                    }
+                     if (subject.toLowerCase().includes('istirahat')) {
+                        cell.classList.add('bg-slate-50', 'text-slate-500', 'italic');
                     }
                     
                     if (isEditable && !subject.toLowerCase().includes('istirahat')) {
                         cell.contentEditable = true;
-                        cell.classList.add('cursor-pointer', 'hover:bg-yellow-100', 'focus:bg-yellow-200', 'outline-none');
+                        cell.classList.add('cursor-pointer', 'hover:bg-amber-100', 'focus:bg-amber-200', 'outline-none', 'rounded-md');
                     }
                     row.appendChild(cell);
                 });
@@ -197,7 +203,6 @@
             });
         }
         
-        /** Mengambil data absensi hari ini */
         async function fetchTodayAttendance() {
             if (!appState.currentUser) return;
             const today = new Date().toISOString().slice(0, 10);
@@ -213,31 +218,35 @@
             }
         }
         
-        /** Merender riwayat absensi hari ini */
         function renderAttendanceLog() {
             const { attendanceLogList } = UIElements;
             attendanceLogList.innerHTML = '';
             if (appState.attendanceLogs.length === 0) {
-                attendanceLogList.innerHTML = '<p class="text-gray-500">Belum ada absensi hari ini.</p>';
+                attendanceLogList.innerHTML = '<p class="text-center text-slate-500 mt-4">Belum ada absensi hari ini.</p>';
                 return;
             }
             appState.attendanceLogs.forEach(log => {
+                const isCheckIn = log.type === 'check_in';
+                const statusColor = log.status.includes('Tepat Waktu') ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800';
+                const icon = isCheckIn ? `<i data-lucide="log-in" class="w-5 h-5 text-emerald-500"></i>` : `<i data-lucide="log-out" class="w-5 h-5 text-sky-500"></i>`;
+                
                 const item = document.createElement('div');
-                const statusColor = log.status.includes('Tepat Waktu') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-                item.className = 'p-3 rounded-lg flex justify-between items-center';
+                item.className = 'p-3 rounded-lg flex items-center gap-4 bg-slate-50 border border-slate-200';
                 item.innerHTML = `
-                    <div>
-                        <p class="font-bold">${log.type === 'check_in' ? 'Absen Masuk' : 'Absen Pulang'}</p>
-                        <p class="text-sm text-gray-600">${log.log_time}</p>
+                    ${icon}
+                    <div class="flex-grow">
+                        <p class="font-semibold text-slate-800">${isCheckIn ? 'Absen Masuk' : 'Absen Pulang'}</p>
+                        <p class="text-sm text-slate-500">${log.log_time}</p>
                     </div>
-                    <span class="text-sm font-medium px-2 py-1 rounded-full ${statusColor}">${log.status}</span>
+                    <span class="text-xs font-medium px-2.5 py-1 rounded-full ${statusColor}">${log.status}</span>
                 `;
                 attendanceLogList.appendChild(item);
             });
+            lucide.createIcons(); // Re-render icons
         }
         
-        /** Memperbarui status tombol absensi berdasarkan waktu dan data absensi */
         function updateAttendanceButtons() {
+            if (!appState.currentUser || appState.currentUser.email.includes('@admin.sekolah.id')) return;
             const now = new Date();
             const hours = now.getHours();
             const hasCheckedIn = appState.attendanceLogs.some(log => log.type === 'check_in');
@@ -255,37 +264,31 @@
             UIElements.checkOutButton.classList.toggle('cursor-not-allowed', !canCheckOut);
         }
 
-        /** [ADMIN] Mengambil semua data absensi hari ini */
         async function fetchAllTodayAttendance() {
             const today = new Date().toISOString().slice(0, 10);
             const { data, error } = await supabase
                 .from('attendance_log')
-                .select(`
-                    *,
-                    profiles ( email ) 
-                `)
+                .select(`*, profiles(email)`)
                 .eq('log_date', today);
 
             if (error) {
                 console.error('Error fetching all attendance:', error.message);
-                showToast("Gagal memuat laporan absensi. Pastikan relasi ke tabel 'profiles' sudah benar.", "error");
+                showToast("Gagal memuat laporan absensi. Cek relasi tabel 'profiles'.", "error");
                 appState.allAttendanceLogs = [];
             } else {
                 appState.allAttendanceLogs = data;
             }
         }
 
-        /** [ADMIN] Merender laporan absensi semua siswa */
         function renderAllAttendanceLog(filter = '') {
             const processedData = {};
             const { adminAttendanceLogBody } = UIElements;
             
-            // 1. Proses dan gabungkan data check-in & check-out per pengguna
             appState.allAttendanceLogs.forEach(log => {
                 const userId = log.user_id;
                 if (!processedData[userId]) {
                     processedData[userId] = {
-                        email: log.profiles?.email || userId, // Fallback ke user_id jika profil tidak ada
+                        email: log.profiles?.email || userId,
                         checkInTime: '-', checkInStatus: '-',
                         checkOutTime: '-', checkOutStatus: '-',
                     };
@@ -299,32 +302,30 @@
                 }
             });
 
-            // 2. Filter data berdasarkan input pencarian
             const filteredData = Object.values(processedData).filter(record => 
                 record.email.toLowerCase().includes(filter.toLowerCase())
             );
 
-            // 3. Render ke tabel
             adminAttendanceLogBody.innerHTML = '';
             if (filteredData.length === 0) {
-                adminAttendanceLogBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">Tidak ada data absensi untuk ditampilkan.</td></tr>`;
+                adminAttendanceLogBody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-slate-500">Tidak ada data absensi untuk ditampilkan.</td></tr>`;
                 return;
             }
 
             filteredData.forEach(record => {
                 const row = document.createElement('tr');
-                row.className = 'border-b';
+                row.className = 'border-b border-slate-200';
                 row.innerHTML = `
-                    <td class="px-4 py-3 font-medium text-gray-900">${record.email}</td>
-                    <td class="px-4 py-3">${record.checkInTime}</td>
-                    <td class="px-4 py-3">
-                        <span class="px-2 py-1 text-xs font-medium rounded-full ${record.checkInStatus === 'Tepat Waktu' ? 'bg-green-100 text-green-800' : (record.checkInStatus === '-' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800')}">
+                    <td class="p-3 font-medium text-slate-900">${record.email}</td>
+                    <td class="p-3 text-slate-600">${record.checkInTime}</td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${record.checkInStatus === 'Tepat Waktu' ? 'bg-emerald-100 text-emerald-800' : (record.checkInStatus === '-' ? 'bg-slate-100 text-slate-800' : 'bg-red-100 text-red-800')}">
                             ${record.checkInStatus}
                         </span>
                     </td>
-                    <td class="px-4 py-3">${record.checkOutTime}</td>
-                    <td class="px-4 py-3">
-                        <span class="px-2 py-1 text-xs font-medium rounded-full ${record.checkOutStatus.includes('Tepat Waktu') ? 'bg-green-100 text-green-800' : (record.checkOutStatus === '-' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800')}">
+                    <td class="p-3 text-slate-600">${record.checkOutTime}</td>
+                    <td class="p-3">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${record.checkOutStatus.includes('Tepat Waktu') ? 'bg-emerald-100 text-emerald-800' : (record.checkOutStatus === '-' ? 'bg-slate-100 text-slate-800' : 'bg-amber-100 text-amber-800')}">
                             ${record.checkOutStatus}
                         </span>
                     </td>
@@ -333,29 +334,45 @@
             });
         }
 
-        // --- EVENT HANDLERS ---
-        
-        /** Menangani proses login */
         async function handleLogin(event) {
             event.preventDefault();
             showLoading(true);
             UIElements.loginError.classList.add('hidden');
             
-            const email = event.target.email.value;
+            const identifier = event.target.identifier.value;
             const password = event.target.password.value;
+            let email = identifier;
 
+            // Cek apakah identifier bukan email (asumsikan sebagai NISN)
+            if (!identifier.includes('@')) {
+                // Cari email berdasarkan NISN di tabel 'profiles'
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('email')
+                    .eq('nisn', identifier)
+                    .single();
+
+                if (profileError || !profile) {
+                    showLoading(false);
+                    UIElements.loginError.textContent = "NISN tidak ditemukan.";
+                    UIElements.loginError.classList.remove('hidden');
+                    return;
+                }
+                email = profile.email;
+            }
+
+            // Lanjutkan login dengan email
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             
             showLoading(false);
             if (error) {
-                UIElements.loginError.textContent = "Email atau password salah.";
+                UIElements.loginError.textContent = "Email/NISN atau password salah.";
                 UIElements.loginError.classList.remove('hidden');
             } else if (data.user) {
                 await initializeMainApp(data.user);
             }
         }
         
-        /** Menangani proses logout */
         async function handleLogout() {
             showLoading(true);
             await supabase.auth.signOut();
@@ -366,7 +383,6 @@
             navigateTo('login');
         }
 
-        /** Menangani proses absensi (masuk/pulang) */
         async function handleAttendance(type) {
             const now = new Date();
             const hours = now.getHours();
@@ -374,15 +390,14 @@
             let status = '';
 
             if (type === 'check_in') {
-                status = (hours < 7 && minutes <= 15) ? 'Tepat Waktu' : 'Terlambat';
+                status = (hours < 7 || (hours === 7 && minutes <= 15)) ? 'Tepat Waktu' : 'Terlambat';
             } else if (type === 'check_out') {
                 status = (hours >= 15) ? 'Pulang Tepat Waktu' : 'Pulang Lebih Awal';
             }
             
             const attendanceRecord = {
                 user_id: appState.currentUser.id,
-                type: type,
-                status: status,
+                type: type, status: status,
                 log_time: now.toTimeString().slice(0, 8),
                 log_date: now.toISOString().slice(0, 10)
             };
@@ -402,7 +417,6 @@
             showLoading(false);
         }
 
-        /** Menangani pembaruan jadwal oleh admin */
         async function handleUpdateSchedule() {
             showLoading(true);
             const newSchedule = { Senin: [], Selasa: [], Rabu: [], Kamis: [], Jumat: [] };
@@ -424,13 +438,12 @@
                 showToast('Gagal menyimpan jadwal.', 'error');
             } else {
                 showToast('Jadwal berhasil diperbarui!', 'success');
-                appState.scheduleData = newSchedule; // Update state lokal
+                appState.scheduleData = newSchedule;
             }
         }
         
-        /** Memeriksa sesi pengguna saat halaman dimuat */
         async function checkUserSession() {
-            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('https://ffciqquplmjcxgugvvsi.supabase.co')) {
+            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('URL_PROYEK_ANDA')) {
                 document.body.innerHTML = `
                     <div class="h-screen bg-red-100 flex flex-col justify-center items-center p-8 text-center">
                         <h1 class="text-3xl font-bold text-red-800 mb-4">Konfigurasi Diperlukan!</h1>
@@ -451,19 +464,16 @@
             showLoading(false);
         }
 
-        // --- INISIALISASI APLIKASI ---
         document.addEventListener('DOMContentLoaded', () => {
             checkUserSession();
             setInterval(updateClock, 1000);
 
-            // Menambahkan event listeners
             UIElements.loginForm.addEventListener('submit', handleLogin);
             UIElements.logoutButton.addEventListener('click', handleLogout);
             UIElements.checkInButton.addEventListener('click', () => handleAttendance('check_in'));
             UIElements.checkOutButton.addEventListener('click', () => handleAttendance('check_out'));
             UIElements.saveScheduleButton.addEventListener('click', handleUpdateSchedule);
 
-            // Event listeners untuk Laporan Absensi Admin
             UIElements.searchStudentInput.addEventListener('input', (e) => {
                 renderAllAttendanceLog(e.target.value);
             });
@@ -474,14 +484,17 @@
                 renderAllAttendanceLog(UIElements.searchStudentInput.value);
                 showLoading(false);
             });
+            
+            // Initial call to create icons if any are present on first load
+            lucide.createIcons();
         });
     </script>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-slate-50">
 
     <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-white bg-opacity-75 flex justify-center items-center z-50 hidden">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+    <div id="loading-screen" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex justify-center items-center z-50 hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
     </div>
 
     <!-- Toast Notification -->
@@ -490,32 +503,60 @@
     </div>
 
     <!-- Login Page -->
-    <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-            <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">Sistem Absensi Online</h1>
-            <p class="text-center text-gray-500 mb-6">Silakan login untuk melanjutkan</p>
-            <form id="login-form">
-                <div class="mb-4">
-                    <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
-                    <input type="email" id="email" name="email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+    <div id="login-page" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-sky-50 to-indigo-100">
+        <div class="grid grid-cols-1 lg:grid-cols-2 w-full max-w-xl bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
+            <!-- Kolom Kiri - Visual -->
+            <div class="hidden lg:flex flex-col justify-center p-12 bg-gradient-to-br from-indigo-600 to-sky-500 text-white">
+                <i data-lucide="clipboard-check" class="w-24 h-24 mb-6"></i>
+                <h2 class="text-3xl font-bold leading-tight mb-4">Sistem Absensi Digital</h2>
+                <p class="text-indigo-100">Catat kehadiran Anda dengan mudah dan cepat.</p>
+            </div>
+    
+            <!-- Kolom Kanan - Form Login -->
+            <div class="p-8 sm:p-12 flex flex-col justify-center">
+                <div class="w-full">
+                    <div class="text-center lg:text-left mb-8">
+                        <h1 class="text-3xl font-bold text-slate-800">Login Akun</h1>
+                        <p class="text-slate-500 mt-2">Masuk untuk melanjutkan.</p>
+                    </div>
+                    <form id="login-form">
+                        <div class="mb-5 relative">
+                            <label for="identifier" class="block text-slate-700 font-medium mb-2">Email atau NISN</label>
+                             <i data-lucide="user" class="absolute left-3.5 top-1/2 mt-1 w-5 h-5 text-slate-400"></i>
+                            <input type="text" id="identifier" name="identifier" class="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required placeholder="E-mail / NISN">
+                        </div>
+                        <div class="mb-4 relative">
+                            <label for="password" class="block text-slate-700 font-medium mb-2">Password</label>
+                            <i data-lucide="lock" class="absolute left-3.5 top-1/2 mt-1 w-5 h-5 text-slate-400"></i>
+                            <input type="password" id="password" name="password" class="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required placeholder="••••••••">
+                        </div>
+                        <div class="text-right mb-6">
+                            <a href="#" class="text-sm font-medium text-indigo-600 hover:underline">Lupa Password?</a>
+                        </div>
+                        <div id="login-error" class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm"></div>
+                        <button type="submit" class="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-indigo-400/50">
+                            <i data-lucide="log-in" class="w-5 h-5"></i>
+                            <span>Login</span>
+                        </button>
+                    </form>
                 </div>
-                <div class="mb-6">
-                    <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
-                    <input type="password" id="password" name="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div id="login-error" class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm"></div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Login</button>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Main App -->
     <div id="main-app" class="hidden">
-        <header class="bg-white shadow-md p-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-600">Absensi Sekolah</h1>
+        <header class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-40 border-b border-slate-200">
+            <div class="flex items-center gap-3">
+                <i data-lucide="clipboard-check" class="w-8 h-8 text-indigo-600"></i>
+                <h1 class="text-2xl font-bold text-slate-800">Dasbor Absensi</h1>
+            </div>
             <div class="flex items-center space-x-4">
-                <span id="welcome-message" class="text-gray-700 hidden sm:block"></span>
-                <button id="logout-button" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">Logout</button>
+                <span id="welcome-message" class="text-slate-700 hidden sm:block font-medium"></span>
+                <button id="logout-button" class="flex items-center gap-2 bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-red-100 hover:text-red-600 transition-colors font-semibold">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Logout</span>
+                </button>
             </div>
         </header>
         
@@ -524,38 +565,44 @@
             <div id="student-view">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Kolom Kiri: Absensi & Jam -->
-                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg">
-                        <div class="text-center">
-                            <p id="clock" class="text-5xl font-bold text-gray-800 tabular-nums"></p>
-                            <p id="date" class="text-lg text-gray-500 mt-1"></p>
+                    <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                        <div class="text-center bg-slate-100 p-6 rounded-xl">
+                            <p id="clock" class="text-5xl font-bold text-slate-800 tabular-nums"></p>
+                            <p id="date" class="text-lg text-slate-500 mt-1"></p>
                         </div>
-                        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <button id="check-in-button" class="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Absen Masuk</button>
-                            <button id="check-out-button" class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Absen Pulang</button>
+                        <div class="mt-8 grid grid-cols-1 gap-4">
+                            <button id="check-in-button" class="w-full flex items-center justify-center gap-3 bg-emerald-500 text-white py-3 rounded-lg font-semibold hover:bg-emerald-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100">
+                                <i data-lucide="log-in" class="w-5 h-5"></i>
+                                <span>Absen Masuk</span>
+                            </button>
+                            <button id="check-out-button" class="w-full flex items-center justify-center gap-3 bg-sky-500 text-white py-3 rounded-lg font-semibold hover:bg-sky-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100">
+                                <i data-lucide="log-out" class="w-5 h-5"></i>
+                                <span>Absen Pulang</span>
+                            </button>
                         </div>
-                        <hr class="my-6">
+                        <hr class="my-6 border-slate-200">
                         <div>
-                            <h3 class="text-xl font-bold text-gray-800 mb-4">Riwayat Absensi Hari Ini</h3>
-                            <div id="attendance-log-list" class="space-y-2">
+                            <h3 class="text-xl font-bold text-slate-800 mb-4">Riwayat Absensi Hari Ini</h3>
+                            <div id="attendance-log-list" class="space-y-3">
                                 <!-- Riwayat absensi akan di-render di sini -->
                             </div>
                         </div>
                     </div>
                     <!-- Kolom Kanan: Jadwal -->
-                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Jadwal Pelajaran</h2>
-                        <table class="w-full text-sm text-left text-gray-500 table-auto">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-slate-200 overflow-x-auto">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">Jadwal Pelajaran</h2>
+                        <table class="w-full text-sm text-left text-slate-500 table-auto">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                 <tr>
-                                    <th class="px-4 py-3">Jam</th>
-                                    <th class="px-4 py-3 text-center">Senin</th>
-                                    <th class="px-4 py-3 text-center">Selasa</th>
-                                    <th class="px-4 py-3 text-center">Rabu</th>
-                                    <th class="px-4 py-3 text-center">Kamis</th>
-                                    <th class="px-4 py-3 text-center">Jumat</th>
+                                    <th class="p-3">Jam</th>
+                                    <th class="p-3 text-center">Senin</th>
+                                    <th class="p-3 text-center">Selasa</th>
+                                    <th class="p-3 text-center">Rabu</th>
+                                    <th class="p-3 text-center">Kamis</th>
+                                    <th class="p-3 text-center">Jumat</th>
                                 </tr>
                             </thead>
-                            <tbody id="schedule-table-body">
+                            <tbody id="schedule-table-body" class="divide-y divide-slate-200">
                                 <!-- Jadwal akan di-render di sini -->
                             </tbody>
                         </table>
@@ -564,26 +611,29 @@
             </div>
 
             <!-- Admin View -->
-            <div id="admin-view" class="hidden">
-                <div class="bg-white p-6 rounded-xl shadow-lg">
+            <div id="admin-view" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                     <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold text-gray-800">Ubah Jadwal Pelajaran</h2>
-                        <button id="save-schedule-button" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Simpan Jadwal</button>
+                        <h2 class="text-2xl font-bold text-slate-800">Ubah Jadwal Pelajaran</h2>
+                        <button id="save-schedule-button" class="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span>Simpan Jadwal</span>
+                        </button>
                     </div>
-                    <p class="text-gray-500 mb-4 text-sm">Klik pada nama mata pelajaran untuk mengubahnya. Perubahan tidak akan tersimpan sebelum Anda menekan tombol "Simpan Jadwal".</p>
+                    <p class="text-slate-500 mb-4 text-sm">Klik pada nama mata pelajaran untuk mengubahnya. Perubahan tidak akan tersimpan sebelum Anda menekan tombol "Simpan Jadwal".</p>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                 <tr>
-                                    <th class="px-4 py-3">Jam</th>
-                                    <th class="px-4 py-3 text-center">Senin</th>
-                                    <th class="px-4 py-3 text-center">Selasa</th>
-                                    <th class="px-4 py-3 text-center">Rabu</th>
-                                    <th class="px-4 py-3 text-center">Kamis</th>
-                                    <th class="px-4 py-3 text-center">Jumat</th>
+                                    <th class="p-3">Jam</th>
+                                    <th class="p-3 text-center">Senin</th>
+                                    <th class="p-3 text-center">Selasa</th>
+                                    <th class="p-3 text-center">Rabu</th>
+                                    <th class="p-3 text-center">Kamis</th>
+                                    <th class="p-3 text-center">Jumat</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-schedule-table-body">
+                            <tbody id="admin-schedule-table-body" class="divide-y divide-slate-200">
                                 <!-- Jadwal admin akan di-render di sini -->
                             </tbody>
                         </table>
@@ -591,33 +641,36 @@
                 </div>
 
                 <!-- Laporan Absensi Harian untuk Admin -->
-                <div class="mt-6 bg-white p-6 rounded-xl shadow-lg">
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                     <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold text-gray-800">Laporan Absensi Hari Ini</h2>
+                        <h2 class="text-2xl font-bold text-slate-800">Laporan Absensi Hari Ini</h2>
                         <div class="flex items-center gap-2">
-                             <input type="text" id="search-student-input" placeholder="Cari email siswa..." class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                             <button id="refresh-attendance-button" class="bg-gray-200 p-2 rounded-lg hover:bg-gray-300 transition-colors" title="Muat Ulang Data">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                             <div class="relative">
+                                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                                 <input type="text" id="search-student-input" placeholder="Cari email siswa..." class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                             </div>
+                             <button id="refresh-attendance-button" class="bg-slate-200 p-2 rounded-lg hover:bg-slate-300 transition-colors" title="Muat Ulang Data">
+                                 <i data-lucide="refresh-cw" class="w-5 h-5 text-slate-600"></i>
                              </button>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                 <tr>
-                                    <th class="px-4 py-3">Email Siswa</th>
-                                    <th class="px-4 py-3">Waktu Masuk</th>
-                                    <th class="px-4 py-3">Status Masuk</th>
-                                    <th class="px-4 py-3">Waktu Pulang</th>
-                                    <th class="px-4 py-3">Status Pulang</th>
+                                    <th class="p-3">Email Siswa</th>
+                                    <th class="p-3">Waktu Masuk</th>
+                                    <th class="p-3">Status Masuk</th>
+                                    <th class="p-3">Waktu Pulang</th>
+                                    <th class="p-3">Status Pulang</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-attendance-log-body">
+                            <tbody id="admin-attendance-log-body" class="divide-y divide-slate-200">
                                 <!-- Laporan absensi akan di-render di sini -->
                             </tbody>
                         </table>
                     </div>
-                    <p class="mt-4 text-xs text-gray-500">Catatan: Fitur ini memerlukan tabel 'profiles' publik yang berelasi dengan 'auth.users' untuk menampilkan email siswa.</p>
+                    <p class="mt-4 text-xs text-slate-500">Catatan: Fitur ini memerlukan tabel 'profiles' publik yang berelasi dengan 'auth.users' untuk menampilkan email siswa.</p>
                 </div>
             </div>
         </main>
@@ -625,4 +678,6 @@
 
 </body>
 </html>
+
+
 
