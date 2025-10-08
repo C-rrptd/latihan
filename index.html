@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Absensi Sekolah Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Menambahkan Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Menambahkan Google Fonts: Inter --><link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Menambahkan Lucide Icons -->
-    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Menambahkan Lucide Icons --><script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
     
     <style>
         body {
@@ -42,6 +40,10 @@
         }
         .auth-card {
             animation: card-fade-in 0.6s ease-out forwards;
+        }
+        /* Animasi untuk transisi view (login/signup/forgot) */
+        .auth-view-transition {
+            transition: opacity 0.3s ease-in-out;
         }
     </style>
     <script type="module">
@@ -488,7 +490,6 @@
         async function handleLogout() {
             if (appState.attendanceSubscription) {
                 supabase.removeChannel(appState.attendanceSubscription);
-                appState.attendanceSubscription = null;
             }
             showLoading(true);
             await supabase.auth.signOut();
@@ -546,6 +547,7 @@
                 }
             });
 
+            // Assuming a single schedule entry for now, with ID 1
             const { error } = await supabase.from('schedules').update({ data: newSchedule }).eq('id', 1);
 
             showLoading(false);
@@ -651,30 +653,27 @@
 </head>
 <body class="bg-slate-50">
 
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex justify-center items-center z-50 hidden">
+    <!-- Loading Screen --><div id="loading-screen" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex justify-center items-center z-50 hidden">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 translate-y-10" role="alert">
+    <!-- Toast Notification --><div id="toast" class="fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 translate-y-10" role="alert">
         <p id="toast-message"></p>
     </div>
 
-    <!-- Login Page -->
-    <div id="login-page" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-sky-50 to-indigo-100">
+    <!-- Login Page --><div id="login-page" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-sky-50 to-indigo-100">
         <div class="auth-card grid grid-cols-1 lg:grid-cols-2 w-full max-w-4xl bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
-            <!-- Kolom Kiri - Visual -->
-            <div class="hidden lg:flex flex-col justify-center p-12 bg-gradient-to-br from-indigo-600 to-sky-500 text-white">
-                <i data-lucide="clipboard-check" class="w-24 h-24 mb-6"></i>
-                <h2 class="text-3xl font-bold leading-tight mb-4">Sistem Absensi Digital</h2>
-                <p class="text-indigo-100">Catat kehadiran Anda dengan mudah, cepat, dan akurat.</p>
+            <!-- Kolom Kiri - Visual --><div class="hidden lg:flex flex-col justify-center items-center p-12 bg-gradient-to-br from-indigo-600 to-sky-500 text-white relative overflow-hidden">
+                <!-- Logo di dalam kotak biru --><div class="absolute top-12 left-1/2 -translate-x-1/2 flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-sky-400 shadow-xl z-10">
+                    <i data-lucide="clipboard-check" class="w-14 h-14 text-white"></i>
+                </div>
+                
+                <h2 class="text-3xl font-bold leading-tight mt-32 mb-4">Sistem Absensi Digital</h2>
+                <p class="text-indigo-100 text-center">Catat kehadiran Anda dengan mudah, cepat, dan akurat.</p>
             </div>
         
-            <!-- Kolom Kanan - Form Container -->
-            <div class="p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden">
-                <!-- Login View -->
-                <div id="login-view" class="transition-opacity duration-300 ease-in-out">
+            <!-- Kolom Kanan - Form Container --><div class="p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden">
+                <!-- Login View --><div id="login-view" class="auth-view-transition">
                     <div class="text-center lg:text-left mb-8">
                         <h1 class="text-3xl font-bold text-slate-800">Login Akun</h1>
                         <p class="text-slate-500 mt-2">Masuk untuk melanjutkan.</p>
@@ -707,8 +706,7 @@
                     </p>
                 </div>
 
-                <!-- Signup View -->
-                <div id="signup-view" class="hidden opacity-0 transition-opacity duration-300 ease-in-out">
+                <!-- Signup View --><div id="signup-view" class="hidden opacity-0 auth-view-transition">
                     <div class="text-center lg:text-left mb-8">
                         <h1 class="text-3xl font-bold text-slate-800">Buat Akun Baru</h1>
                         <p class="text-slate-500 mt-2">Daftarkan diri Anda sebagai siswa.</p>
@@ -743,8 +741,7 @@
                     </p>
                 </div>
 
-                <!-- Forgot Password View -->
-                <div id="forgot-password-view" class="hidden opacity-0 transition-opacity duration-300 ease-in-out">
+                <!-- Forgot Password View --><div id="forgot-password-view" class="hidden opacity-0 auth-view-transition">
                     <div class="text-center lg:text-left mb-8">
                         <h1 class="text-3xl font-bold text-slate-800">Lupa Password</h1>
                         <p class="text-slate-500 mt-2">Masukkan email Anda untuk reset password.</p>
@@ -769,8 +766,7 @@
         </div>
     </div>
 
-    <!-- Main App -->
-    <div id="main-app" class="hidden">
+    <!-- Main App --><div id="main-app" class="hidden">
         <header class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-40 border-b border-slate-200">
             <div class="flex items-center gap-3">
                 <i data-lucide="clipboard-check" class="w-8 h-8 text-indigo-600"></i>
@@ -786,11 +782,9 @@
         </header>
         
         <main class="p-4 sm:p-6 lg:p-8">
-            <!-- Student View -->
-            <div id="student-view">
+            <!-- Student View --><div id="student-view">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Kolom Kiri: Absensi & Jam -->
-                    <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                    <!-- Kolom Kiri: Absensi & Jam --><div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                         <div class="text-center bg-slate-100 p-6 rounded-xl">
                             <p id="clock" class="text-5xl font-bold text-slate-800 tabular-nums"></p>
                             <p id="date" class="text-lg text-slate-500 mt-1"></p>
@@ -809,12 +803,10 @@
                         <div>
                             <h3 class="text-xl font-bold text-slate-800 mb-4">Riwayat Absensi Hari Ini</h3>
                             <div id="attendance-log-list" class="space-y-3">
-                                <!-- Riwayat absensi akan di-render di sini -->
-                            </div>
+                                <!-- Riwayat absensi akan di-render di sini --></div>
                         </div>
                     </div>
-                    <!-- Kolom Kanan: Jadwal -->
-                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-slate-200 overflow-x-auto">
+                    <!-- Kolom Kanan: Jadwal --><div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-slate-200 overflow-x-auto">
                         <h2 class="text-2xl font-bold text-slate-800 mb-4">Jadwal Pelajaran</h2>
                         <table class="w-full text-sm text-left text-slate-500 table-auto">
                             <thead class="text-xs text-slate-700 uppercase bg-slate-100">
@@ -828,15 +820,13 @@
                                 </tr>
                             </thead>
                             <tbody id="schedule-table-body" class="divide-y divide-slate-200">
-                                <!-- Jadwal akan di-render di sini -->
-                            </tbody>
+                                <!-- Jadwal akan di-render di sini --></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Admin View -->
-            <div id="admin-view" class="hidden space-y-6">
+            <!-- Admin View --><div id="admin-view" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                     <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-slate-800">Ubah Jadwal Pelajaran</h2>
@@ -859,14 +849,12 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-schedule-table-body" class="divide-y divide-slate-200">
-                                <!-- Jadwal admin akan di-render di sini -->
-                            </tbody>
+                                <!-- Jadwal admin akan di-render di sini --></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Laporan Absensi Harian untuk Admin -->
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                <!-- Laporan Absensi Harian untuk Admin --><div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                     <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-slate-800">Laporan Absensi Hari Ini</h2>
                         <div class="flex items-center gap-2">
@@ -891,8 +879,7 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-attendance-log-body" class="divide-y divide-slate-200">
-                                <!-- Laporan absensi akan di-render di sini -->
-                            </tbody>
+                                <!-- Laporan absensi akan di-render di sini --></tbody>
                         </table>
                     </div>
                     <p class="mt-4 text-xs text-slate-500">Catatan: Fitur ini memerlukan tabel 'profiles' publik yang berelasi dengan 'auth.users' untuk menampilkan email siswa.</p>
