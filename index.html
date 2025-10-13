@@ -5,35 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Absensi Sekolah Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Menambahkan Google Fonts: Inter --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Menambahkan Lucide Icons --><script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
     
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* slate-50 */
+            background-color: #f8fafc;
         }
         #toast {
             transition: opacity 0.3s, transform 0.3s;
         }
-        /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f5f9; /* slate-100 */
+            background: #f1f5f9;
         }
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; /* slate-300 */
+            background: #cbd5e1;
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; /* slate-400 */
+            background: #94a3b8;
         }
-        /* Animasi untuk kartu login */
         @keyframes card-fade-in {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -41,55 +39,160 @@
         .auth-card {
             animation: card-fade-in 0.6s ease-out forwards;
         }
-        /* Animasi untuk transisi view (login/signup/forgot) */
         .auth-view-transition {
             transition: opacity 0.3s ease-in-out;
         }
-        
-        /* [BARU] Latar belakang geometris untuk panel visual */
         .visual-panel-bg {
-            background-color: #4f46e5; /* fallback color */
+            background-color: #4f46e5;
             background-image:
                 linear-gradient(135deg, rgba(30, 64, 175, 0.8) 0%, rgba(107, 33, 168, 0.8) 100%),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h4v-9H0v-1h5v1h9v-1h1v1h9v-1h1v1h9v-1h1v1h9v-1h1v1h9v-1h1v1h9v-1h1v1h9v-1h1v1h9v-1h1v1h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm-9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm-9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm-9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm-9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9z'/%3E%3Cpath d='M6 5V0h1v5h94V0h1v5h-6v94h6V95h-1v5H6v-5h1v-94H6z M95 6H6v93h89V6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
+        
+        .arc-spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #e5e7eb; /* slate-200 */
+            border-top-color: #4f46e5; /* indigo-600 */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            animation: skeleton-loading 1s linear infinite alternate;
+        }
+        @keyframes skeleton-loading {
+            0% { background-color: hsl(200, 20%, 80%); }
+            100% { background-color: hsl(200, 20%, 95%); }
+        }
     </style>
     <script type="module">
-        // Impor Supabase Client
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
         // --- KONFIGURASI SUPABASE ---
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
-        // -------------------------
-
+        
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- Cache DOM Elements ---
+        // ============================================
+        // VALIDATION UTILITIES
+        // ============================================
+        const Validators = {
+            email: (email) => {
+                const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return regex.test(email);
+            },
+            nisn: (nisn) => {
+                return /^\d{10}$/.test(nisn);
+            },
+            password: (password) => {
+                return password.length >= 6;
+            },
+            notEmpty: (value) => {
+                return value && value.trim().length > 0;
+            }
+        };
+
+        const ValidationMessages = {
+            email: 'Format email tidak valid',
+            nisn: 'NISN harus 10 digit angka',
+            password: 'Password minimal 6 karakter',
+            required: 'Field ini wajib diisi'
+        };
+
+        // ============================================
+        // ERROR HANDLER
+        // ============================================
+        class ErrorHandler {
+            static handle(error, context = '') {
+                console.error(`Error in ${context}:`, error);
+                
+                const errorMessages = {
+                    'Invalid login credentials': 'Email/NISN atau password salah',
+                    'Email not confirmed': 'Email belum diverifikasi. Cek inbox Anda',
+                    'User already registered': 'Email sudah terdaftar',
+                    'Network request failed': 'Koneksi internet bermasalah',
+                    'Failed to fetch': 'Gagal terhubung ke server',
+                    'PGRST116': 'Data tidak ditemukan'
+                };
+
+                for (const [key, message] of Object.entries(errorMessages)) {
+                    if (error.message?.includes(key) || error.code?.includes(key)) {
+                        return message;
+                    }
+                }
+
+                if (context) {
+                    return `Terjadi kesalahan saat ${context}. Silakan coba lagi.`;
+                }
+                
+                return error.message || 'Terjadi kesalahan yang tidak diketahui';
+            }
+        }
+
+        // ============================================
+        // CACHE & PERFORMANCE
+        // ============================================
+        class DataCache {
+            constructor() {
+                this.cache = new Map();
+                this.ttl = 5 * 60 * 1000; // 5 minutes
+            }
+
+            set(key, value) {
+                this.cache.set(key, {
+                    value,
+                    timestamp: Date.now()
+                });
+            }
+
+            get(key) {
+                const item = this.cache.get(key);
+                if (!item) return null;
+                
+                if (Date.now() - item.timestamp > this.ttl) {
+                    this.cache.delete(key);
+                    return null;
+                }
+                
+                return item.value;
+            }
+
+            clear() {
+                this.cache.clear();
+            }
+        }
+
+        const cache = new DataCache();
+
+        // ============================================
+        // DOM CACHE
+        // ============================================
         const UIElements = {
             loadingScreen: document.getElementById('loading-screen'),
             loginPage: document.getElementById('login-page'),
             mainApp: document.getElementById('main-app'),
             
-            // Auth Views
             loginView: document.getElementById('login-view'),
             signupView: document.getElementById('signup-view'),
             forgotPasswordView: document.getElementById('forgot-password-view'),
 
-            // Forms & Errors
             loginForm: document.getElementById('login-form'),
             signupForm: document.getElementById('signup-form'),
             forgotPasswordForm: document.getElementById('forgot-password-form'),
             loginError: document.getElementById('login-error'),
             signupError: document.getElementById('signup-error'),
             
-            // Auth Navigation
             showSignupButton: document.getElementById('show-signup-button'),
             showLoginButton: document.getElementById('show-login-button'),
             showForgotPasswordButton: document.getElementById('show-forgot-password-button'),
             backToLoginButton: document.getElementById('back-to-login-button'),
             
-            // Main App UI
             welcomeMessage: document.getElementById('welcome-message'),
             logoutButton: document.getElementById('logout-button'),
             studentView: document.getElementById('student-view'),
@@ -107,8 +210,16 @@
             adminAttendanceLogBody: document.getElementById('admin-attendance-log-body'),
             refreshAttendanceButton: document.getElementById('refresh-attendance-button'),
             searchStudentInput: document.getElementById('search-student-input'),
+            exportButton: document.getElementById('export-button'),
+            currentPage: document.getElementById('current-page'),
+            totalPages: document.getElementById('total-pages'),
+            prevPageButton: document.getElementById('prev-page-button'),
+            nextPageButton: document.getElementById('next-page-button'),
         };
 
+        // ============================================
+        // APP STATE
+        // ============================================
         const appState = {
             currentUser: null,
             scheduleData: null,
@@ -116,13 +227,22 @@
             allAttendanceLogs: [],
             toastTimeout: null,
             attendanceSubscription: null,
+            clockInterval: null,
+            currentPage: 1,
+            itemsPerPage: 20,
+            scheduleId: null,
         };
-        
+
+        // ============================================
+        // UI UTILITIES
+        // ============================================
         function showLoading(isLoading) {
-            UIElements.loadingScreen.classList.toggle('hidden', !isLoading);
+            UIElements.loadingScreen?.classList.toggle('hidden', !isLoading);
         }
 
         function showToast(message, type = 'success') {
+            if (!UIElements.toast || !UIElements.toastMessage) return;
+            
             clearTimeout(appState.toastTimeout);
             UIElements.toastMessage.textContent = message;
             
@@ -130,27 +250,28 @@
                 success: 'bg-emerald-500',
                 error: 'bg-red-500',
                 info: 'bg-sky-500',
+                warning: 'bg-amber-500'
             };
 
             UIElements.toast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl ${toastStyles[type] || toastStyles.info}`;
             UIElements.toast.classList.remove('opacity-0', 'translate-y-10');
 
             appState.toastTimeout = setTimeout(() => {
-                UIElements.toast.classList.add('opacity-0', 'translate-y-10');
+                UIElements.toast?.classList.add('opacity-0', 'translate-y-10');
             }, 3000);
         }
 
         function navigateTo(view) {
-            UIElements.loginPage.classList.add('hidden');
-            UIElements.mainApp.classList.add('hidden');
+            UIElements.loginPage?.classList.add('hidden');
+            UIElements.mainApp?.classList.add('hidden');
 
             if (view === 'login') {
-                UIElements.loginPage.classList.remove('hidden');
+                UIElements.loginPage?.classList.remove('hidden');
             } else if (view === 'app') {
-                UIElements.mainApp.classList.remove('hidden');
+                UIElements.mainApp?.classList.remove('hidden');
                 const isAdmin = appState.currentUser?.email.includes('@admin.sekolah.id');
-                UIElements.studentView.classList.toggle('hidden', isAdmin);
-                UIElements.adminView.classList.toggle('hidden', !isAdmin);
+                UIElements.studentView?.classList.toggle('hidden', isAdmin);
+                UIElements.adminView?.classList.toggle('hidden', !isAdmin);
             }
         }
         
@@ -161,7 +282,7 @@
                 forgotPassword: UIElements.forgotPasswordView
             };
 
-            let currentView = Object.values(views).find(v => !v.classList.contains('hidden'));
+            const currentView = Object.values(views).find(v => v && !v.classList.contains('hidden'));
 
             if (currentView) {
                 currentView.classList.add('opacity-0');
@@ -170,17 +291,28 @@
             
             setTimeout(() => {
                 const targetView = views[viewName] || views.login;
-                targetView.classList.remove('hidden');
-                setTimeout(() => targetView.classList.remove('opacity-0'), 10);
+                if (targetView) {
+                    targetView.classList.remove('hidden');
+                    setTimeout(() => targetView.classList.remove('opacity-0'), 10);
+                }
             }, 300);
         }
 
+        // ============================================
+        // CLOCK & TIME
+        // ============================================
         function updateClock() {
+            if (!UIElements.clock || !UIElements.date) return;
+            
             const now = new Date();
             const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-            UIElements.clock.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            UIElements.clock.textContent = now.toLocaleTimeString('id-ID', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
             UIElements.date.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
             
             if (now.getSeconds() === 0) {
@@ -188,20 +320,64 @@
             }
         }
 
+        // ============================================
+        // VALIDATION
+        // ============================================
+        function validateForm(formData, rules) {
+            const errors = [];
+            
+            for (const [field, validators] of Object.entries(rules)) {
+                const value = formData[field];
+                
+                for (const validator of validators) {
+                    if (validator === 'required' && !Validators.notEmpty(value)) {
+                        errors.push(`${field}: ${ValidationMessages.required}`);
+                    } else if (validator === 'email' && !Validators.email(value)) {
+                        errors.push(`${field}: ${ValidationMessages.email}`);
+                    } else if (validator === 'nisn' && !Validators.nisn(value)) {
+                        errors.push(`${field}: ${ValidationMessages.nisn}`);
+                    } else if (validator === 'password' && !Validators.password(value)) {
+                        errors.push(`${field}: ${ValidationMessages.password}`);
+                    }
+                }
+            }
+            
+            return errors;
+        }
+
+        // ============================================
+        // DATA FETCHING
+        // ============================================
         async function initializeMainApp(user) {
             appState.currentUser = user;
-            UIElements.welcomeMessage.textContent = `Hai, ${user.email.split('@')[0]}`;
+            if (UIElements.welcomeMessage) {
+                UIElements.welcomeMessage.textContent = `Hai, ${user.email.split('@')[0]}`;
+            }
             
             showLoading(true);
             try {
                 const isAdmin = user.email.includes('@admin.sekolah.id');
-                const attendanceFetcher = isAdmin ? fetchAllTodayAttendance() : fetchTodayAttendance();
-                await Promise.all([fetchSchedule(), attendanceFetcher]);
+                
+                const tasks = [fetchSchedule()];
+                if (isAdmin) {
+                    tasks.push(fetchAllTodayAttendance());
+                } else {
+                    tasks.push(fetchTodayAttendance());
+                }
+                
+                const results = await Promise.allSettled(tasks);
+                
+                results.forEach((result, index) => {
+                    if (result.status === 'rejected') {
+                        console.error(`Task ${index} failed:`, result.reason);
+                        showToast(`Gagal memuat sebagian data: ${result.reason.message}`, 'warning');
+                    }
+                });
                 
                 if (isAdmin) {
                     renderSchedule(UIElements.adminScheduleTableBody, true);
                     renderAllAttendanceLog();
-                    subscribeToAttendanceChanges(); // Activate real-time updates
+                    subscribeToAttendanceChanges();
                 } else {
                     renderSchedule(UIElements.scheduleTableBody, false);
                     renderAttendanceLog();
@@ -210,7 +386,7 @@
                 navigateTo('app');
             } catch (error) {
                 console.error("Initialization error:", error);
-                showToast("Gagal memuat data aplikasi.", "error");
+                showToast(ErrorHandler.handle(error, 'memuat aplikasi'), "error");
                 handleLogout();
             } finally {
                 showLoading(false);
@@ -218,19 +394,36 @@
         }
 
         async function fetchSchedule() {
-            const { data, error } = await supabase.from('schedules').select('data').limit(1).single();
-            if (error) {
-                console.error('Error fetching schedule:', error.message);
-                throw new Error('Gagal memuat jadwal.');
+            const cached = cache.get('schedule');
+            if (cached) {
+                appState.scheduleData = cached.data;
+                appState.scheduleId = cached.id;
+                return;
             }
-            if (data) {
-                appState.scheduleData = data.data;
+
+            try {
+                const { data, error } = await supabase
+                    .from('schedules')
+                    .select('id, data')
+                    .limit(1)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (data) {
+                    appState.scheduleData = data.data;
+                    appState.scheduleId = data.id;
+                    cache.set('schedule', { data: data.data, id: data.id });
+                }
+            } catch (error) {
+                throw new Error(ErrorHandler.handle(error, 'memuat jadwal'));
             }
         }
 
         function renderSchedule(tbody, isEditable) {
-            if (!appState.scheduleData) return;
-            tbody.innerHTML = '';
+            if (!tbody || !appState.scheduleData) return;
+            
+            const fragment = document.createDocumentFragment();
             
             const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
             const times = ["06:30-07:15", "07:15-08:00", "08:00-08:45", "08:45-09:30", "09:30-10:00", "10:00-10:45", "10:45-11:30", "11:30-12:15", "12:15-13:00", "13:00-13:45", "13:45-14:30", "14:30-15:15"];
@@ -239,7 +432,12 @@
             times.forEach((time, i) => {
                 const row = document.createElement('tr');
                 row.className = 'border-b border-slate-200 hover:bg-slate-50 transition-colors';
-                row.innerHTML = `<td class="p-3 font-mono bg-slate-100 text-slate-600 text-sm">${time}</td>`;
+                
+                const timeCell = document.createElement('td');
+                timeCell.className = 'p-3 font-mono bg-slate-100 text-slate-600 text-sm';
+                timeCell.textContent = time;
+                row.appendChild(timeCell);
+                
                 days.forEach((day, j) => {
                     const subject = appState.scheduleData[day]?.[i] || '';
                     const cell = document.createElement('td');
@@ -249,7 +447,7 @@
                     if (j === todayIndex && !isEditable) {
                         cell.classList.add('bg-sky-50', 'font-semibold', 'text-sky-700');
                     }
-                     if (subject.toLowerCase().includes('istirahat')) {
+                    if (subject.toLowerCase().includes('istirahat')) {
                         cell.classList.add('bg-slate-50', 'text-slate-500', 'italic');
                     }
                     
@@ -259,54 +457,81 @@
                     }
                     row.appendChild(cell);
                 });
-                tbody.appendChild(row);
+                fragment.appendChild(row);
             });
+            
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
         }
         
         async function fetchTodayAttendance() {
             if (!appState.currentUser) return;
-            const today = new Date().toISOString().slice(0, 10);
             
-            const { data, error } = await supabase.from('attendance_log').select('*').eq('user_id', appState.currentUser.id).eq('log_date', today);
+            const today = new Date().toISOString().slice(0, 10);
+            const cacheKey = `attendance_${appState.currentUser.id}_${today}`;
+            
+            const cached = cache.get(cacheKey);
+            if (cached) {
+                appState.attendanceLogs = cached;
+                return;
+            }
 
-            if (error) {
-                console.error('Error fetching attendance:', error.message);
-                showToast("Gagal mengambil data absensi.", "error");
+            try {
+                const { data, error } = await supabase
+                    .from('attendance_log')
+                    .select('*')
+                    .eq('user_id', appState.currentUser.id)
+                    .eq('log_date', today);
+
+                if (error) throw error;
+                
+                appState.attendanceLogs = data || [];
+                cache.set(cacheKey, data || []);
+            } catch (error) {
+                console.error('Error fetching attendance:', error);
+                showToast(ErrorHandler.handle(error, 'mengambil data absensi'), "error");
                 appState.attendanceLogs = [];
-            } else {
-                appState.attendanceLogs = data;
             }
         }
         
         function renderAttendanceLog() {
-            const { attendanceLogList } = UIElements;
-            attendanceLogList.innerHTML = '';
+            if (!UIElements.attendanceLogList) return;
+            
+            UIElements.attendanceLogList.innerHTML = '';
+            
             if (appState.attendanceLogs.length === 0) {
-                attendanceLogList.innerHTML = '<p class="text-center text-slate-500 mt-4">Belum ada absensi hari ini.</p>';
+                UIElements.attendanceLogList.innerHTML = '<p class="text-center text-slate-500 mt-4">Belum ada absensi hari ini.</p>';
                 return;
             }
-            appState.attendanceLogs.sort((a,b) => a.log_time.localeCompare(b.log_time)).forEach(log => {
+            
+            const fragment = document.createDocumentFragment();
+            const sortedLogs = [...appState.attendanceLogs].sort((a, b) => a.log_time.localeCompare(b.log_time));
+            
+            sortedLogs.forEach(log => {
                 const isCheckIn = log.type === 'check_in';
                 const statusColor = log.status.includes('Tepat Waktu') ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800';
-                const icon = isCheckIn ? `<i data-lucide="log-in" class="w-5 h-5 text-emerald-500"></i>` : `<i data-lucide="log-out" class="w-5 h-5 text-sky-500"></i>`;
                 
                 const item = document.createElement('div');
                 item.className = 'p-3 rounded-lg flex items-center gap-4 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors';
                 item.innerHTML = `
-                    ${icon}
+                    <i data-lucide="${isCheckIn ? 'log-in' : 'log-out'}" class="w-5 h-5 ${isCheckIn ? 'text-emerald-500' : 'text-sky-500'}"></i>
                     <div class="flex-grow">
                         <p class="font-semibold text-slate-800">${isCheckIn ? 'Absen Masuk' : 'Absen Pulang'}</p>
                         <p class="text-sm text-slate-500">${log.log_time}</p>
                     </div>
                     <span class="text-xs font-medium px-2.5 py-1 rounded-full ${statusColor}">${log.status}</span>
                 `;
-                attendanceLogList.appendChild(item);
+                fragment.appendChild(item);
             });
-            lucide.createIcons(); // Re-render icons
+            
+            UIElements.attendanceLogList.appendChild(fragment);
+            lucide.createIcons();
         }
         
         function updateAttendanceButtons() {
             if (!appState.currentUser || appState.currentUser.email.includes('@admin.sekolah.id')) return;
+            if (!UIElements.checkInButton || !UIElements.checkOutButton) return;
+            
             const now = new Date();
             const hours = now.getHours();
             const hasCheckedIn = appState.attendanceLogs.some(log => log.type === 'check_in');
@@ -326,23 +551,36 @@
 
         async function fetchAllTodayAttendance() {
             const today = new Date().toISOString().slice(0, 10);
-            const { data, error } = await supabase
-                .from('attendance_log')
-                .select(`*, profiles(email)`)
-                .eq('log_date', today);
+            const cacheKey = `all_attendance_${today}`;
+            
+            const cached = cache.get(cacheKey);
+            if (cached) {
+                appState.allAttendanceLogs = cached;
+                return;
+            }
 
-            if (error) {
-                console.error('Error fetching all attendance:', error.message);
-                showToast("Gagal memuat laporan absensi.", "error");
+            try {
+                const { data, error } = await supabase
+                    .from('attendance_log')
+                    .select(`*, profiles(email)`)
+                    .eq('log_date', today)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                appState.allAttendanceLogs = data || [];
+                cache.set(cacheKey, data || []);
+            } catch (error) {
+                console.error('Error fetching all attendance:', error);
+                showToast(ErrorHandler.handle(error, 'memuat laporan absensi'), "error");
                 appState.allAttendanceLogs = [];
-            } else {
-                appState.allAttendanceLogs = data;
             }
         }
 
         function renderAllAttendanceLog(filter = '') {
+            if (!UIElements.adminAttendanceLogBody) return;
+            
             const processedData = {};
-            const { adminAttendanceLogBody } = UIElements;
             
             appState.allAttendanceLogs.forEach(log => {
                 const userId = log.user_id;
@@ -366,148 +604,287 @@
                 record.email.toLowerCase().includes(filter.toLowerCase())
             );
 
-            adminAttendanceLogBody.innerHTML = '';
-            if (filteredData.length === 0) {
-                adminAttendanceLogBody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-slate-500">Tidak ada data absensi untuk ditampilkan.</td></tr>`;
+            const totalItems = filteredData.length;
+            const totalPages = Math.ceil(totalItems / appState.itemsPerPage) || 1;
+            appState.currentPage = Math.min(appState.currentPage, totalPages);
+            
+            const startIndex = (appState.currentPage - 1) * appState.itemsPerPage;
+            const endIndex = startIndex + appState.itemsPerPage;
+            const paginatedData = filteredData.slice(startIndex, endIndex);
+
+            UIElements.adminAttendanceLogBody.innerHTML = '';
+            
+            if (paginatedData.length === 0) {
+                UIElements.adminAttendanceLogBody.innerHTML = `<tr><td colspan="5" class="text-center p-6 text-slate-500">Tidak ada data absensi untuk ditampilkan.</td></tr>`;
+                updatePagination(1, 1);
                 return;
             }
 
-            filteredData.sort((a, b) => a.email.localeCompare(b.email));
+            const fragment = document.createDocumentFragment();
+            paginatedData.sort((a, b) => a.email.localeCompare(b.email));
 
-            filteredData.forEach(record => {
+            paginatedData.forEach(record => {
                 const row = document.createElement('tr');
                 row.className = 'border-b border-slate-200 hover:bg-slate-50 transition-colors';
+                
+                const getStatusClass = (status) => {
+                    if (status === 'Tepat Waktu' || status.includes('Tepat Waktu')) {
+                        return 'bg-emerald-100 text-emerald-800';
+                    } else if (status === '-') {
+                        return 'bg-slate-100 text-slate-800';
+                    } else if (status.includes('Terlambat')) {
+                        return 'bg-red-100 text-red-800';
+                    } else {
+                        return 'bg-amber-100 text-amber-800';
+                    }
+                };
+                
                 row.innerHTML = `
                     <td class="p-3 font-medium text-slate-900">${record.email}</td>
                     <td class="p-3 text-slate-600">${record.checkInTime}</td>
                     <td class="p-3">
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${record.checkInStatus === 'Tepat Waktu' ? 'bg-emerald-100 text-emerald-800' : (record.checkInStatus === '-' ? 'bg-slate-100 text-slate-800' : 'bg-red-100 text-red-800')}">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${getStatusClass(record.checkInStatus)}">
                             ${record.checkInStatus}
                         </span>
                     </td>
                     <td class="p-3 text-slate-600">${record.checkOutTime}</td>
                     <td class="p-3">
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${record.checkOutStatus.includes('Tepat Waktu') ? 'bg-emerald-100 text-emerald-800' : (record.checkOutStatus === '-' ? 'bg-slate-100 text-slate-800' : 'bg-amber-100 text-amber-800')}">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${getStatusClass(record.checkOutStatus)}">
                             ${record.checkOutStatus}
                         </span>
                     </td>
                 `;
-                adminAttendanceLogBody.appendChild(row);
+                fragment.appendChild(row);
             });
+            
+            UIElements.adminAttendanceLogBody.appendChild(fragment);
+            updatePagination(appState.currentPage, totalPages);
         }
-        
+
+        function updatePagination(current, total) {
+            if (!UIElements.currentPage || !UIElements.totalPages) return;
+            
+            UIElements.currentPage.textContent = current;
+            UIElements.totalPages.textContent = total;
+            
+            if (UIElements.prevPageButton && UIElements.nextPageButton) {
+                UIElements.prevPageButton.disabled = current === 1;
+                UIElements.nextPageButton.disabled = current === total;
+                
+                UIElements.prevPageButton.classList.toggle('opacity-50', current === 1);
+                UIElements.prevPageButton.classList.toggle('cursor-not-allowed', current === 1);
+                UIElements.nextPageButton.classList.toggle('opacity-50', current === total);
+                UIElements.nextPageButton.classList.toggle('cursor-not-allowed', current === total);
+            }
+        }
+
+        // ============================================
+        // AUTH HANDLERS
+        // ============================================
         async function handleLogin(event) {
             event.preventDefault();
             showLoading(true);
-            UIElements.loginError.classList.add('hidden');
+            if (UIElements.loginError) {
+                UIElements.loginError.classList.add('hidden');
+            }
             
-            const identifier = event.target.identifier.value;
-            const password = event.target.password.value;
+            const formData = new FormData(event.target);
+            const identifier = formData.get('identifier');
+            const password = formData.get('password');
+            
+            const errors = validateForm(
+                { identifier, password },
+                { identifier: ['required'], password: ['required', 'password'] }
+            );
+            
+            if (errors.length > 0) {
+                showLoading(false);
+                if (UIElements.loginError) {
+                    UIElements.loginError.textContent = errors[0].split(': ')[1];
+                    UIElements.loginError.classList.remove('hidden');
+                }
+                return;
+            }
+            
             let email = identifier;
 
-            if (!identifier.includes('@')) {
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('email')
-                    .eq('nisn', identifier)
-                    .single();
+            try {
+                if (!identifier.includes('@')) {
+                    if (!Validators.nisn(identifier)) {
+                        throw new Error('NISN harus 10 digit angka');
+                    }
+                    
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('email')
+                        .eq('nisn', identifier)
+                        .single();
 
-                if (profileError || !profile) {
-                    showLoading(false);
-                    UIElements.loginError.textContent = "NISN tidak ditemukan.";
-                    UIElements.loginError.classList.remove('hidden');
-                    return;
+                    if (profileError || !profile) {
+                        throw new Error('NISN tidak ditemukan');
+                    }
+                    email = profile.email;
                 }
-                email = profile.email;
-            }
 
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            
-            showLoading(false);
-            if (error) {
-                UIElements.loginError.textContent = "Email/NISN atau password salah.";
-                UIElements.loginError.classList.remove('hidden');
-            } else if (data.user) {
-                await initializeMainApp(data.user);
+                const { data, error } = await supabase.auth.signInWithPassword({ 
+                    email, 
+                    password 
+                });
+                
+                if (error) throw error;
+                
+                if (data.user) {
+                    await initializeMainApp(data.user);
+                }
+            } catch (error) {
+                if (UIElements.loginError) {
+                    UIElements.loginError.textContent = ErrorHandler.handle(error, '');
+                    UIElements.loginError.classList.remove('hidden');
+                }
+            } finally {
+                showLoading(false);
             }
         }
         
         async function handleSignUp(event) {
             event.preventDefault();
             showLoading(true);
-            UIElements.signupError.classList.add('hidden');
-            const email = event.target.email.value;
-            const password = event.target.password.value;
-            const nisn = event.target.nisn.value;
-
-            // Simple validation
-            if (!nisn || !email || !password) {
-                UIElements.signupError.textContent = "Semua kolom wajib diisi.";
-                UIElements.signupError.classList.remove('hidden');
-                showLoading(false);
-                return;
+            if (UIElements.signupError) {
+                UIElements.signupError.classList.add('hidden');
             }
+            
+            const formData = new FormData(event.target);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const nisn = formData.get('nisn');
 
-            // Step 1: Check if NISN already exists
-            const { data: existingProfile } = await supabase.from('profiles').select('nisn').eq('nisn', nisn).single();
-            if (existingProfile) {
-                UIElements.signupError.textContent = "NISN sudah terdaftar.";
-                UIElements.signupError.classList.remove('hidden');
+            const errors = validateForm(
+                { email, password, nisn },
+                { 
+                    email: ['required', 'email'], 
+                    password: ['required', 'password'],
+                    nisn: ['required', 'nisn']
+                }
+            );
+            
+            if (errors.length > 0) {
                 showLoading(false);
-                return;
-            }
-
-            // Step 2: Sign up user
-            const { data, error } = await supabase.auth.signUp({ email, password });
-
-            if (error) {
-                UIElements.signupError.textContent = error.message.includes('Password') ? "Password terlalu lemah, gunakan minimal 6 karakter." : "Email sudah terdaftar.";
-                UIElements.signupError.classList.remove('hidden');
-            } else if (data.user) {
-                const { error: profileError } = await supabase.from('profiles').insert({ id: data.user.id, nisn: nisn, email: email });
-                
-                if (profileError) {
-                    console.error("Profile creation error:", profileError);
-                    UIElements.signupError.textContent = "Gagal membuat profil, hubungi admin.";
+                if (UIElements.signupError) {
+                    UIElements.signupError.textContent = errors[0].split(': ')[1];
                     UIElements.signupError.classList.remove('hidden');
-                } else {
+                }
+                return;
+            }
+
+            try {
+                const { data: existingProfile } = await supabase
+                    .from('profiles')
+                    .select('nisn')
+                    .eq('nisn', nisn)
+                    .single();
+                
+                if (existingProfile) {
+                    throw new Error('NISN sudah terdaftar');
+                }
+
+                const { data, error } = await supabase.auth.signUp({ 
+                    email, 
+                    password 
+                });
+
+                if (error) throw error;
+                
+                if (data.user) {
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert({ 
+                            id: data.user.id, 
+                            nisn: nisn, 
+                            email: email 
+                        });
+                    
+                    if (profileError) {
+                        throw new Error('Gagal membuat profil. Hubungi admin.');
+                    }
+                    
                     showToast('Pendaftaran berhasil! Cek email untuk verifikasi.', 'success');
-                    UIElements.signupForm.reset();
+                    event.target.reset();
                     showAuthView('login');
                 }
+            } catch (error) {
+                if (UIElements.signupError) {
+                    UIElements.signupError.textContent = ErrorHandler.handle(error, '');
+                    UIElements.signupError.classList.remove('hidden');
+                }
+            } finally {
+                showLoading(false);
             }
-            showLoading(false);
         }
         
         async function handlePasswordReset(event) {
             event.preventDefault();
             showLoading(true);
-            const email = event.target.email.value;
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin, // Redirect to the site's origin
-            });
-            showLoading(false);
-            if (error) {
-                showToast("Gagal mengirim email reset. Pastikan email benar.", "error");
-            } else {
+            
+            const formData = new FormData(event.target);
+            const email = formData.get('email');
+            
+            const errors = validateForm(
+                { email },
+                { email: ['required', 'email'] }
+            );
+            
+            if (errors.length > 0) {
+                showLoading(false);
+                showToast(errors[0].split(': ')[1], 'error');
+                return;
+            }
+            
+            try {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin,
+                });
+                
+                if (error) throw error;
+                
                 showToast("Email reset password telah dikirim.", "info");
                 showAuthView('login');
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'mengirim email reset'), "error");
+            } finally {
+                showLoading(false);
             }
         }
 
         async function handleLogout() {
             if (appState.attendanceSubscription) {
                 supabase.removeChannel(appState.attendanceSubscription);
+                appState.attendanceSubscription = null;
             }
+            
+            if (appState.clockInterval) {
+                clearInterval(appState.clockInterval);
+                appState.clockInterval = null;
+            }
+            
             showLoading(true);
-            await supabase.auth.signOut();
-            appState.currentUser = null;
-            appState.scheduleData = null;
-            appState.attendanceLogs = [];
-            showLoading(false);
-            navigateTo('login');
+            try {
+                await supabase.auth.signOut();
+                appState.currentUser = null;
+                appState.scheduleData = null;
+                appState.attendanceLogs = [];
+                appState.allAttendanceLogs = [];
+                cache.clear();
+                navigateTo('login');
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'logout'), 'error');
+            } finally {
+                showLoading(false);
+            }
         }
 
+        // ============================================
+        // ATTENDANCE HANDLERS
+        // ============================================
         async function handleAttendance(type) {
             const now = new Date();
             const hours = now.getHours();
@@ -522,49 +899,73 @@
             
             const attendanceRecord = {
                 user_id: appState.currentUser.id,
-                type: type, status: status,
+                type: type, 
+                status: status,
                 log_time: now.toTimeString().slice(0, 8),
                 log_date: now.toISOString().slice(0, 10)
             };
             
             showLoading(true);
-            const { error } = await supabase.from('attendance_log').insert([attendanceRecord]);
-            
-            if (error) {
-                console.error('Error inserting attendance:', error.message);
-                showToast('Gagal melakukan absensi. Coba lagi.', 'error');
-            } else {
+            try {
+                const { error } = await supabase
+                    .from('attendance_log')
+                    .insert([attendanceRecord]);
+                
+                if (error) throw error;
+                
                 showToast(`Anda berhasil ${type === 'check_in' ? 'absen masuk' : 'absen pulang'}!`, 'success');
+                
+                const today = new Date().toISOString().slice(0, 10);
+                const cacheKey = `attendance_${appState.currentUser.id}_${today}`;
+                cache.set(cacheKey, null);
+                
                 await fetchTodayAttendance();
                 renderAttendanceLog();
                 updateAttendanceButtons();
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'melakukan absensi'), 'error');
+            } finally {
+                showLoading(false);
             }
-            showLoading(false);
         }
 
         async function handleUpdateSchedule() {
+            if (!UIElements.adminScheduleTableBody) return;
+            
             showLoading(true);
-            const newSchedule = { Senin: [], Selasa: [], Rabu: [], Kamis: [], Jumat: [] };
-            const rows = UIElements.adminScheduleTableBody.querySelectorAll('tr');
-            const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
+            try {
+                const newSchedule = { 
+                    Senin: [], 
+                    Selasa: [], 
+                    Rabu: [], 
+                    Kamis: [], 
+                    Jumat: [] 
+                };
+                const rows = UIElements.adminScheduleTableBody.querySelectorAll('tr');
+                const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
 
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                for(let i = 1; i < cells.length; i++) {
-                    newSchedule[days[i-1]].push(cells[i].textContent.trim());
-                }
-            });
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    for(let i = 1; i < cells.length; i++) {
+                        newSchedule[days[i-1]].push(cells[i].textContent.trim());
+                    }
+                });
 
-            // Assuming a single schedule entry for now, with ID 1
-            const { error } = await supabase.from('schedules').update({ data: newSchedule }).eq('id', 1);
+                const scheduleId = appState.scheduleId || 1;
+                const { error } = await supabase
+                    .from('schedules')
+                    .update({ data: newSchedule })
+                    .eq('id', scheduleId);
 
-            showLoading(false);
-            if (error) {
-                console.error('Error updating schedule:', error.message);
-                showToast('Gagal menyimpan jadwal.', 'error');
-            } else {
+                if (error) throw error;
+                
                 showToast('Jadwal berhasil diperbarui!', 'success');
                 appState.scheduleData = newSchedule;
+                cache.set('schedule', { data: newSchedule, id: scheduleId });
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'menyimpan jadwal'), 'error');
+            } finally {
+                showLoading(false);
             }
         }
 
@@ -572,17 +973,80 @@
             if (appState.attendanceSubscription) {
                 supabase.removeChannel(appState.attendanceSubscription);
             }
+            
             appState.attendanceSubscription = supabase
                 .channel('public:attendance_log')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_log' }, async (payload) => {
+                .on('postgres_changes', { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'attendance_log' 
+                }, async (payload) => {
                     console.log('Realtime change received!', payload);
+                    
+                    const today = new Date().toISOString().slice(0, 10);
+                    cache.set(`all_attendance_${today}`, null);
+                    
                     showToast('Data absensi diperbarui!', 'info');
                     await fetchAllTodayAttendance();
-                    renderAllAttendanceLog(UIElements.searchStudentInput.value);
+                    renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
                 })
                 .subscribe();
         }
-        
+
+        // ============================================
+        // EXPORT FUNCTIONALITY
+        // ============================================
+        function exportToCSV() {
+            if (!appState.allAttendanceLogs || appState.allAttendanceLogs.length === 0) {
+                showToast('Tidak ada data untuk diekspor', 'warning');
+                return;
+            }
+            
+            const processedData = {};
+            appState.allAttendanceLogs.forEach(log => {
+                const userId = log.user_id;
+                if (!processedData[userId]) {
+                    processedData[userId] = {
+                        email: log.profiles?.email || `ID: ${userId.substring(0, 8)}...`,
+                        checkInTime: '-', checkInStatus: '-',
+                        checkOutTime: '-', checkOutStatus: '-',
+                    };
+                }
+                if (log.type === 'check_in') {
+                    processedData[userId].checkInTime = log.log_time;
+                    processedData[userId].checkInStatus = log.status;
+                } else if (log.type === 'check_out') {
+                    processedData[userId].checkOutTime = log.log_time;
+                    processedData[userId].checkOutStatus = log.status;
+                }
+            });
+
+            const csvData = Object.values(processedData);
+            const headers = ['Email', 'Waktu Masuk', 'Status Masuk', 'Waktu Pulang', 'Status Pulang'];
+            
+            let csvContent = headers.join(',') + '\n';
+            csvData.forEach(row => {
+                csvContent += `${row.email},${row.checkInTime},${row.checkInStatus},${row.checkOutTime},${row.checkOutStatus}\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const today = new Date().toISOString().slice(0, 10);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `absensi_${today}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('Data berhasil diekspor', 'success');
+        }
+
+        // ============================================
+        // SESSION CHECK
+        // ============================================
         async function checkUserSession() {
             if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('URL_PROYEK_ANDA')) {
                 document.body.innerHTML = `
@@ -596,92 +1060,144 @@
             }
 
             showLoading(true);
-            const { data } = await supabase.auth.getSession();
-            if (data.session?.user) {
-                await initializeMainApp(data.session.user);
-            } else {
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) throw error;
+                
+                if (data.session?.user) {
+                    await initializeMainApp(data.session.user);
+                } else {
+                    navigateTo('login');
+                }
+            } catch (error) {
+                console.error('Session check error:', error);
                 navigateTo('login');
+            } finally {
+                showLoading(false);
             }
-            showLoading(false);
         }
 
+        // ============================================
+        // INITIALIZATION
+        // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             checkUserSession();
-            setInterval(updateClock, 1000);
+            appState.clockInterval = setInterval(updateClock, 1000);
+            updateClock();
 
-            // --- Form Event Listeners ---
-            UIElements.loginForm.addEventListener('submit', handleLogin);
-            UIElements.signupForm.addEventListener('submit', handleSignUp);
-            UIElements.forgotPasswordForm.addEventListener('submit', handlePasswordReset);
+            // Form Event Listeners
+            UIElements.loginForm?.addEventListener('submit', handleLogin);
+            UIElements.signupForm?.addEventListener('submit', handleSignUp);
+            UIElements.forgotPasswordForm?.addEventListener('submit', handlePasswordReset);
             
-            // --- Navigation Event Listeners ---
-            UIElements.showSignupButton.addEventListener('click', (e) => { e.preventDefault(); showAuthView('signup'); });
-            [UIElements.showLoginButton, UIElements.backToLoginButton].forEach(btn => {
-                btn.addEventListener('click', (e) => { e.preventDefault(); showAuthView('login'); });
+            // Navigation Event Listeners
+            UIElements.showSignupButton?.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                showAuthView('signup'); 
             });
-            UIElements.showForgotPasswordButton.addEventListener('click', (e) => { e.preventDefault(); showAuthView('forgotPassword'); });
             
-            // --- Main App Event Listeners ---
-            UIElements.logoutButton.addEventListener('click', handleLogout);
-            UIElements.checkInButton.addEventListener('click', () => handleAttendance('check_in'));
-            UIElements.checkOutButton.addEventListener('click', () => handleAttendance('check_out'));
-            UIElements.saveScheduleButton.addEventListener('click', handleUpdateSchedule);
+            [UIElements.showLoginButton, UIElements.backToLoginButton].forEach(btn => {
+                btn?.addEventListener('click', (e) => { 
+                    e.preventDefault(); 
+                    showAuthView('login'); 
+                });
+            });
+            
+            UIElements.showForgotPasswordButton?.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                showAuthView('forgotPassword'); 
+            });
+            
+            // Main App Event Listeners
+            UIElements.logoutButton?.addEventListener('click', handleLogout);
+            UIElements.checkInButton?.addEventListener('click', () => handleAttendance('check_in'));
+            UIElements.checkOutButton?.addEventListener('click', () => handleAttendance('check_out'));
+            UIElements.saveScheduleButton?.addEventListener('click', handleUpdateSchedule);
 
-            UIElements.searchStudentInput.addEventListener('input', (e) => {
+            // Admin Controls
+            UIElements.searchStudentInput?.addEventListener('input', (e) => {
+                appState.currentPage = 1;
                 renderAllAttendanceLog(e.target.value);
             });
-            UIElements.refreshAttendanceButton.addEventListener('click', async () => {
+            
+            UIElements.refreshAttendanceButton?.addEventListener('click', async () => {
                 showToast('Memuat ulang data absensi...', 'info');
                 showLoading(true);
-                await fetchAllTodayAttendance();
-                renderAllAttendanceLog(UIElements.searchStudentInput.value);
-                showLoading(false);
+                try {
+                    const today = new Date().toISOString().slice(0, 10);
+                    cache.set(`all_attendance_${today}`, null);
+                    await fetchAllTodayAttendance();
+                    renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                } catch (error) {
+                    showToast(ErrorHandler.handle(error, 'memuat ulang data'), 'error');
+                } finally {
+                    showLoading(false);
+                }
             });
             
-            // --- Password Toggle Listener ---
+            UIElements.exportButton?.addEventListener('click', exportToCSV);
+            
+            // Pagination
+            UIElements.prevPageButton?.addEventListener('click', () => {
+                if (appState.currentPage > 1) {
+                    appState.currentPage--;
+                    renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                }
+            });
+            
+            UIElements.nextPageButton?.addEventListener('click', () => {
+                const totalPages = Math.ceil(appState.allAttendanceLogs.length / appState.itemsPerPage);
+                if (appState.currentPage < totalPages) {
+                    appState.currentPage++;
+                    renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                }
+            });
+            
+            // Password Toggle
             document.querySelectorAll('.password-toggle').forEach(button => {
                 button.addEventListener('click', () => {
                     const passwordInput = button.previousElementSibling;
                     const icon = button.querySelector('i');
-                    if (passwordInput.type === 'password') {
-                        passwordInput.type = 'text';
-                        icon.setAttribute('data-lucide', 'eye-off');
-                    } else {
-                        passwordInput.type = 'password';
-                        icon.setAttribute('data-lucide', 'eye');
+                    if (passwordInput && icon) {
+                        if (passwordInput.type === 'password') {
+                            passwordInput.type = 'text';
+                            icon.setAttribute('data-lucide', 'eye-off');
+                        } else {
+                            passwordInput.type = 'password';
+                            icon.setAttribute('data-lucide', 'eye');
+                        }
+                        lucide.createIcons();
                     }
-                    lucide.createIcons(); // Re-render the new icon
                 });
             });
 
-            // Initial call to create icons
             lucide.createIcons();
         });
     </script>
 </head>
 <body class="bg-slate-50">
 
-    <!-- Loading Screen --><div id="loading-screen" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex justify-center items-center z-50 hidden">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
+    <div id="loading-screen" class="fixed inset-0 bg-white/90 backdrop-blur-sm flex flex-col justify-center items-center z-50 hidden">
+        <div class="arc-spinner"></div>
     </div>
 
-    <!-- Toast Notification --><div id="toast" class="fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 translate-y-10" role="alert">
+    <div id="toast" class="fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 translate-y-10" role="alert">
         <p id="toast-message"></p>
     </div>
 
-    <!-- Login Page --><div id="login-page" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-sky-50 to-indigo-100">
+    <div id="login-page" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-sky-50 to-indigo-100">
         <div class="auth-card grid grid-cols-1 lg:grid-cols-2 w-full max-w-4xl bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
-            <!-- Kolom Kiri - Visual --><div class="hidden lg:flex flex-col justify-center items-center p-12 visual-panel-bg text-white relative">
-                <!-- Logo --><div class="mb-8 flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 shadow-xl">
+            <div class="hidden lg:flex flex-col justify-center items-center p-12 visual-panel-bg text-white relative">
+                <div class="mb-8 flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 shadow-xl">
                     <i data-lucide="clipboard-check" class="w-14 h-14 text-white"></i>
                 </div>
-                
                 <h2 class="text-3xl font-bold leading-tight mb-4 text-shadow">Sistem Absensi Digital</h2>
                 <p class="text-indigo-100 text-center text-shadow-sm">Catat kehadiran Anda dengan mudah, cepat, dan akurat.</p>
             </div>
         
-            <!-- Kolom Kanan - Form Container --><div class="p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden">
-                <!-- Login View --><div id="login-view" class="auth-view-transition">
+            <div class="p-8 sm:p-12 flex flex-col justify-center relative overflow-hidden">
+                <div id="login-view" class="auth-view-transition">
                     <div class="text-center lg:text-left mb-8">
                         <h1 class="text-3xl font-bold text-slate-800">Login Akun</h1>
                         <p class="text-slate-500 mt-2">Masuk untuk melanjutkan.</p>
@@ -718,17 +1234,17 @@
                     </p>
                 </div>
 
-                <!-- Signup View --><div id="signup-view" class="hidden opacity-0 auth-view-transition">
+                <div id="signup-view" class="hidden opacity-0 auth-view-transition">
                     <div class="text-center lg:text-left mb-8">
                         <h1 class="text-3xl font-bold text-slate-800">Buat Akun Baru</h1>
                         <p class="text-slate-500 mt-2">Daftarkan diri Anda sebagai siswa.</p>
                     </div>
                     <form id="signup-form">
                         <div class="mb-5">
-                            <label for="signup-nisn" class="block text-slate-700 font-medium mb-2">NISN</label>
+                            <label for="signup-nisn" class="block text-slate-700 font-medium mb-2">NISN (10 digit)</label>
                             <div class="relative">
                                 <i data-lucide="hash" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                                <input type="text" id="signup-nisn" name="nisn" class="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required placeholder="Nomor Induk Siswa Nasional">
+                                <input type="text" id="signup-nisn" name="nisn" class="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required placeholder="Nomor Induk Siswa Nasional" maxlength="10" pattern="[0-9]{10}">
                             </div>
                         </div>
                          <div class="mb-5">
@@ -742,7 +1258,7 @@
                             <label for="signup-password" class="block text-slate-700 font-medium mb-2">Password</label>
                             <div class="relative">
                                 <i data-lucide="lock" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                                <input type="password" id="signup-password" name="password" class="w-full pl-12 pr-12 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required placeholder="Minimal 6 karakter">
+                                <input type="password" id="signup-password" name="password" class="w-full pl-12 pr-12 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required placeholder="Minimal 6 karakter" minlength="6">
                                 <button type="button" class="password-toggle absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                                     <i data-lucide="eye" class="w-5 h-5"></i>
                                 </button>
@@ -759,7 +1275,7 @@
                     </p>
                 </div>
 
-                <!-- Forgot Password View --><div id="forgot-password-view" class="hidden opacity-0 auth-view-transition">
+                <div id="forgot-password-view" class="hidden opacity-0 auth-view-transition">
                     <div class="text-center lg:text-left mb-8">
                         <h1 class="text-3xl font-bold text-slate-800">Lupa Password</h1>
                         <p class="text-slate-500 mt-2">Masukkan email Anda untuk reset password.</p>
@@ -786,7 +1302,7 @@
         </div>
     </div>
 
-    <!-- Main App --><div id="main-app" class="hidden">
+    <div id="main-app" class="hidden">
         <header class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-40 border-b border-slate-200">
             <div class="flex items-center gap-3">
                 <i data-lucide="clipboard-check" class="w-8 h-8 text-indigo-600"></i>
@@ -802,9 +1318,9 @@
         </header>
         
         <main class="p-4 sm:p-6 lg:p-8">
-            <!-- Student View --><div id="student-view">
+            <div id="student-view">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Kolom Kiri: Absensi & Jam --><div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                         <div class="text-center bg-slate-100 p-6 rounded-xl">
                             <p id="clock" class="text-5xl font-bold text-slate-800 tabular-nums"></p>
                             <p id="date" class="text-lg text-slate-500 mt-1"></p>
@@ -822,11 +1338,10 @@
                         <hr class="my-6 border-slate-200">
                         <div>
                             <h3 class="text-xl font-bold text-slate-800 mb-4">Riwayat Absensi Hari Ini</h3>
-                            <div id="attendance-log-list" class="space-y-3">
-                                <!-- Riwayat absensi akan di-render di sini --></div>
+                            <div id="attendance-log-list" class="space-y-3"></div>
                         </div>
                     </div>
-                    <!-- Kolom Kanan: Jadwal --><div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-slate-200 overflow-x-auto">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-slate-200 overflow-x-auto">
                         <h2 class="text-2xl font-bold text-slate-800 mb-4">Jadwal Pelajaran</h2>
                         <table class="w-full text-sm text-left text-slate-500 table-auto">
                             <thead class="text-xs text-slate-700 uppercase bg-slate-100">
@@ -839,14 +1354,13 @@
                                     <th class="p-3 text-center">Jumat</th>
                                 </tr>
                             </thead>
-                            <tbody id="schedule-table-body" class="divide-y divide-slate-200">
-                                <!-- Jadwal akan di-render di sini --></tbody>
+                            <tbody id="schedule-table-body" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Admin View --><div id="admin-view" class="hidden space-y-6">
+            <div id="admin-view" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                     <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-slate-800">Ubah Jadwal Pelajaran</h2>
@@ -868,13 +1382,12 @@
                                     <th class="p-3 text-center">Jumat</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-schedule-table-body" class="divide-y divide-slate-200">
-                                <!-- Jadwal admin akan di-render di sini --></tbody>
+                            <tbody id="admin-schedule-table-body" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Laporan Absensi Harian untuk Admin --><div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
                     <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-slate-800">Laporan Absensi Hari Ini</h2>
                         <div class="flex items-center gap-2">
@@ -882,6 +1395,10 @@
                                  <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                                  <input type="text" id="search-student-input" placeholder="Cari email siswa..." class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                              </div>
+                             <button id="export-button" class="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-2" title="Ekspor ke CSV">
+                                 <i data-lucide="download" class="w-5 h-5"></i>
+                                 <span class="hidden sm:inline">Ekspor</span>
+                             </button>
                              <button id="refresh-attendance-button" class="bg-slate-200 p-2 rounded-lg hover:bg-slate-300 transition-colors" title="Muat Ulang Data">
                                  <i data-lucide="refresh-cw" class="w-5 h-5 text-slate-600"></i>
                              </button>
@@ -898,11 +1415,20 @@
                                     <th class="p-3">Status Pulang</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-attendance-log-body" class="divide-y divide-slate-200">
-                                <!-- Laporan absensi akan di-render di sini --></tbody>
+                            <tbody id="admin-attendance-log-body" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
-                    <p class="mt-4 text-xs text-slate-500">Catatan: Fitur ini memerlukan tabel 'profiles' publik yang berelasi dengan 'auth.users' untuk menampilkan email siswa.</p>
+                    <div class="flex justify-between items-center mt-4">
+                        <p class="text-xs text-slate-500">Menampilkan halaman <span id="current-page">1</span> dari <span id="total-pages">1</span></p>
+                        <div class="flex gap-2">
+                            <button id="prev-page-button" class="px-3 py-1 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <button id="next-page-button" class="px-3 py-1 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
