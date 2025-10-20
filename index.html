@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Perubahan: Memuat Supabase JS versi UMD yang lebih kompatibel -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
         * {
@@ -49,14 +51,14 @@
             transform: translateY(0);
         }
         
-        .spinner {
-            width: 50px;
-            height: 50px;
+        .spinner, .btn-spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top-color: #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+        .spinner { width: 50px; height: 50px; }
+        .btn-spinner { width: 24px; height: 24px; border-width: 3px; border-top-color: white; }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -88,7 +90,7 @@
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #667eea !important;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
@@ -100,20 +102,9 @@
             font-weight: 600;
         }
         
-        .status-success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .status-warning {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .status-danger {
-            background: #fee2e2;
-            color: #991b1b;
-        }
+        .status-success { background: #d1fae5; color: #065f46; }
+        .status-warning { background: #fef3c7; color: #92400e; }
+        .status-danger { background: #fee2e2; color: #991b1b; }
         
         .clock-display {
             font-size: 3rem;
@@ -122,9 +113,7 @@
         }
         
         @media (max-width: 768px) {
-            .clock-display {
-                font-size: 2rem;
-            }
+            .clock-display { font-size: 2rem; }
         }
         
         table {
@@ -139,13 +128,8 @@
             z-index: 10;
         }
         
-        tbody tr {
-            transition: background-color 0.2s;
-        }
-        
-        tbody tr:hover {
-            background-color: #f9fafb;
-        }
+        tbody tr { transition: background-color 0.2s; }
+        tbody tr:hover { background-color: #f9fafb; }
         
         [contenteditable="true"] {
             min-height: 2rem;
@@ -159,14 +143,401 @@
         }
     </style>
     
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    <!-- Perubahan: Skrip dipindahkan ke akhir body dan diubah menjadi skrip biasa (bukan module) -->
+</head>
+<body>
 
-        const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
-        
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <!-- Layar Pemuatan Global -->
+    <div id="loading-screen" class="fixed inset-0 bg-gradient-to-br from-purple-600 to-indigo-600 flex flex-col justify-center items-center z-[100] hidden">
+        <div class="spinner"></div>
+        <p class="mt-6 text-white text-lg font-semibold">Memuat...</p>
+    </div>
 
+    <!-- Notifikasi Toast -->
+    <div id="toast" style="opacity: 0; transform: translateY(10px);">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Halaman Login & Registrasi -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <!-- Tampilan Login -->
+            <div id="login-view">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
+                        <i data-lucide="school" class="w-10 h-10 text-purple-600"></i>
+                    </div>
+                    <h2 class="text-4xl font-bold text-white mb-2">Selamat Datang</h2>
+                    <p class="text-purple-100">Masuk ke Sistem Absensi Sekolah</p>
+                </div>
+                
+                <div id="login-error" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg hidden flex items-center gap-2 transition-all"></div>
+                
+                <form id="login-form" class="space-y-5 glass-effect p-8 rounded-2xl">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email atau NISN</label>
+                        <input type="text" name="identifier" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                        <div class="relative">
+                            <input type="password" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
+                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg h-[50px] flex items-center justify-center">
+                        Masuk
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center text-sm space-y-3">
+                    <button id="show-forgot-password-button" class="text-white hover:text-purple-200 transition-colors font-medium">
+                        Lupa password?
+                    </button>
+                    <p class="text-purple-100">
+                        Belum punya akun? 
+                        <button id="show-signup-button" class="text-white hover:text-purple-200 transition-colors font-bold underline">
+                            Daftar di sini
+                        </button>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tampilan Registrasi -->
+            <div id="signup-view" class="hidden">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
+                        <i data-lucide="user-plus" class="w-10 h-10 text-purple-600"></i>
+                    </div>
+                    <h2 class="text-4xl font-bold text-white mb-2">Buat Akun</h2>
+                    <p class="text-purple-100">Daftar untuk menggunakan sistem</p>
+                </div>
+                
+                <div id="signup-error" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg hidden flex items-center gap-2 transition-all"></div>
+                
+                <form id="signup-form" class="space-y-5 glass-effect p-8 rounded-2xl">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                        <input type="email" name="email" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">NISN (10 digit)</label>
+                        <input type="text" name="nisn" required maxlength="10" pattern="\d{10}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all" placeholder="1234567890">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                        <div class="relative">
+                            <input type="password" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
+                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-2 ml-1">Minimal 8 karakter</p>
+                    </div>
+                    
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg h-[50px] flex items-center justify-center">
+                        Daftar Sekarang
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-purple-100">
+                        Sudah punya akun? 
+                        <button id="show-login-button" class="text-white hover:text-purple-200 transition-colors font-bold underline">
+                            Masuk di sini
+                        </button>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tampilan Lupa Password -->
+            <div id="forgot-password-view" class="hidden">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
+                        <i data-lucide="key" class="w-10 h-10 text-purple-600"></i>
+                    </div>
+                    <h2 class="text-4xl font-bold text-white mb-2">Reset Password</h2>
+                    <p class="text-purple-100">Masukkan email untuk reset password</p>
+                </div>
+                
+                <div id="forgot-error" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg hidden"></div>
+                
+                <form id="forgot-password-form" class="space-y-5 glass-effect p-8 rounded-2xl">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                        <input type="email" name="email" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
+                    </div>
+                    
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg h-[50px] flex items-center justify-center">
+                        Kirim Link Reset
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <button id="back-to-login-button" class="text-white hover:text-purple-200 transition-colors font-medium flex items-center gap-2 mx-auto">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Kembali ke login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aplikasi Utama -->
+    <div id="main-app" class="hidden min-h-screen bg-gray-50">
+        <header class="glass-effect sticky top-0 z-40 border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i data-lucide="school" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold gradient-text">Sistem Absensi</h1>
+                        <p class="text-sm text-gray-600">Selamat datang, <span id="welcome-message" class="font-semibold"></span></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="profile-button" class="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all shadow-md hover:shadow-lg">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Profil</span>
+                    </button>
+                    <button id="logout-button" class="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-md hover:shadow-lg">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Keluar</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tampilan Siswa -->
+        <div id="student-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+            <div class="glass-effect rounded-2xl p-6 sm:p-8 text-center shadow-xl card-hover">
+                <div class="mb-6">
+                    <h2 id="clock" class="clock-display gradient-text mb-2">00:00:00</h2>
+                    <p id="date" class="text-gray-600 text-lg">-</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="check-in-button" class="flex-1 sm:flex-initial px-8 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 h-[60px]">
+                        <i data-lucide="log-in" class="w-5 h-5"></i>
+                        Absen Masuk
+                    </button>
+                    <button id="check-out-button" class="flex-1 sm:flex-initial px-8 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 h-[60px]">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                        Absen Pulang
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div class="glass-effect rounded-2xl p-6 shadow-lg card-hover">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i data-lucide="clipboard-list" class="w-5 h-5 text-purple-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Riwayat Absensi Hari Ini</h3>
+                    </div>
+                    <div id="attendance-log-list" class="space-y-3"></div>
+                </div>
+
+                <div class="glass-effect rounded-2xl p-6 shadow-lg card-hover">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i data-lucide="calendar" class="w-5 h-5 text-purple-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Jadwal Pelajaran</h3>
+                    </div>
+                    <div class="overflow-x-auto -mx-2">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="p-3 text-left font-bold">Waktu</th>
+                                    <th class="p-3 text-center font-bold">Sen</th>
+                                    <th class="p-3 text-center font-bold">Sel</th>
+                                    <th class="p-3 text-center font-bold">Rab</th>
+                                    <th class="p-3 text-center font-bold">Kam</th>
+                                    <th class="p-3 text-center font-bold">Jum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tampilan Admin -->
+        <div id="admin-view" class="hidden max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+            <div class="glass-effect rounded-2xl p-6 shadow-lg">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">Data Absensi Hari Ini</h3>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button id="refresh-attendance-button" class="flex-1 sm:flex-initial px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            Refresh
+                        </button>
+                        <button id="export-csv-button" class="flex-1 sm:flex-initial px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            Export
+                        </button>
+                    </div>
+                </div>
+                
+                <input type="text" id="search-student-input" placeholder="🔍 Cari NISN, Nama, email, atau kelas..." class="w-full mb-4 px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
+                
+                <div class="overflow-x-auto -mx-2">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="p-3 text-left font-bold">NISN</th>
+                                <th class="p-3 text-left font-bold">Nama Siswa</th>
+                                <th class="p-3 text-left font-bold">Email</th>
+                                <th class="p-3 text-left font-bold">Kelas</th>
+                                <th class="p-3 text-left font-bold">Jenis</th>
+                                <th class="p-3 text-left font-bold">Waktu</th>
+                                <th class="p-3 text-left font-bold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-attendance-log-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass-effect rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="calendar-days" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">Kelola Jadwal Pelajaran</h3>
+                </div>
+                
+                <select id="admin-class-select" class="w-full mb-4 px-4 py-3 border-2 border-gray-200 rounded-xl transition-all font-semibold">
+                    <option value="" disabled selected>Pilih kelas...</option>
+                </select>
+                
+                <div id="admin-schedule-container" class="hidden">
+                    <div class="overflow-x-auto -mx-2 mb-4">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="border-b-2 border-gray-200">
+                                    <th class="p-3 text-left font-bold">Waktu</th>
+                                    <th class="p-3 text-center font-bold">Senin</th>
+                                    <th class="p-3 text-center font-bold">Selasa</th>
+                                    <th class="p-3 text-center font-bold">Rabu</th>
+                                    <th class="p-3 text-center font-bold">Kamis</th>
+                                    <th class="p-3 text-center font-bold">Jumat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-schedule-table-body"></tbody>
+                        </table>
+                    </div>
+                    
+                    <button id="save-schedule-button" class="w-full px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 h-[60px]">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        Simpan Jadwal
+                    </button>
+                    
+                    <p class="text-xs text-gray-500 mt-3 flex items-center gap-2">
+                        <i data-lucide="info" class="w-4 h-4"></i>
+                        Klik pada sel untuk mengedit jadwal, lalu klik simpan.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Profil -->
+    <div id="profile-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-effect rounded-2xl p-6 w-full max-w-md animate-slide-in">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="user-circle" class="w-6 h-6 text-purple-600"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Edit Profil</h2>
+                </div>
+                <button id="close-profile-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <form id="profile-form" class="space-y-4">
+                <div class="text-center">
+                    <div class="relative inline-block">
+                        <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-white shadow-md">
+                            <img id="profile-image-preview" class="w-full h-full object-cover hidden" alt="Profile">
+                            <i data-lucide="user" class="w-12 h-12 text-gray-400"></i>
+                        </div>
+                        <label class="absolute bottom-0 right-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-700 transition-colors shadow-lg">
+                            <i data-lucide="camera" class="w-4 h-4 text-white"></i>
+                            <input type="file" id="profile-image-input" name="profile_image" accept="image/*" class="hidden">
+                        </label>
+                    </div>
+                    <button type="button" id="remove-profile-image" class="hidden mt-2 text-sm text-red-600 hover:text-red-700 font-medium">
+                        Hapus Foto
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
+                    <input type="text" id="profile-name" name="full_name" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all" placeholder="Masukkan nama lengkap">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                    <input type="email" id="profile-email" name="email" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
+                    <p class="text-xs text-gray-500 mt-1">Perubahan email memerlukan verifikasi ulang.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">NISN</label>
+                    <input type="text" id="profile-nisn" name="nisn" maxlength="10" pattern="\d{10}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all" placeholder="10 digit NISN">
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="button" id="cancel-profile-button" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                        Batal
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg h-[50px] flex items-center justify-center">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Konfirmasi -->
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[99] flex items-center justify-center p-4">
+        <div class="glass-effect rounded-2xl p-6 w-full max-w-sm animate-slide-in text-center">
+            <h2 id="confirm-title" class="text-xl font-bold text-gray-800 mb-2"></h2>
+            <p id="confirm-message" class="text-gray-600 mb-6"></p>
+            <div class="flex gap-3">
+                <button id="cancel-button" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">Logout</button>
+                <button id="confirm-button" class="flex-1 px-4 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg">Coba Lagi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Perubahan: Menggunakan skrip biasa, bukan module.
+        // Inisialisasi client Supabase dari objek global yang dimuat di <head>.
+        const supabaseClient = supabase.createClient(
+            'https://qvunfkabbhulwqfnkren.supabase.co', 
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'
+        );
+
+        // --- UTILITIES & HELPERS ---
         const Validators = {
             email: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
             nisn: (nisn) => /^\d{10}$/.test(nisn),
@@ -186,7 +557,7 @@
                 console.error(`Error in ${context}:`, error);
                 const friendlyMessages = {
                     'Invalid login credentials': 'Email/NISN atau password salah',
-                    'Email not confirmed': 'Email belum diverifikasi',
+                    'Email not confirmed': 'Email belum diverifikasi. Cek inbox Anda.',
                     'User already registered': 'Email sudah terdaftar',
                     'Network request failed': 'Koneksi internet bermasalah',
                     'Failed to fetch': 'Gagal terhubung ke server',
@@ -197,10 +568,11 @@
                 for (const [key, message] of Object.entries(friendlyMessages)) {
                     if (error.message?.includes(key)) return message;
                 }
-                return `Terjadi kesalahan saat ${context}`;
+                return `Terjadi kesalahan saat ${context}. Coba lagi nanti.`;
             }
         }
         
+        // --- STATE MANAGEMENT ---
         const UIElements = {
             loadingScreen: document.getElementById('loading-screen'),
             loginPage: document.getElementById('login-page'),
@@ -240,7 +612,12 @@
             searchStudentInput: document.getElementById('search-student-input'),
             adminClassSelect: document.getElementById('admin-class-select'),
             adminScheduleContainer: document.getElementById('admin-schedule-container'),
-            exportCsvButton: document.getElementById('export-csv-button')
+            exportCsvButton: document.getElementById('export-csv-button'),
+            confirmationModal: document.getElementById('confirmation-modal'),
+            confirmTitle: document.getElementById('confirm-title'),
+            confirmMessage: document.getElementById('confirm-message'),
+            confirmButton: document.getElementById('confirm-button'),
+            cancelButton: document.getElementById('cancel-button')
         };
 
         const appState = {
@@ -252,9 +629,23 @@
             toastTimeout: null,
             attendanceSubscription: null,
             clockInterval: null,
-            selectedAdminClassId: null
+            selectedAdminClassId: null,
+            profileImageToDelete: false
         };
         
+        // --- UI MANIPULATION ---
+        function setButtonLoading(button, isLoading) {
+            if (!button) return;
+            if (isLoading) {
+                button.disabled = true;
+                button.dataset.originalText = button.innerHTML;
+                button.innerHTML = '<div class="btn-spinner mx-auto"></div>';
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.dataset.originalText || '';
+            }
+        }
+
         function showLoading(isLoading) { 
             UIElements.loadingScreen?.classList.toggle('hidden', !isLoading); 
         }
@@ -316,6 +707,30 @@
             }
         }
 
+        function showConfirmationModal(title, message, onConfirm, onCancel) {
+            UIElements.confirmTitle.textContent = title;
+            UIElements.confirmMessage.textContent = message;
+
+            const newConfirmButton = UIElements.confirmButton.cloneNode(true);
+            UIElements.confirmButton.parentNode.replaceChild(newConfirmButton, UIElements.confirmButton);
+            UIElements.confirmButton = newConfirmButton;
+
+            const newCancelButton = UIElements.cancelButton.cloneNode(true);
+            UIElements.cancelButton.parentNode.replaceChild(newCancelButton, UIElements.cancelButton);
+            UIElements.cancelButton = newCancelButton;
+
+            UIElements.confirmButton.addEventListener('click', () => {
+                onConfirm();
+                UIElements.confirmationModal.classList.add('hidden');
+            });
+            UIElements.cancelButton.addEventListener('click', () => {
+                onCancel();
+                UIElements.confirmationModal.classList.add('hidden');
+            });
+
+            UIElements.confirmationModal.classList.remove('hidden');
+        }
+
         function updateClock() {
             if (!UIElements.clock || !UIElements.date) return;
             const now = new Date();
@@ -332,134 +747,63 @@
             
             if (now.getSeconds() === 0) updateAttendanceButtons();
         }
-
+        
         async function initializeMainApp(user) {
             appState.currentUser = user;
-            console.log('Initializing app for user:', user.id);
-            console.log('User metadata:', user.user_metadata);
             showLoading(true);
 
             try {
-                // Coba fetch profile tanpa join dulu
-                let { data: profile, error } = await supabase
+                let { data: profile, error } = await supabaseClient
                     .from('profiles')
-                    .select('*')
+                    .select('*, classes(class_name)')
                     .eq('id', user.id)
                     .maybeSingle();
                 
-                console.log('Profile fetch result:', { profile, error });
-                    
-                if (error && error.code !== 'PGRST116') {
-                    console.error('Profile fetch error:', error);
-                    // Jangan throw, coba buat profile baru
-                }
+                if (error && error.code !== 'PGRST116') throw error;
                 
                 if (!profile) {
-                    // Profile belum ada, buat profile baru
-                    console.log('Profile not found, creating new profile...');
-                    
-                    // Ambil NISN dari user metadata atau localStorage
-                    const nisn = user.user_metadata?.nisn || 
-                                 localStorage.getItem(`pending_nisn_${user.id}`) || 
-                                 null;
-                    
-                    console.log('NISN to use:', nisn);
-                    
-                    const { data: newProfile, error: createError } = await supabase
+                    console.warn('Profile not found for new user, creating one...');
+                    const nisn = localStorage.getItem(`pending_nisn_${user.id}`);
+                    const { data: newProfile, error: createError } = await supabaseClient
                         .from('profiles')
-                        .insert({
-                            id: user.id,
-                            email: user.email,
-                            nisn: nisn,
-                            role: 'student'
-                        })
-                        .select()
-                        .maybeSingle();
+                        .insert({ id: user.id, email: user.email, nisn: nisn, role: 'student' })
+                        .select('*, classes(class_name)')
+                        .single();
                     
-                    if (createError) {
-                        console.error('Create profile error:', createError);
-                        
-                        // Jika error bukan duplicate, throw
-                        if (createError.code !== '23505') {
-                            throw new Error("Gagal membuat profil: " + createError.message);
-                        }
-                        
-                        // Jika duplicate, coba fetch lagi
-                        console.log('Duplicate error, fetching again...');
-                        const { data: retryProfile } = await supabase
-                            .from('profiles')
-                            .select('*')
-                            .eq('id', user.id)
-                            .maybeSingle();
-                        
-                        profile = retryProfile;
-                    } else {
-                        profile = newProfile;
-                        console.log('New profile created:', profile);
-                        
-                        // Hapus pending NISN dari localStorage
-                        try {
-                            localStorage.removeItem(`pending_nisn_${user.id}`);
-                        } catch (e) {
-                            console.warn('Cannot remove from localStorage:', e);
-                        }
-                    }
-                }
-                
-                if (!profile) {
-                    throw new Error("Profil pengguna tidak ditemukan dan gagal dibuat");
-                }
-                
-                // Fetch class info jika ada class_id
-                if (profile.class_id) {
-                    const { data: classData } = await supabase
-                        .from('classes')
-                        .select('class_name')
-                        .eq('id', profile.class_id)
-                        .maybeSingle();
-                    
-                    if (classData) {
-                        profile.classes = classData;
-                    }
+                    if (createError) throw createError;
+                    profile = newProfile;
+                    localStorage.removeItem(`pending_nisn_${user.id}`);
                 }
                 
                 appState.profile = profile;
-                console.log('Profile loaded:', profile);
                 
-                const displayName = profile.nisn || profile.email?.split('@')[0] || 'User';
+                const displayName = profile.full_name || profile.nisn || profile.email?.split('@')[0] || 'User';
                 UIElements.welcomeMessage.textContent = displayName;
 
                 if (appState.profile.role === 'admin') {
-                    console.log('Loading admin view...');
-                    await Promise.allSettled([
+                    await Promise.all([
                         fetchAllTodayAttendance().then(() => renderAllAttendanceLog()),
                         populateAdminClassesDropdown()
                     ]);
                     subscribeToAttendanceChanges();
                 } else {
-                    console.log('Loading student view...');
-                    await Promise.allSettled([
+                    await Promise.all([
                         fetchTodayAttendance().then(() => renderAttendanceLog()),
                         fetchSchedule().then(() => renderSchedule(UIElements.scheduleTableBody, false))
                     ]);
                     updateAttendanceButtons();
                 }
                 
-                console.log('Navigating to app...');
                 navigateTo('app');
-                console.log('App initialized successfully');
             } catch (err) {
                 console.error('App initialization error:', err);
-                showToast(ErrorHandler.handle(err, 'inisialisasi aplikasi'), "error");
-                
-                // Beri opsi untuk retry atau logout
-                setTimeout(() => {
-                    if (confirm('Gagal memuat data. Coba lagi?')) {
-                        initializeMainApp(user);
-                    } else {
-                        handleLogout();
-                    }
-                }, 1500);
+                const friendlyError = ErrorHandler.handle(err, 'inisialisasi aplikasi');
+                showConfirmationModal(
+                    'Gagal Memuat Data',
+                    `${friendlyError}. Apakah Anda ingin mencoba lagi?`,
+                    () => initializeMainApp(user),
+                    () => handleLogout()
+                );
             } finally {
                 showLoading(false);
             }
@@ -471,7 +815,7 @@
                 return;
             }
             
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('schedules')
                 .select('data')
                 .eq('class_id', appState.profile.class_id)
@@ -483,7 +827,7 @@
         }
         
         async function populateAdminClassesDropdown() {
-            const { data: classes, error } = await supabase
+            const { data: classes, error } = await supabaseClient
                 .from('classes')
                 .select('id, class_name')
                 .order('class_name');
@@ -508,7 +852,7 @@
             ];
             
             if (!appState.scheduleData) {
-                tbody.innerHTML = `<tr><td colspan="${days.length + 1}" class="text-center p-6 text-gray-500">Jadwal belum diatur</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${days.length + 1}" class="text-center p-6 text-gray-500">Jadwal belum diatur untuk kelas ini</td></tr>`;
                 return;
             }
 
@@ -529,7 +873,7 @@
                     }
                     
                     if (subject.toLowerCase().includes('istirahat')) {
-                        cell.classList.add('bg-gray-50', 'text-gray-500', 'italic');
+                        cell.classList.add('bg-gray-100', 'text-gray-500', 'italic');
                     }
                     
                     if (isEditable && !subject.toLowerCase().includes('istirahat')) {
@@ -547,7 +891,7 @@
         async function fetchTodayAttendance() {
             if (!appState.currentUser) return;
             
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('attendance_log')
                 .select('*')
                 .eq('user_id', appState.currentUser.id)
@@ -585,7 +929,7 @@
                 
                 div.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border">
                             <i data-lucide="${icon}" class="w-5 h-5 text-purple-600"></i>
                         </div>
                         <div>
@@ -611,27 +955,22 @@
             UIElements.checkInButton.disabled = hasCheckedIn;
             UIElements.checkOutButton.disabled = !hasCheckedIn || hasCheckedOut;
             
-            if (hasCheckedIn) {
-                UIElements.checkInButton.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                UIElements.checkInButton.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+            UIElements.checkInButton.classList.toggle('opacity-50', hasCheckedIn);
+            UIElements.checkInButton.classList.toggle('cursor-not-allowed', hasCheckedIn);
             
-            if (!hasCheckedIn || hasCheckedOut) {
-                UIElements.checkOutButton.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                UIElements.checkOutButton.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+            const isCheckOutDisabled = !hasCheckedIn || hasCheckedOut;
+            UIElements.checkOutButton.classList.toggle('opacity-50', isCheckOutDisabled);
+            UIElements.checkOutButton.classList.toggle('cursor-not-allowed', isCheckOutDisabled);
         }
         
         async function fetchAllTodayAttendance() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('attendance_log')
-                .select('*, profiles(nisn, email, classes(class_name))')
+                .select('*, profiles(full_name, nisn, email, classes(class_name))')
                 .eq('log_date', new Date().toISOString().slice(0, 10))
                 .order('log_time', { ascending: false });
                 
-            if (error) throw new Error("Gagal mengambil data absensi");
+            if (error) throw new Error("Gagal mengambil semua data absensi");
             
             appState.allAttendanceLogs = data || [];
         }
@@ -643,15 +982,17 @@
             
             const filtered = appState.allAttendanceLogs.filter(log => {
                 const searchTerm = filter.toLowerCase();
+                const studentName = log.profiles?.full_name?.toLowerCase() || '';
                 return log.profiles?.nisn?.includes(searchTerm) ||
                        log.profiles?.email?.toLowerCase().includes(searchTerm) ||
+                       studentName.includes(searchTerm) ||
                        log.profiles?.classes?.class_name?.toLowerCase().includes(searchTerm);
             });
             
             if (filtered.length === 0) {
                 UIElements.adminAttendanceLogBody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center p-8">
+                        <td colspan="7" class="text-center p-8">
                             <i data-lucide="search-x" class="w-12 h-12 mx-auto text-gray-300 mb-2"></i>
                             <p class="text-gray-500">${filter ? 'Tidak ada data yang sesuai' : 'Belum ada data absensi hari ini'}</p>
                         </td>
@@ -668,7 +1009,8 @@
                 const statusClass = log.status.includes('Tepat') ? 'status-success' : log.status.includes('Awal') ? 'status-danger' : 'status-warning';
                 
                 row.innerHTML = `
-                    <td class="p-3 font-mono">${log.profiles?.nisn || '-'}</td>
+                    <td class="p-3 font-mono text-gray-700">${log.profiles?.nisn || '-'}</td>
+                    <td class="p-3 font-semibold">${log.profiles?.full_name || log.profiles?.email || '-'}</td>
                     <td class="p-3">${log.profiles?.email || '-'}</td>
                     <td class="p-3"><span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">${log.profiles?.classes?.class_name || '-'}</span></td>
                     <td class="p-3">${log.type === 'check_in' ? 'Masuk' : 'Pulang'}</td>
@@ -683,251 +1025,173 @@
         async function handleLogin(event) {
             event.preventDefault();
             UIElements.loginError.classList.add('hidden');
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            setButtonLoading(submitButton, true);
             
             const formData = new FormData(event.target);
             const identifier = formData.get('identifier');
             const password = formData.get('password');
             
-            console.log('Login attempt with:', identifier);
-            
-            showLoading(true);
-            
             try {
                 let email = identifier;
                 
-                // Jika input bukan email, cari email berdasarkan NISN
                 if (!identifier.includes('@')) {
                     if (!Validators.nisn(identifier)) {
-                        throw new Error('NISN tidak valid. Harus 10 digit');
+                        throw new Error('NISN tidak valid. Harus 10 digit angka.');
                     }
                     
-                    const { data: profile, error } = await supabase
+                    const { data: profile, error } = await supabaseClient
                         .from('profiles')
                         .select('email')
                         .eq('nisn', identifier)
                         .single();
                     
-                    console.log('Profile lookup result:', { profile, error });
-                        
                     if (error || !profile) {
                         throw new Error('NISN tidak ditemukan. Pastikan Anda sudah terdaftar.');
                     }
                     
                     email = profile.email;
-                    console.log('Found email:', email);
                 }
                 
-                // Login dengan email dan password
-                const { data, error } = await supabase.auth.signInWithPassword({ 
-                    email, 
-                    password 
-                });
-                
-                console.log('Login result:', { data, error });
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                 
                 if (error) throw error;
-                
-                if (data.user) {
-                    console.log('Login successful, initializing app...');
-                    await initializeMainApp(data.user);
-                } else {
-                    throw new Error('Login gagal. Data user tidak ditemukan.');
-                }
+                if (!data.user) throw new Error('Login gagal. Data user tidak ditemukan.');
+
+                await initializeMainApp(data.user);
                 
             } catch (error) {
-                console.error('Login error:', error);
                 const errorMsg = ErrorHandler.handle(error, 'login');
                 UIElements.loginError.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${errorMsg}</span>`;
                 UIElements.loginError.classList.remove('hidden');
                 lucide.createIcons();
             } finally {
-                showLoading(false);
+                setButtonLoading(submitButton, false);
             }
         }
         
         async function handleSignUp(event) {
             event.preventDefault();
             UIElements.signupError.classList.add('hidden');
-            
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            setButtonLoading(submitButton, true);
+
             const formData = new FormData(event.target);
             const email = formData.get('email');
             const password = formData.get('password');
             const nisn = formData.get('nisn');
 
-            const validationRules = { 
-                email: ['notEmpty', 'email'], 
-                password: ['notEmpty', 'password'], 
-                nisn: ['notEmpty', 'nisn'] 
-            };
-            
-            const errors = [];
-            for (const [field, rules] of Object.entries(validationRules)) {
-                const value = field === 'email' ? email : field === 'password' ? password : nisn;
-                for (const rule of rules) {
-                    if (!Validators[rule](value)) {
-                        errors.push(ValidationMessages[rule]);
-                        break;
-                    }
-                }
-            }
-
-            if (errors.length > 0) {
-                UIElements.signupError.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${errors[0]}</span>`;
-                UIElements.signupError.classList.remove('hidden');
-                lucide.createIcons();
-                return;
-            }
-            
-            showLoading(true);
-            
             try {
-                console.log('Starting signup process for:', email);
+                if (!Validators.email(email)) throw new Error(ValidationMessages.email);
+                if (!Validators.nisn(nisn)) throw new Error(ValidationMessages.nisn);
+                if (!Validators.password(password)) throw new Error(ValidationMessages.password);
                 
-                // Sign up user
-                const { data, error: signUpError } = await supabase.auth.signUp({ 
+                const { data, error: signUpError } = await supabaseClient.auth.signUp({ 
                     email, 
                     password,
                     options: {
-                        emailRedirectTo: window.location.origin,
-                        data: {
-                            nisn: nisn,
-                            role: 'student',
-                            email: email
-                        }
+                        emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+                        data: { nisn, role: 'student', email }
                     }
                 });
                 
-                console.log('Signup result:', { data, error: signUpError });
+                if (signUpError) throw signUpError;
+                if (!data.user) throw new Error('Pendaftaran gagal. User tidak berhasil dibuat.');
                 
-                if (signUpError) {
-                    console.error('Signup error:', signUpError);
-                    
-                    // Cek apakah user sudah ada
-                    if (signUpError.message?.includes('already registered')) {
-                        throw new Error('Email sudah terdaftar. Silakan login atau gunakan email lain.');
-                    }
-                    
-                    throw signUpError;
-                }
+                localStorage.setItem(`pending_nisn_${data.user.id}`, nisn);
                 
-                if (!data || !data.user) {
-                    throw new Error('Pendaftaran gagal. User tidak ter-create.');
-                }
+                const toastMessage = data.user.identities?.length === 0 
+                    ? '✅ Pendaftaran berhasil! Cek email untuk verifikasi, lalu login.' 
+                    : '✅ Pendaftaran berhasil! Silakan login.';
                 
-                console.log('User created successfully:', data.user.id);
-                console.log('User metadata:', data.user.user_metadata);
-                
-                // Simpan NISN ke localStorage sementara untuk digunakan saat login
-                try {
-                    localStorage.setItem(`pending_nisn_${data.user.id}`, nisn);
-                } catch (e) {
-                    console.warn('Cannot save to localStorage:', e);
-                }
-                
-                console.log('Signup completed successfully!');
-                showToast('✅ Pendaftaran berhasil! Silakan login dengan email dan password Anda', 'success');
+                showToast(toastMessage, 'success');
                 event.target.reset();
-                
-                // Tunggu sebentar sebelum pindah ke login
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                showAuthView('login');
+                setTimeout(() => showAuthView('login'), 1500);
                 
             } catch(error) {
-                console.error('Signup error:', error);
                 const errorMsg = ErrorHandler.handle(error, 'pendaftaran');
                 UIElements.signupError.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${errorMsg}</span>`;
                 UIElements.signupError.classList.remove('hidden');
                 lucide.createIcons();
             } finally {
-                showLoading(false);
+                setButtonLoading(submitButton, false);
             }
         }
         
         async function handlePasswordReset(event) {
             event.preventDefault();
             UIElements.forgotError?.classList.add('hidden');
-            
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            setButtonLoading(submitButton, true);
+
             const formData = new FormData(event.target);
             const email = formData.get('email');
             
-            if (!Validators.email(email)) {
-                showToast(ValidationMessages.email, 'error');
-                return;
-            }
-            
-            showLoading(true);
-            
             try {
-                const { error } = await supabase.auth.resetPasswordForEmail(email, { 
-                    redirectTo: window.location.origin 
+                if (!Validators.email(email)) {
+                    throw new Error(ValidationMessages.email);
+                }
+                
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { 
+                    redirectTo: `${window.location.origin}${window.location.pathname}`
                 });
                 
                 if (error) throw error;
                 
-                showToast("Link reset password telah dikirim ke email", "info");
+                showToast(`Link reset password telah dikirim ke ${email}`, "info");
                 event.target.reset();
                 showAuthView('login');
             } catch (error) {
                 showToast(ErrorHandler.handle(error, 'reset password'), "error");
             } finally {
-                showLoading(false);
+                setButtonLoading(submitButton, false);
             }
         }
         
         async function handleLogout() {
             if (appState.attendanceSubscription) {
-                supabase.removeChannel(appState.attendanceSubscription);
+                supabaseClient.removeChannel(appState.attendanceSubscription);
+                appState.attendanceSubscription = null;
             }
+            if (appState.clockInterval) {
+                clearInterval(appState.clockInterval);
+                appState.clockInterval = null;
+            }
+
+            await supabaseClient.auth.signOut();
             
-            if (appState.clockInterval) clearInterval(appState.clockInterval);
-            
-            appState.attendanceSubscription = null;
-            appState.clockInterval = null;
-            
-            await supabase.auth.signOut();
-            
-            Object.keys(appState).forEach(k => {
-                if(typeof appState[k] === 'object' && appState[k] !== null) {
-                    appState[k] = Array.isArray(appState[k]) ? [] : {};
-                } else {
-                    appState[k] = null;
-                }
-            });
+            Object.keys(appState).forEach(key => appState[key] = null);
+            appState.attendanceLogs = [];
+            appState.allAttendanceLogs = [];
             
             navigateTo('login');
         }
 
         async function handleAttendance(type) {
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            
-            let status;
-            if (type === 'check_in') {
-                status = (hours < 7 || (hours === 7 && minutes <= 15)) 
-                    ? 'Tepat Waktu' 
-                    : 'Terlambat';
-            } else {
-                status = hours >= 15 
-                    ? 'Pulang Tepat Waktu' 
-                    : 'Pulang Lebih Awal';
-            }
-            
-            const record = { 
-                user_id: appState.currentUser.id, 
-                type, 
-                status, 
-                log_time: now.toTimeString().slice(0, 8), 
-                log_date: now.toISOString().slice(0, 10) 
-            };
-            
-            showLoading(true);
-            
+            const button = type === 'check_in' ? UIElements.checkInButton : UIElements.checkOutButton;
+            setButtonLoading(button, true);
+
             try {
-                const { error } = await supabase
-                    .from('attendance_log')
-                    .insert(record);
-                    
+                const now = new Date();
+                const hours = now.getHours();
+                const minutes = now.getMinutes();
+                
+                let status;
+                if (type === 'check_in') {
+                    status = (hours < 7 || (hours === 7 && minutes <= 15)) ? 'Tepat Waktu' : 'Terlambat';
+                } else {
+                    status = hours >= 15 ? 'Pulang Tepat Waktu' : 'Pulang Lebih Awal';
+                }
+                
+                const record = { 
+                    user_id: appState.currentUser.id, 
+                    type, 
+                    status, 
+                    log_time: now.toTimeString().slice(0, 8), 
+                    log_date: now.toISOString().slice(0, 10) 
+                };
+                
+                const { error } = await supabaseClient.from('attendance_log').insert(record);
                 if (error) throw error;
                 
                 showToast(`Berhasil ${type === 'check_in' ? 'absen masuk' : 'absen pulang'}!`, 'success');
@@ -938,26 +1202,20 @@
             } catch (error) {
                 showToast(ErrorHandler.handle(error, 'absensi'), 'error');
             } finally {
-                showLoading(false);
+                setButtonLoading(button, false);
             }
         }
 
-        async function handleUpdateSchedule() {
+        async function handleUpdateSchedule(event) {
+            const button = event.target;
             if (!appState.selectedAdminClassId) { 
                 showToast("Pilih kelas terlebih dahulu", "error"); 
                 return; 
             }
             
-            showLoading(true);
+            setButtonLoading(button, true);
             
-            const newScheduleData = { 
-                Senin: [], 
-                Selasa: [], 
-                Rabu: [], 
-                Kamis: [], 
-                Jumat: [] 
-            };
-            
+            const newScheduleData = { Senin: [], Selasa: [], Rabu: [], Kamis: [], Jumat: [] };
             const rows = UIElements.adminScheduleTableBody.querySelectorAll('tr');
             const days = Object.keys(newScheduleData);
             
@@ -968,14 +1226,12 @@
             });
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('schedules')
                     .upsert({ 
                         class_id: appState.selectedAdminClassId, 
                         data: newScheduleData 
-                    }, { 
-                        onConflict: 'class_id' 
-                    });
+                    }, { onConflict: 'class_id' });
                     
                 if (error) throw error;
                 
@@ -984,7 +1240,7 @@
             } catch(error) {
                 showToast(ErrorHandler.handle(error, 'menyimpan jadwal'), 'error');
             } finally {
-                showLoading(false);
+                setButtonLoading(button, false);
             }
         }
         
@@ -996,7 +1252,7 @@
             showLoading(true);
             
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('schedules')
                     .select('data')
                     .eq('class_id', classId)
@@ -1022,9 +1278,10 @@
                 return;
             }
             
-            const headers = ['NISN', 'Email', 'Kelas', 'Jenis', 'Waktu', 'Status', 'Tanggal'];
+            const headers = ['NISN', 'Nama Siswa', 'Email', 'Kelas', 'Jenis', 'Waktu', 'Status', 'Tanggal'];
             const rows = appState.allAttendanceLogs.map(log => [
                 log.profiles?.nisn || '-',
+                log.profiles?.full_name || '-',
                 log.profiles?.email || '-',
                 log.profiles?.classes?.class_name || '-',
                 log.type === 'check_in' ? 'Masuk' : 'Pulang',
@@ -1035,7 +1292,7 @@
             
             const csvContent = [
                 headers.join(','),
-                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+                ...rows.map(row => row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(','))
             ].join('\n');
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1053,16 +1310,139 @@
             showToast('Data berhasil diekspor', 'success');
         }
         
+        function openProfileModal() {
+            if (!appState.profile) return;
+            
+            UIElements.profileModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            document.getElementById('profile-name').value = appState.profile.full_name || '';
+            document.getElementById('profile-email').value = appState.profile.email || '';
+            document.getElementById('profile-nisn').value = appState.profile.nisn || '';
+            
+            if (appState.profile.avatar_url) {
+                UIElements.profileImagePreview.src = appState.profile.avatar_url;
+                UIElements.profileImagePreview.classList.remove('hidden');
+                UIElements.removeProfileImage.classList.remove('hidden');
+            } else {
+                UIElements.profileImagePreview.classList.add('hidden');
+                UIElements.removeProfileImage.classList.add('hidden');
+                UIElements.profileImagePreview.src = '';
+            }
+        }
+        
+        function closeProfileModal() {
+            UIElements.profileModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function handleProfileImageChange(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                showToast('File harus berupa gambar', 'error');
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) { // 2MB
+                showToast('Ukuran gambar maksimal 2MB', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                UIElements.profileImagePreview.src = e.target.result;
+                UIElements.profileImagePreview.classList.remove('hidden');
+                UIElements.removeProfileImage.classList.remove('hidden');
+                appState.profileImageToDelete = false;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function removeProfileImage() {
+            UIElements.profileImagePreview.src = '';
+            UIElements.profileImagePreview.classList.add('hidden');
+            UIElements.removeProfileImage.classList.add('hidden');
+            UIElements.profileImageInput.value = '';
+            appState.profileImageToDelete = true;
+        }
+        
+        async function handleProfileUpdate(event) {
+            event.preventDefault();
+            const button = event.target.querySelector('button[type="submit"]');
+            setButtonLoading(button, true);
+            
+            try {
+                const formData = new FormData(event.target);
+                const fullName = formData.get('full_name');
+                const email = formData.get('email');
+                const nisn = formData.get('nisn');
+                const imageFile = formData.get('profile_image');
+                
+                let avatarUrl = appState.profile.avatar_url;
+                
+                if (imageFile && imageFile.size > 0) {
+                    const fileExt = imageFile.name.split('.').pop();
+                    const fileName = `${appState.currentUser.id}-${Date.now()}.${fileExt}`;
+                    const filePath = `avatars/${fileName}`;
+                    
+                    if (appState.profile.avatar_url) {
+                        const oldPath = appState.profile.avatar_url.split('/').pop();
+                        await supabaseClient.storage.from('avatars').remove([`avatars/${oldPath}`]);
+                    }
+                    
+                    const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(filePath, imageFile);
+                    if (uploadError) throw uploadError;
+                    
+                    const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+                    avatarUrl = urlData.publicUrl;
+                } else if (appState.profileImageToDelete && appState.profile.avatar_url) {
+                    const oldPath = appState.profile.avatar_url.split('/').pop();
+                    await supabaseClient.storage.from('avatars').remove([`avatars/${oldPath}`]);
+                    avatarUrl = null;
+                }
+                
+                const { error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({ full_name: fullName, email, nisn, avatar_url: avatarUrl })
+                    .eq('id', appState.currentUser.id);
+                
+                if (updateError) throw updateError;
+                
+                if (email !== appState.currentUser.email) {
+                    await supabaseClient.auth.updateUser({ email });
+                    showToast('Profil diperbarui! Cek email untuk konfirmasi perubahan email', 'info');
+                }
+                
+                appState.profile.full_name = fullName;
+                appState.profile.email = email;
+                appState.profile.nisn = nisn;
+                appState.profile.avatar_url = avatarUrl;
+                appState.profileImageToDelete = false;
+                
+                const displayName = fullName || nisn || email.split('@')[0];
+                UIElements.welcomeMessage.textContent = displayName;
+                
+                showToast('✅ Profil berhasil diperbarui!', 'success');
+                closeProfileModal();
+                
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'memperbarui profil'), 'error');
+            } finally {
+                setButtonLoading(button, false);
+            }
+        }
+        
         function subscribeToAttendanceChanges() {
-            appState.attendanceSubscription = supabase
+            if (appState.attendanceSubscription) {
+                supabaseClient.removeChannel(appState.attendanceSubscription);
+            }
+            appState.attendanceSubscription = supabaseClient
                 .channel('attendance-changes')
                 .on('postgres_changes', 
-                    { 
-                        event: '*', 
-                        schema: 'public', 
-                        table: 'attendance_log' 
-                    }, 
+                    { event: '*', schema: 'public', table: 'attendance_log' }, 
                     async (payload) => {
+                        console.log('Realtime change received:', payload);
                         await fetchAllTodayAttendance();
                         renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
                     }
@@ -1071,19 +1451,20 @@
         }
 
         async function checkUserSession() {
-            if (SUPABASE_URL.includes('URL_PROYEK_ANDA') || 
-                SUPABASE_ANON_KEY.includes('KUNCI_ANON_ANDA')) {
+            const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
+            if (SUPABASE_URL.includes('URL_PROYEK_ANDA') || SUPABASE_ANON_KEY.includes('KUNCI_ANON_ANDA')) {
                 document.body.innerHTML = `
                     <div class="h-screen bg-red-100 flex flex-col items-center justify-center p-4 text-center">
                         <h1 class="text-2xl font-bold text-red-800 mb-2">Konfigurasi Diperlukan</h1>
-                        <p class="text-red-700">Harap masukkan Supabase URL dan Anon Key di dalam file HTML</p>
+                        <p class="text-red-700">Harap masukkan Supabase URL dan Anon Key Anda di dalam file HTML pada bagian &lt;script&gt;.</p>
                     </div>
                 `;
                 return;
             }
             
             showLoading(true);
-            const { data } = await supabase.auth.getSession();
+            const { data } = await supabaseClient.auth.getSession();
             
             if (data.session?.user) {
                 await initializeMainApp(data.session.user);
@@ -1107,6 +1488,17 @@
             UIElements.saveScheduleButton?.addEventListener('click', handleUpdateSchedule);
             UIElements.adminClassSelect?.addEventListener('change', handleAdminClassSelect);
             UIElements.exportCsvButton?.addEventListener('click', exportToCSV);
+            UIElements.profileButton?.addEventListener('click', openProfileModal);
+            UIElements.closeProfileModal?.addEventListener('click', closeProfileModal);
+            UIElements.profileForm?.addEventListener('submit', handleProfileUpdate);
+            UIElements.profileImageInput?.addEventListener('change', handleProfileImageChange);
+            UIElements.removeProfileImage?.addEventListener('click', removeProfileImage);
+            
+            document.getElementById('cancel-profile-button')?.addEventListener('click', closeProfileModal);
+            
+            UIElements.profileModal?.addEventListener('click', (e) => {
+                if (e.target === UIElements.profileModal) closeProfileModal();
+            });
             
             UIElements.refreshAttendanceButton?.addEventListener('click', async () => {
                 showToast('Memuat ulang...', 'info');
@@ -1118,36 +1510,19 @@
                 renderAllAttendanceLog(e.target.value);
             });
             
-            document.getElementById('show-signup-button')?.addEventListener('click', () => {
-                showAuthView('signup');
-            });
-            
-            document.getElementById('show-login-button')?.addEventListener('click', () => {
-                showAuthView('login');
-            });
-            
-            document.getElementById('show-forgot-password-button')?.addEventListener('click', () => {
-                showAuthView('forgotPassword');
-            });
-            
-            document.getElementById('back-to-login-button')?.addEventListener('click', () => {
-                showAuthView('login');
-            });
+            document.getElementById('show-signup-button')?.addEventListener('click', () => showAuthView('signup'));
+            document.getElementById('show-login-button')?.addEventListener('click', () => showAuthView('login'));
+            document.getElementById('show-forgot-password-button')?.addEventListener('click', () => showAuthView('forgotPassword'));
+            document.getElementById('back-to-login-button')?.addEventListener('click', () => showAuthView('login'));
             
             document.querySelectorAll('.toggle-password').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const input = this.previousElementSibling;
+                    const input = this.parentElement.querySelector('input');
                     const icon = this.querySelector('i');
-                    
                     if (input && icon) {
-                        if (input.type === 'password') {
-                            input.type = 'text';
-                            icon.setAttribute('data-lucide', 'eye-off');
-                        } else {
-                            input.type = 'password';
-                            icon.setAttribute('data-lucide', 'eye');
-                        }
-                        
+                        const isPassword = input.type === 'password';
+                        input.type = isPassword ? 'text' : 'password';
+                        icon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
                         lucide.createIcons();
                     }
                 });
@@ -1156,306 +1531,6 @@
             lucide.createIcons();
         });
     </script>
-</head>
-<body>
-
-    <div id="loading-screen" class="fixed inset-0 bg-gradient-to-br from-purple-600 to-indigo-600 flex flex-col justify-center items-center z-50 hidden">
-        <div class="spinner"></div>
-        <p class="mt-6 text-white text-lg font-semibold">Memuat...</p>
-    </div>
-
-    <div id="toast" style="opacity: 0; transform: translateY(10px);"></div>
-
-    <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
-        <div class="w-full max-w-md">
-            <div id="login-view">
-                <div class="text-center mb-8">
-                    <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="school" class="w-10 h-10 text-purple-600"></i>
-                    </div>
-                    <h2 class="text-4xl font-bold text-white mb-2">Selamat Datang</h2>
-                    <p class="text-purple-100">Masuk ke Sistem Absensi Sekolah</p>
-                </div>
-                
-                <div id="login-error" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg hidden flex items-center gap-2">
-                    <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                    <span></span>
-                </div>
-                
-                <form id="login-form" class="space-y-5 glass-effect p-8 rounded-2xl">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email atau NISN</label>
-                        <input type="text" name="identifier" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all focus:border-purple-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                        <div class="relative">
-                            <input type="password" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all focus:border-purple-500">
-                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                                <i data-lucide="eye" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">
-                        Masuk
-                    </button>
-                </form>
-                
-                <div class="mt-6 text-center text-sm space-y-3">
-                    <button id="show-forgot-password-button" class="text-white hover:text-purple-200 transition-colors font-medium">
-                        Lupa password?
-                    </button>
-                    <p class="text-purple-100">
-                        Belum punya akun? 
-                        <button id="show-signup-button" class="text-white hover:text-purple-200 transition-colors font-bold underline">
-                            Daftar di sini
-                        </button>
-                    </p>
-                </div>
-            </div>
-
-            <div id="signup-view" class="hidden">
-                <div class="text-center mb-8">
-                    <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="user-plus" class="w-10 h-10 text-purple-600"></i>
-                    </div>
-                    <h2 class="text-4xl font-bold text-white mb-2">Buat Akun</h2>
-                    <p class="text-purple-100">Daftar untuk menggunakan sistem</p>
-                </div>
-                
-                <div id="signup-error" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg hidden flex items-center gap-2">
-                    <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                    <span></span>
-                </div>
-                
-                <form id="signup-form" class="space-y-5 glass-effect p-8 rounded-2xl">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                        <input type="email" name="email" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all focus:border-purple-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">NISN (10 digit)</label>
-                        <input type="text" name="nisn" required maxlength="10" pattern="\d{10}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all focus:border-purple-500" placeholder="1234567890">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                        <div class="relative">
-                            <input type="password" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all focus:border-purple-500">
-                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                                <i data-lucide="eye" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                        <p class="text-xs text-gray-600 mt-2 ml-1">Minimal 8 karakter</p>
-                    </div>
-                    
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">
-                        Daftar Sekarang
-                    </button>
-                </form>
-                
-                <div class="mt-6 text-center">
-                    <p class="text-purple-100">
-                        Sudah punya akun? 
-                        <button id="show-login-button" class="text-white hover:text-purple-200 transition-colors font-bold underline">
-                            Masuk di sini
-                        </button>
-                    </p>
-                </div>
-            </div>
-
-            <div id="forgot-password-view" class="hidden">
-                <div class="text-center mb-8">
-                    <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="key" class="w-10 h-10 text-purple-600"></i>
-                    </div>
-                    <h2 class="text-4xl font-bold text-white mb-2">Reset Password</h2>
-                    <p class="text-purple-100">Masukkan email untuk reset password</p>
-                </div>
-                
-                <div id="forgot-error" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg hidden"></div>
-                
-                <form id="forgot-password-form" class="space-y-5 glass-effect p-8 rounded-2xl">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                        <input type="email" name="email" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all focus:border-purple-500">
-                    </div>
-                    
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">
-                        Kirim Link Reset
-                    </button>
-                </form>
-                
-                <div class="mt-6 text-center">
-                    <button id="back-to-login-button" class="text-white hover:text-purple-200 transition-colors font-medium flex items-center gap-2 mx-auto">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        Kembali ke login
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="main-app" class="hidden min-h-screen bg-gray-50">
-        <header class="glass-effect sticky top-0 z-40 border-b border-gray-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <i data-lucide="school" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold gradient-text">Sistem Absensi</h1>
-                        <p class="text-sm text-gray-600">Selamat datang, <span id="welcome-message" class="font-semibold"></span></p>
-                    </div>
-                </div>
-                <button id="logout-button" class="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-md hover:shadow-lg">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Keluar</span>
-                </button>
-            </div>
-        </header>
-
-        <div id="student-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
-            <div class="glass-effect rounded-2xl p-6 sm:p-8 text-center shadow-xl card-hover">
-                <div class="mb-6">
-                    <h2 id="clock" class="clock-display gradient-text mb-2">00:00:00</h2>
-                    <p id="date" class="text-gray-600 text-lg">-</p>
-                </div>
-                
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button id="check-in-button" class="flex-1 sm:flex-initial px-8 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="log-in" class="w-5 h-5"></i>
-                        Absen Masuk
-                    </button>
-                    <button id="check-out-button" class="flex-1 sm:flex-initial px-8 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="log-out" class="w-5 h-5"></i>
-                        Absen Pulang
-                    </button>
-                </div>
-            </div>
-
-            <div class="grid lg:grid-cols-2 gap-6">
-                <div class="glass-effect rounded-2xl p-6 shadow-lg card-hover">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <i data-lucide="clipboard-list" class="w-5 h-5 text-purple-600"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-800">Riwayat Absensi Hari Ini</h3>
-                    </div>
-                    <div id="attendance-log-list" class="space-y-3"></div>
-                </div>
-
-                <div class="glass-effect rounded-2xl p-6 shadow-lg card-hover">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <i data-lucide="calendar" class="w-5 h-5 text-purple-600"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-800">Jadwal Pelajaran</h3>
-                    </div>
-                    <div class="overflow-x-auto -mx-2">
-                        <table class="w-full text-xs">
-                            <thead>
-                                <tr class="border-b-2 border-gray-200">
-                                    <th class="p-3 text-left font-bold">Waktu</th>
-                                    <th class="p-3 text-center font-bold">Sen</th>
-                                    <th class="p-3 text-center font-bold">Sel</th>
-                                    <th class="p-3 text-center font-bold">Rab</th>
-                                    <th class="p-3 text-center font-bold">Kam</th>
-                                    <th class="p-3 text-center font-bold">Jum</th>
-                                </tr>
-                            </thead>
-                            <tbody id="schedule-table-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="admin-view" class="hidden max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
-            <div class="glass-effect rounded-2xl p-6 shadow-lg">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-800">Data Absensi Hari Ini</h3>
-                    </div>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button id="refresh-attendance-button" class="flex-1 sm:flex-initial px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                            Refresh
-                        </button>
-                        <button id="export-csv-button" class="flex-1 sm:flex-initial px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            Export
-                        </button>
-                    </div>
-                </div>
-                
-                <input type="text" id="search-student-input" placeholder="🔍 Cari NISN, email, atau kelas..." class="w-full mb-4 px-4 py-3 border-2 border-gray-200 rounded-xl transition-all focus:border-purple-500">
-                
-                <div class="overflow-x-auto -mx-2">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b-2 border-gray-200">
-                                <th class="p-3 text-left font-bold">NISN</th>
-                                <th class="p-3 text-left font-bold">Email</th>
-                                <th class="p-3 text-left font-bold">Kelas</th>
-                                <th class="p-3 text-left font-bold">Jenis</th>
-                                <th class="p-3 text-left font-bold">Waktu</th>
-                                <th class="p-3 text-left font-bold">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-attendance-log-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="glass-effect rounded-2xl p-6 shadow-lg">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <i data-lucide="calendar-days" class="w-5 h-5 text-purple-600"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800">Kelola Jadwal Pelajaran</h3>
-                </div>
-                
-                <select id="admin-class-select" class="w-full mb-4 px-4 py-3 border-2 border-gray-200 rounded-xl transition-all focus:border-purple-500 font-semibold">
-                    <option value="" disabled selected>Pilih kelas...</option>
-                </select>
-                
-                <div id="admin-schedule-container" class="hidden">
-                    <div class="overflow-x-auto -mx-2 mb-4">
-                        <table class="w-full text-xs">
-                            <thead>
-                                <tr class="border-b-2 border-gray-200">
-                                    <th class="p-3 text-left font-bold">Waktu</th>
-                                    <th class="p-3 text-center font-bold">Senin</th>
-                                    <th class="p-3 text-center font-bold">Selasa</th>
-                                    <th class="p-3 text-center font-bold">Rabu</th>
-                                    <th class="p-3 text-center font-bold">Kamis</th>
-                                    <th class="p-3 text-center font-bold">Jumat</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-schedule-table-body"></tbody>
-                        </table>
-                    </div>
-                    
-                    <button id="save-schedule-button" class="w-full px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="save" class="w-5 h-5"></i>
-                        Simpan Jadwal
-                    </button>
-                    
-                    <p class="text-xs text-gray-500 mt-3 flex items-center gap-2">
-                        <i data-lucide="info" class="w-4 h-4"></i>
-                        Klik pada sel untuk mengedit jadwal
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
+
