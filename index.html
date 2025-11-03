@@ -34,6 +34,38 @@
     #toast { position: fixed; bottom:24px; right:24px; z-index:50; transition: all .3s ease; }
     /* small helper to keep inline svgs sized by tailwind classes reliably */
     svg.icon { display:block; width:100%; height:100%; }
+
+    /* Toggle-password button styling (fixed position, correct size, accessible) */
+    .toggle-password {
+      position: absolute;
+      right: 0.75rem; /* matches input's padding */
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;  /* 36px container */
+      height: 2.25rem;
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      color: #6b7280; /* gray-500 */
+      border-radius: 0.375rem;
+    }
+    .toggle-password:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+    }
+    .toggle-password .icon {
+      width: 1.125rem; /* 18px */
+      height: 1.125rem;
+      display: block;
+    }
+
+    /* ensure input has enough right padding for the button (kept in classes, but safe fallback) */
+    .has-password-toggle { padding-right: 3rem !important; }
   </style>
 </head>
 <body>
@@ -66,28 +98,34 @@
         <div id="login-error" class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg hidden flex items-center gap-2"></div>
 
         <form id="login-form" class="space-y-5 glass-effect p-8 rounded-2xl">
-          <div>
+          <div class="relative">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Email atau NISN</label>
-            <input type="text" name="identifier" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
+            <input type="text" name="identifier" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all has-password-toggle">
           </div>
 
-          <div>
+          <div class="relative">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-            <div class="relative">
-              <input type="password" id="login-password-input" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all pr-12">
-              <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="login-password-input" aria-label="toggle password">
-                <!-- eye open -->
-                <svg class="w-5 h-5 eye-open icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-                <!-- eye closed (hidden by default) -->
-                <svg class="w-5 h-5 eye-closed icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/>
-                </svg>
-              </button>
-            </div>
+            <input type="password" id="login-password-input" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all pr-12 has-password-toggle" aria-describedby="toggle-password-login">
+            <button
+              type="button"
+              id="toggle-password-login"
+              class="toggle-password"
+              data-target="login-password-input"
+              aria-label="Tampilkan atau sembunyikan password"
+              aria-pressed="false"
+              title="Tampilkan password"
+            >
+              <!-- eye open -->
+              <svg class="icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              <!-- eye closed -->
+              <svg class="icon eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/>
+              </svg>
+            </button>
           </div>
 
           <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg h-[50px] flex items-center justify-center">
@@ -126,20 +164,26 @@
             <input type="text" name="nisn" required maxlength="10" pattern="\d{10}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all" placeholder="1234567890">
           </div>
 
-          <div>
+          <div class="relative">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-            <div class="relative">
-              <input type="password" id="signup-password-input" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all pr-12">
-              <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="signup-password-input" aria-label="toggle password">
-                <svg class="w-5 h-5 eye-open icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <svg class="w-5 h-5 eye-closed icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
-                </svg>
-              </button>
-            </div>
+            <input type="password" id="signup-password-input" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all pr-12 has-password-toggle" aria-describedby="toggle-password-signup">
+            <button
+              type="button"
+              id="toggle-password-signup"
+              class="toggle-password"
+              data-target="signup-password-input"
+              aria-label="Tampilkan atau sembunyikan password"
+              aria-pressed="false"
+              title="Tampilkan password"
+            >
+              <svg class="icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              <svg class="icon eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243"/>
+              </svg>
+            </button>
             <p class="text-xs text-gray-600 mt-2 ml-1">Minimal 8 karakter</p>
           </div>
 
@@ -605,13 +649,9 @@
     }
 
     // Robust fetchAllTodayAttendance:
-    // - try nested select (attendance_log + profiles + classes)
-    // - if that fails (400 or parse error), fallback to simpler flow:
-    //   fetch attendance rows, then fetch profiles separately and merge client-side
     async function fetchAllTodayAttendance() {
       const date = new Date().toISOString().slice(0,10);
       try {
-        // Primary: attempt nested select including profile + classes
         const primary = await supabaseClient
           .from('attendance_log')
           .select('*, profiles(id, full_name, nisn, email, class_id, classes(class_name))')
@@ -620,7 +660,6 @@
 
         if (primary.error) {
           console.warn('fetchAllTodayAttendance primary error:', primary.error);
-          // If PostgREST returned 400 (parse/relationship issue) -> fallback
           if (primary.error.status === 400 || primary.error.code === 'PGRST116' || /cannot/gi.test(primary.error.message || '')) {
             console.info('fetchAllTodayAttendance: falling back to two-step fetch');
             const fallback = await supabaseClient
@@ -635,7 +674,6 @@
             }
 
             const rows = fallback.data || [];
-            // get unique user_ids
             const userIds = [...new Set(rows.map(r => r.user_id).filter(Boolean))];
             let profilesMap = {};
             if (userIds.length) {
@@ -658,7 +696,6 @@
           }
         }
 
-        // success
         appState.allAttendanceLogs = primary.data || [];
       } catch (err) {
         console.error('fetchAllTodayAttendance final error:', err);
@@ -666,7 +703,6 @@
       }
     }
 
-    // fetch today's personal attendance for student
     async function fetchTodayAttendance() {
       if (!appState.currentUser) return;
       const date = new Date().toISOString().slice(0,10);
@@ -755,7 +791,6 @@
       });
     }
 
-    // Subscribe to attendance changes for admin view
     function subscribeToAttendanceChanges() {
       if (appState.attendanceSubscription) return;
       appState.attendanceSubscription = supabaseClient
@@ -768,7 +803,6 @@
     }
 
     async function initializeMainApp(user) {
-      // prevent double init for same user
       if (appState.currentUser && appState.currentUser.id === user.id) { console.log('initializeMainApp: already initialized'); return; }
       appState.currentUser = user;
       showLoading(true);
@@ -973,7 +1007,6 @@
       } finally { setButtonLoading(btn, false); }
     }
 
-    // Admin schedule functions
     async function handleAdminClassSelect(e) {
       const classId = e.target.value;
       if (!classId) return;
@@ -1109,9 +1142,7 @@
       try {
         const formData = new FormData(e.target);
         const updates = { full_name: formData.get('full_name') || null, nisn: formData.get('nisn') || null, class_id: formData.get('class_id') || null };
-        // image handling
         if (appState.profileImageFile) {
-          // delete old if exists
           if (appState.profile?.avatar_url) {
             const oldPath = appState.profile.avatar_url.split('/').pop();
             try { await supabaseClient.storage.from('avatars').remove([`${appState.currentUser.id}/${oldPath}`]); } catch(e) { console.warn('old avatar remove failed', e); }
@@ -1152,9 +1183,47 @@
       } finally { setButtonLoading(submitBtn, false); }
     }
 
+    // -------------------------
+    // Password toggle behavior
+    // -------------------------
+    function setupPasswordToggles() {
+      document.querySelectorAll('.toggle-password').forEach(btn => {
+        // ensure button does not submit forms
+        btn.addEventListener('click', (ev) => {
+          ev.preventDefault(); // don't submit
+          const targetId = btn.getAttribute('data-target');
+          const input = document.getElementById(targetId);
+          if (!input) return;
+          const eyeOpen = btn.querySelector('.eye-open');
+          const eyeClosed = btn.querySelector('.eye-closed');
+
+          // toggle type
+          if (input.type === 'password') {
+            input.type = 'text';
+            btn.setAttribute('aria-pressed', 'true');
+            btn.title = 'Sembunyikan password';
+            if (eyeOpen) eyeOpen.classList.add('hidden');
+            if (eyeClosed) eyeClosed.classList.remove('hidden');
+          } else {
+            input.type = 'password';
+            btn.setAttribute('aria-pressed', 'false');
+            btn.title = 'Tampilkan password';
+            if (eyeOpen) eyeOpen.classList.remove('hidden');
+            if (eyeClosed) eyeClosed.classList.add('hidden');
+          }
+
+          // keep focus on the input after toggling
+          try { input.focus(); const len = input.value?.length || 0; input.setSelectionRange(len, len); } catch(e) { /* ignore */ }
+        });
+      });
+    }
+
     // DOM events and initialization
     document.addEventListener('DOMContentLoaded', async () => {
       console.log('App initialized');
+
+      // setup password toggles early so they're ready
+      setupPasswordToggles();
 
       // Auth session
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1177,18 +1246,7 @@
       document.getElementById('show-forgot-password-button')?.addEventListener('click', () => showAuthView('forgotPassword'));
       document.getElementById('back-to-login-button')?.addEventListener('click', () => showAuthView('login'));
 
-      // password toggles
-      document.querySelectorAll('.toggle-password').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const targetId = this.getAttribute('data-target');
-          const input = document.getElementById(targetId);
-          if (!input) return;
-          const eyeOpen = this.querySelector('.eye-open');
-          const eyeClosed = this.querySelector('.eye-closed');
-          if (input.type === 'password') { input.type = 'text'; eyeOpen?.classList.add('hidden'); eyeClosed?.classList.remove('hidden'); }
-          else { input.type = 'password'; eyeOpen?.classList.remove('hidden'); eyeClosed?.classList.add('hidden'); }
-        });
-      });
+      // password toggles already set up by setupPasswordToggles()
 
       document.getElementById('logout-button')?.addEventListener('click', handleLogout);
       document.getElementById('check-in-button')?.addEventListener('click', () => handleAttendance('check_in'));
