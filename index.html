@@ -141,6 +141,16 @@
             outline: 2px solid #f59e0b;
             outline-offset: -2px;
         }
+        /* Style Toast dari file index.html */
+        #toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 100;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(10px);
+        }
     </style>
     
     <!-- Perubahan: Skrip dipindahkan ke akhir body dan diubah menjadi skrip biasa (bukan module) -->
@@ -154,8 +164,8 @@
     </div>
 
     <!-- Notifikasi Toast -->
-    <div id="toast" style="opacity: 0; transform: translateY(10px);">
-        <span id="toast-message"></span>
+    <div id="toast" role="status" aria-live="polite">
+        <!-- Konten toast akan diisi oleh JavaScript -->
     </div>
 
     <!-- Halaman Login & Registrasi -->
@@ -523,8 +533,8 @@
             <h2 id="confirm-title" class="text-xl font-bold text-gray-800 mb-2"></h2>
             <p id="confirm-message" class="text-gray-600 mb-6"></p>
             <div class="flex gap-3">
-                <button id="cancel-button" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">Logout</button>
-                <button id="confirm-button" class="flex-1 px-4 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg">Coba Lagi</button>
+                <button id="cancel-button" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">Batal</button>
+                <button id="confirm-button" class="flex-1 px-4 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg">Konfirmasi</button>
             </div>
         </div>
     </div>
@@ -532,16 +542,31 @@
     <script>
         // Perubahan: Menggunakan skrip biasa, bukan module.
         // Inisialisasi client Supabase dari objek global yang dimuat di <head>.
-        const supabaseClient = supabase.createClient(
-            'https://qvunfkabbhulwqfnkren.supabase.co', 
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'
-        );
+        // GANTI DENGAN KUNCI SUPABASE ANDA
+        const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
+        
+        // Peringatan jika kunci belum diganti (opsional, tapi bagus untuk pengembangan)
+        function checkSupabaseKeys() {
+            if (SUPABASE_URL.includes('URL_PROYEK_ANDA') || SUPABASE_ANON_KEY.includes('KUNCI_ANON_ANDA')) {
+                document.body.innerHTML = `
+                    <div class="h-screen bg-red-100 flex flex-col items-center justify-center p-4 text-center">
+                        <h1 class="text-2xl font-bold text-red-800 mb-2">Konfigurasi Diperlukan</h1>
+                        <p class="text-red-700">Harap masukkan Supabase URL dan Anon Key Anda di dalam file HTML pada bagian &lt;script&gt;.</p>
+                    </div>
+                `;
+                return false;
+            }
+            return true;
+        }
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- UTILITIES & HELPERS ---
         const Validators = {
             email: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
             nisn: (nisn) => /^\d{10}$/.test(nisn),
-            password: (password) => password.length >= 8,
+            password: (password) => password.length >= 8, // Disesuaikan untuk Supabase (default 6, tapi 8 lebih baik)
             notEmpty: (value) => value && value.trim().length > 0
         };
 
@@ -606,7 +631,6 @@
             checkOutButton: document.getElementById('check-out-button'),
             saveScheduleButton: document.getElementById('save-schedule-button'),
             toast: document.getElementById('toast'),
-            toastMessage: document.getElementById('toast-message'),
             adminAttendanceLogBody: document.getElementById('admin-attendance-log-body'),
             refreshAttendanceButton: document.getElementById('refresh-attendance-button'),
             searchStudentInput: document.getElementById('search-student-input'),
@@ -651,9 +675,8 @@
         }
 
         function showToast(message, type = 'success') {
-            if (!UIElements.toast || !UIElements.toastMessage) return;
+            if (!UIElements.toast) return;
             clearTimeout(appState.toastTimeout);
-            UIElements.toastMessage.textContent = message;
             const icons = {
                 success: '<i data-lucide="check-circle" class="w-5 h-5"></i>',
                 error: '<i data-lucide="alert-circle" class="w-5 h-5"></i>',
@@ -707,10 +730,13 @@
             }
         }
 
-        function showConfirmationModal(title, message, onConfirm, onCancel) {
+        function showConfirmationModal(title, message, confirmText, cancelText, onConfirm) {
             UIElements.confirmTitle.textContent = title;
             UIElements.confirmMessage.textContent = message;
+            UIElements.confirmButton.textContent = confirmText;
+            UIElements.cancelButton.textContent = cancelText;
 
+            // Hapus event listener lama agar tidak menumpuk
             const newConfirmButton = UIElements.confirmButton.cloneNode(true);
             UIElements.confirmButton.parentNode.replaceChild(newConfirmButton, UIElements.confirmButton);
             UIElements.confirmButton = newConfirmButton;
@@ -720,11 +746,10 @@
             UIElements.cancelButton = newCancelButton;
 
             UIElements.confirmButton.addEventListener('click', () => {
-                onConfirm();
+                if (onConfirm) onConfirm();
                 UIElements.confirmationModal.classList.add('hidden');
             });
             UIElements.cancelButton.addEventListener('click', () => {
-                onCancel();
                 UIElements.confirmationModal.classList.add('hidden');
             });
 
@@ -763,6 +788,7 @@
                 
                 if (!profile) {
                     console.warn('Profile not found for new user, creating one...');
+                    // Ambil NISN dari local storage jika ada (disimpan saat sign up)
                     const nisn = localStorage.getItem(`pending_nisn_${user.id}`);
                     const { data: newProfile, error: createError } = await supabaseClient
                         .from('profiles')
@@ -801,6 +827,8 @@
                 showConfirmationModal(
                     'Gagal Memuat Data',
                     `${friendlyError}. Apakah Anda ingin mencoba lagi?`,
+                    'Coba Lagi',
+                    'Logout',
                     () => initializeMainApp(user),
                     () => handleLogout()
                 );
@@ -982,11 +1010,12 @@
             
             const filtered = appState.allAttendanceLogs.filter(log => {
                 const searchTerm = filter.toLowerCase();
-                const studentName = log.profiles?.full_name?.toLowerCase() || '';
-                return log.profiles?.nisn?.includes(searchTerm) ||
-                       log.profiles?.email?.toLowerCase().includes(searchTerm) ||
+                if (!log.profiles) return false; // Abaikan log tanpa profil
+                const studentName = log.profiles.full_name?.toLowerCase() || '';
+                return log.profiles.nisn?.includes(searchTerm) ||
+                       log.profiles.email?.toLowerCase().includes(searchTerm) ||
                        studentName.includes(searchTerm) ||
-                       log.profiles?.classes?.class_name?.toLowerCase().includes(searchTerm);
+                       log.profiles.classes?.class_name?.toLowerCase().includes(searchTerm);
             });
             
             if (filtered.length === 0) {
@@ -1009,10 +1038,10 @@
                 const statusClass = log.status.includes('Tepat') ? 'status-success' : log.status.includes('Awal') ? 'status-danger' : 'status-warning';
                 
                 row.innerHTML = `
-                    <td class="p-3 font-mono text-gray-700">${log.profiles?.nisn || '-'}</td>
-                    <td class="p-3 font-semibold">${log.profiles?.full_name || log.profiles?.email || '-'}</td>
-                    <td class="p-3">${log.profiles?.email || '-'}</td>
-                    <td class="p-3"><span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">${log.profiles?.classes?.class_name || '-'}</span></td>
+                    <td class="p-3 font-mono text-gray-700">${log.profiles.nisn || '-'}</td>
+                    <td class="p-3 font-semibold">${log.profiles.full_name || log.profiles.email || '-'}</td>
+                    <td class="p-3">${log.profiles.email || '-'}</td>
+                    <td class="p-3"><span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">${log.profiles.classes?.class_name || '-'}</span></td>
                     <td class="p-3">${log.type === 'check_in' ? 'Masuk' : 'Pulang'}</td>
                     <td class="p-3 font-semibold">${log.log_time}</td>
                     <td class="p-3"><span class="status-badge ${statusClass}">${log.status}</span></td>
@@ -1091,14 +1120,29 @@
                     password,
                     options: {
                         emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
-                        data: { nisn, role: 'student', email }
                     }
                 });
                 
                 if (signUpError) throw signUpError;
                 if (!data.user) throw new Error('Pendaftaran gagal. User tidak berhasil dibuat.');
                 
+                // Simpan NISN sementara di local storage untuk diambil setelah login pertama
                 localStorage.setItem(`pending_nisn_${data.user.id}`, nisn);
+                
+                // Buat profil di 'profiles' table secara langsung saat sign up
+                // Ini akan gagal jika RLS tidak mengizinkan, tapi kita coba dulu
+                // Peran (role) harus diatur oleh admin atau trigger di database
+                const { error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .insert({ id: data.user.id, email: email, nisn: nisn, role: 'student' });
+
+                if (profileError && !profileError.message.includes('duplicate key')) {
+                    // Jangan lempar error jika hanya duplikat (misal trigger sudah buat)
+                    // Tapi jika error lain, tampilkan
+                    if (!profileError.message.includes('duplicate')) {
+                        console.warn("Could not create profile during sign up:", profileError.message);
+                    }
+                }
                 
                 const toastMessage = data.user.identities?.length === 0 
                     ? '✅ Pendaftaran berhasil! Cek email untuk verifikasi, lalu login.' 
@@ -1387,8 +1431,8 @@
                     const filePath = `avatars/${fileName}`;
                     
                     if (appState.profile.avatar_url) {
-                        const oldPath = appState.profile.avatar_url.split('/').pop();
-                        await supabaseClient.storage.from('avatars').remove([`avatars/${oldPath}`]);
+                        const oldPath = appState.profile.avatar_url.split('/avatars/').pop();
+                        await supabaseClient.storage.from('avatars').remove([oldPath]);
                     }
                     
                     const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(filePath, imageFile);
@@ -1397,8 +1441,8 @@
                     const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(filePath);
                     avatarUrl = urlData.publicUrl;
                 } else if (appState.profileImageToDelete && appState.profile.avatar_url) {
-                    const oldPath = appState.profile.avatar_url.split('/').pop();
-                    await supabaseClient.storage.from('avatars').remove([`avatars/${oldPath}`]);
+                    const oldPath = appState.profile.avatar_url.split('/avatars/').pop();
+                    await supabaseClient.storage.from('avatars').remove([oldPath]);
                     avatarUrl = null;
                 }
                 
@@ -1451,17 +1495,7 @@
         }
 
         async function checkUserSession() {
-            const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
-            if (SUPABASE_URL.includes('URL_PROYEK_ANDA') || SUPABASE_ANON_KEY.includes('KUNCI_ANON_ANDA')) {
-                document.body.innerHTML = `
-                    <div class="h-screen bg-red-100 flex flex-col items-center justify-center p-4 text-center">
-                        <h1 class="text-2xl font-bold text-red-800 mb-2">Konfigurasi Diperlukan</h1>
-                        <p class="text-red-700">Harap masukkan Supabase URL dan Anon Key Anda di dalam file HTML pada bagian &lt;script&gt;.</p>
-                    </div>
-                `;
-                return;
-            }
+            if (!checkSupabaseKeys()) return; // Hentikan jika kunci tidak diatur
             
             showLoading(true);
             const { data } = await supabaseClient.auth.getSession();
@@ -1533,3 +1567,4 @@
     </script>
 </body>
 </html>
+
