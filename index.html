@@ -5,15 +5,29 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sistem Absensi Sekolah Online</title>
 
-  <!-- Use compiled Tailwind CSS (production) instead of the CDN -->
-  <link rel="stylesheet" href="/dist/styles.css">
-
+  <!-- Load Tailwind CSS CDN for single-file self-contained apps -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Supabase client -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  
+  <!-- Configuration for Tailwind to use Inter font and custom colors -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+          },
+          colors: {
+            'primary-from': '#667eea',
+            'primary-to': '#764ba2',
+          }
+        },
+      }
+    }
+  </script>
 
   <style>
+    /* Custom styles remain, using CSS variables for gradients */
     :root { --primary-from: #667eea; --primary-to: #764ba2; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -24,10 +38,11 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Glass card */
+    /* Glass card (updated to use modern Tailwind classes where possible, kept old style for consistency) */
     .glass {
       background: rgba(255,255,255,0.95);
       backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid rgba(255,255,255,0.22);
       box-shadow: 0 10px 30px rgba(2,6,23,0.08);
     }
@@ -40,7 +55,7 @@
       color: transparent;
     }
 
-    /* spinner */
+    /* Spinner */
     .spinner, .btn-spinner {
       border-radius: 9999px;
       border: 4px solid rgba(255,255,255,0.3);
@@ -52,7 +67,7 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* toggle-password button */
+    /* Password Toggle */
     .toggle-password {
       position: absolute;
       right: 0.5rem;
@@ -61,7 +76,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 3rem;      /* 48px hit area */
+      width: 3rem;
       height: 3rem;
       background: transparent;
       border: none;
@@ -77,14 +92,14 @@
       box-shadow: 0 0 0 4px rgba(102,126,234,0.12);
     }
     .toggle-password .icon {
-      width: 1.25rem;   /* 20px */
+      width: 1.25rem;
       height: 1.25rem;
       display: block;
       pointer-events: none;
     }
 
     /* ensure inputs with toggles have enough padding */
-    .has-password-toggle { padding-right: 4rem !important; } /* ~64px */
+    .has-password-toggle { padding-right: 4rem !important; }
 
     /* toast */
     #toast { position: fixed; right: 1.25rem; bottom: 1.5rem; z-index: 60; transition: all .25s ease; opacity: 0; transform: translateY(10px); }
@@ -111,7 +126,7 @@
   <div id="toast" role="status" aria-live="polite"></div>
 
   <!-- Auth page -->
-  <main id="login-page" class="min-h-screen flex items-start justify-center py-12 px-4">
+  <main id="auth-page" class="min-h-screen flex items-start justify-center py-12 px-4">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <!-- inline book icon -->
@@ -122,54 +137,106 @@
           </svg>
         </div>
 
-        <h1 class="text-4xl font-extrabold text-white gradient-text">Selamat Datang</h1>
-        <p class="text-purple-100 mt-2">Masuk ke Sistem Absensi Sekolah</p>
+        <h1 class="text-4xl font-extrabold text-white gradient-text" id="auth-title">Selamat Datang</h1>
+        <p class="text-purple-100 mt-2" id="auth-subtitle">Masuk ke Sistem Absensi Sekolah</p>
       </div>
 
       <div class="glass rounded-2xl p-6 shadow-xl">
+        
+        <!-- LOGIN FORM -->
         <form id="login-form" class="space-y-5" autocomplete="on" novalidate>
           <div>
-            <label for="identifier" class="block text-sm font-semibold text-gray-700 mb-2">Email atau NISN</label>
-            <input id="identifier" name="identifier" type="text" required
+            <label for="login-email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+            <input id="login-email" name="email" type="email" required
                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                   placeholder="email@domain.com atau 10 digit NISN" />
+                   placeholder="email@domain.com" />
+            <p class="text-xs text-gray-500 mt-1">NISN tidak didukung. Harap gunakan email Anda.</p>
           </div>
 
           <div class="relative">
-            <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-            <input id="password" name="password" type="password" required
+            <label for="login-password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+            <input id="login-password" name="password" type="password" required
                    class="w-full has-password-toggle px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                    placeholder="Masukkan password" autocomplete="current-password" />
 
-            <!-- Toggle: data-action used to avoid conflicts -->
-            <button type="button" class="toggle-password" data-action="toggle-password" data-target="password" aria-label="Tampilkan password" aria-pressed="false" title="Tampilkan password">
-              <!-- eye open (visible when input.type === 'password') -->
-              <svg class="icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path d="M2.5 12s3.5-7.5 9.5-7.5S21.5 12 21.5 12 18 19.5 12 19.5 2.5 12 2.5 12z"/>
-                <circle cx="12" cy="12" r="3.2"/>
-              </svg>
-              <!-- eye closed (hidden by default) -->
-              <svg class="icon eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path d="M3 3l18 18"/>
-                <path d="M10.6 10.6a3 3 0 014.2 4.2" />
-                <path d="M2.6 12s3.5-7.5 9.5-7.5c2 0 3.7.6 5 1.6" />
-                <path d="M21.4 12s-3.5 7.5-9.5 7.5c-2 0-3.7-.6-5-1.6" />
-              </svg>
+            <button type="button" class="toggle-password" data-action="toggle-password" data-target="login-password" aria-label="Tampilkan password" aria-pressed="false" title="Tampilkan password">
+              <svg class="icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.5-7.5 9.5-7.5S21.5 12 21.5 12 18 19.5 12 19.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>
+              <svg class="icon eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a3 3 0 014.2 4.2" /><path d="M2.6 12s3.5-7.5 9.5-7.5c2 0 3.7.6 5 1.6" /><path d="M21.4 12s-3.5 7.5-9.5 7.5c-2 0-3.7-.6-5-1.6" /></svg>
             </button>
           </div>
 
           <div>
             <button id="login-submit" type="submit"
-                    class="w-full btn-primary text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
+                    class="w-full text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                     style="background: linear-gradient(135deg,var(--primary-from),var(--primary-to));">
               Masuk
             </button>
           </div>
         </form>
 
+        <!-- SIGN UP FORM -->
+        <form id="signup-form" class="space-y-5 hidden" autocomplete="off" novalidate>
+          <div>
+            <label for="signup-fullname" class="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
+            <input id="signup-fullname" name="fullname" type="text" required
+                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                   placeholder="Nama Lengkap Anda" />
+          </div>
+          <div>
+            <label for="signup-nisn" class="block text-sm font-semibold text-gray-700 mb-2">NISN (10 digit)</label>
+            <input id="signup-nisn" name="nisn" type="text" pattern="\d{10}" required maxlength="10"
+                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                   placeholder="Masukkan 10 digit NISN Anda" />
+          </div>
+          <div>
+            <label for="signup-email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+            <input id="signup-email" name="email" type="email" required
+                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                   placeholder="email@domain.com" />
+          </div>
+          <div class="relative">
+            <label for="signup-password" class="block text-sm font-semibold text-gray-700 mb-2">Password (min 6 karakter)</label>
+            <input id="signup-password" name="password" type="password" required minlength="6"
+                   class="w-full has-password-toggle px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                   placeholder="Buat password" autocomplete="new-password" />
+            <button type="button" class="toggle-password" data-action="toggle-password" data-target="signup-password" aria-label="Tampilkan password" aria-pressed="false" title="Tampilkan password">
+              <svg class="icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 12s3.5-7.5 9.5-7.5S21.5 12 21.5 12 18 19.5 12 19.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3.2"/></svg>
+              <svg class="icon eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a3 3 0 014.2 4.2" /><path d="M2.6 12s3.5-7.5 9.5-7.5c2 0 3.7.6 5 1.6" /><path d="M21.4 12s-3.5 7.5-9.5 7.5c-2 0-3.7-.6-5-1.6" /></svg>
+            </button>
+          </div>
+          <div>
+            <button id="signup-submit" type="submit"
+                    class="w-full text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="background: linear-gradient(135deg,var(--primary-from),var(--primary-to));">
+              Daftar Akun
+            </button>
+          </div>
+        </form>
+
+        <!-- FORGOT PASSWORD FORM -->
+        <form id="forgot-form" class="space-y-5 hidden" autocomplete="off" novalidate>
+          <p class="text-sm text-gray-600">Masukkan email Anda. Kami akan mengirimkan tautan untuk mengatur ulang password Anda.</p>
+          <div>
+            <label for="forgot-email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+            <input id="forgot-email" name="email" type="email" required
+                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                   placeholder="email@domain.com" />
+          </div>
+          <div>
+            <button id="forgot-submit" type="submit"
+                    class="w-full text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="background: linear-gradient(135deg,var(--primary-from),var(--primary-to));">
+              Kirim Tautan Reset Password
+            </button>
+          </div>
+        </form>
+        
         <div class="mt-6 text-center">
-          <button id="show-forgot-password-button" class="text-sm text-purple-100 hover:text-white transition-colors">Lupa password?</button>
-          <p class="mt-3 text-sm text-purple-100">Belum punya akun? <button id="show-signup-button" class="underline font-semibold text-white">Daftar di sini</button></p>
+          <button id="show-forgot-button" class="text-sm text-purple-100 hover:text-white transition-colors">Lupa password?</button>
+          <p class="mt-3 text-sm text-purple-100">
+            <span id="auth-footer-text">Belum punya akun? <button id="show-signup-button" class="underline font-semibold text-white">Daftar di sini</button></span>
+            <button id="show-login-button" class="underline font-semibold text-white hidden">Kembali ke Login</button>
+          </p>
         </div>
       </div>
     </div>
@@ -185,19 +252,17 @@
           </div>
           <div>
             <h1 class="text-xl font-bold gradient-text">Sistem Absensi</h1>
-            <p class="text-sm text-gray-600">Selamat datang, <span id="welcome-message" class="font-semibold"></span></p>
+            <p class="text-sm text-gray-600">Selamat datang, <span id="welcome-message" class="font-semibold text-purple-600"></span></p>
           </div>
         </div>
 
         <div class="flex items-center gap-3">
-          <button id="profile-button" class="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all">
-            <div class="w-8 h-8 rounded-lg overflow-hidden bg-purple-200 flex items-center justify-center">
-              <svg class="w-4 h-4 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0z"/><path d="M4 21v-1a4 4 0 014-4h8a4 4 0 014 4v1"/></svg>
-            </div>
-            <span class="hidden sm:inline font-semibold">Profil</span>
-          </button>
+          <!-- Profile/User ID Display (MANDATORY for multi-user apps) -->
+          <div class="hidden sm:block text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
+             UID: <span id="user-id-display" class="font-mono text-gray-700"></span>
+          </div>
 
-          <button id="logout-button" class="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all">
+          <button id="logout-button" class="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-md">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 16l4-4-4-4"/><path d="M21 12H7"/><path d="M7 20H5a2 2 0 01-2-2V6a2 2 0 012-2h2"/></svg>
             <span class="hidden sm:inline">Keluar</span>
           </button>
@@ -205,37 +270,65 @@
       </div>
     </header>
 
-    <section class="max-w-7xl mx-auto p-6 space-y-6">
-      <!-- Dashboard simplified for brevity -->
-      <div class="glass rounded-2xl p-8 text-center">
-        <h2 id="clock" class="text-5xl font-extrabold gradient-text mb-2">00:00:00</h2>
-        <p id="date" class="text-gray-600 mb-6">-</p>
-        <div class="flex gap-4 justify-center">
-          <button id="check-in-button" class="px-8 py-3 btn-primary text-white rounded-xl shadow">Absen Masuk</button>
-          <button id="check-out-button" class="px-8 py-3 btn-primary text-white rounded-xl shadow">Absen Pulang</button>
+    <section class="max-w-7xl mx-auto p-6 space-y-8">
+      <!-- Dashboard -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass rounded-2xl p-8 text-center md:col-span-2">
+          <h2 id="clock" class="text-6xl font-extrabold gradient-text mb-2">00:00:00</h2>
+          <p id="date" class="text-gray-600 mb-8 text-lg font-medium">-</p>
+          <div class="flex gap-4 justify-center">
+            <button id="check-in-button" class="px-8 py-3 w-40 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="background: linear-gradient(135deg,#10b981,#059669);">Absen Masuk</button>
+            <button id="check-out-button" class="px-8 py-3 w-40 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="background: linear-gradient(135deg,#f97316,#ea580c);">Absen Pulang</button>
+          </div>
+          <p id="attendance-status" class="mt-4 text-sm font-semibold text-gray-700"></p>
+        </div>
+
+        <div class="glass rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+            <h3 class="text-xl font-bold gradient-text mb-2">Profil Anda</h3>
+            <p class="text-sm text-gray-600" id="profile-name">Memuat...</p>
+            <p class="text-sm text-gray-600" id="profile-nisn"></p>
+            <p class="text-sm font-semibold text-purple-600" id="profile-class"></p>
         </div>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="glass rounded-2xl p-6">Riwayat Absensi Hari Ini</div>
-        <div class="glass rounded-2xl p-6">Jadwal Pelajaran</div>
+
+      <!-- Attendance History -->
+      <div class="glass rounded-2xl p-6">
+        <h2 class="text-2xl font-bold gradient-text mb-4">Riwayat Absensi Hari Ini</h2>
+        <div id="today-attendance-list" class="space-y-3">
+          <p class="text-gray-500">Belum ada data absensi hari ini.</p>
+        </div>
       </div>
     </section>
   </div>
 
-  <script>
-    // --- Supabase client (same keys used previously) ---
-    const supabaseClient = supabase.createClient(
-      'https://qvunfkabbhulwqfnkren.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'
-    );
+  <script type="module">
+    // --- Firebase/Firestore Module Imports ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, setLogLevel, collection, query, where, getDocs, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // lightweight utilities
+    // --- Firebase Initialization ---
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    const app = initializeApp(firebaseConfig);
+    setLogLevel('Debug'); // Mandatory logging
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- Global State ---
     const appState = {
       currentUser: null,
       profile: null,
       clockInterval: null,
-      loadingTimeout: null
+      loadingTimeout: null,
+      activeForm: 'login' // 'login', 'signup', 'forgot'
     };
+    
+    // --- Utility Functions ---
 
     function showLoading(on = true) {
       const el = document.getElementById('loading-screen');
@@ -245,6 +338,7 @@
       if (on) {
         appState.loadingTimeout = setTimeout(() => {
           el.classList.add('hidden');
+          showToast('Waktu pemuatan terlalu lama. Coba lagi.', 'error');
           appState.loadingTimeout = null;
         }, 20000);
       }
@@ -260,8 +354,42 @@
       toast.classList.add('show');
       setTimeout(() => { toast.classList.remove('show'); }, 3500);
     }
+    
+    function formatTime(timestamp) {
+        if (!timestamp) return '-';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
 
-    // Clock
+    // --- UI Toggling ---
+
+    function toggleForm(targetForm) {
+      const forms = {
+        'login': document.getElementById('login-form'),
+        'signup': document.getElementById('signup-form'),
+        'forgot': document.getElementById('forgot-form')
+      };
+      
+      const authTitle = document.getElementById('auth-title');
+      const authSubtitle = document.getElementById('auth-subtitle');
+      const authFooterText = document.getElementById('auth-footer-text');
+      const showLoginBtn = document.getElementById('show-login-button');
+      
+      authTitle.textContent = targetForm === 'login' ? 'Selamat Datang' : (targetForm === 'signup' ? 'Buat Akun Baru' : 'Lupa Password');
+      authSubtitle.textContent = targetForm === 'login' ? 'Masuk ke Sistem Absensi Sekolah' : (targetForm === 'signup' ? 'Daftarkan data diri Anda' : 'Atur ulang password Anda');
+
+      for (const key in forms) {
+        forms[key]?.classList.toggle('hidden', key !== targetForm);
+      }
+      
+      authFooterText.classList.toggle('hidden', targetForm !== 'login');
+      showLoginBtn.classList.toggle('hidden', targetForm === 'login');
+      
+      appState.activeForm = targetForm;
+    }
+
+    // --- Clock and Date Display ---
+
     function updateClock() {
       const clock = document.getElementById('clock');
       const dateEl = document.getElementById('date');
@@ -273,63 +401,189 @@
       dateEl.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
     }
 
-    // --- PASSWORD TOGGLE HANDLING ---
-    // Use event delegation; works even if DOM changes
+    // --- Password Toggle Handling ---
     document.addEventListener('click', (ev) => {
       const btn = ev.target.closest('[data-action="toggle-password"]');
       if (!btn) return;
       ev.preventDefault();
       ev.stopPropagation();
 
-      try {
-        const targetId = btn.getAttribute('data-target');
-        const input = targetId ? document.getElementById(targetId) : btn.closest('.relative')?.querySelector('input[type="password"], input[type="text"]');
-        if (!input) {
-          console.warn('toggle: no target input found for', btn);
-          return;
-        }
+      const targetId = btn.getAttribute('data-target');
+      const input = targetId ? document.getElementById(targetId) : btn.closest('.relative')?.querySelector('input[type="password"], input[type="text"]');
+      if (!input) return;
 
-        const isPassword = input.type === 'password';
-        input.type = isPassword ? 'text' : 'password';
-        btn.setAttribute('aria-pressed', String(isPassword));
-        btn.title = isPassword ? 'Sembunyikan password' : 'Tampilkan password';
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', String(isPassword));
+      btn.title = isPassword ? 'Sembunyikan password' : 'Tampilkan password';
 
-        const eyeOpen = btn.querySelector('.eye-open');
-        const eyeClosed = btn.querySelector('.eye-closed');
-        if (eyeOpen) eyeOpen.classList.toggle('hidden', !isPassword);
-        if (eyeClosed) eyeClosed.classList.toggle('hidden', isPassword);
-
-        // restore focus/caret
-        try {
-          input.focus();
-          const len = input.value?.length || 0;
-          input.setSelectionRange(len, len);
-        } catch (e) { /* ignore */ }
-      } catch (err) {
-        console.error('Error toggling password:', err);
-      }
+      const eyeOpen = btn.querySelector('.eye-open');
+      const eyeClosed = btn.querySelector('.eye-closed');
+      if (eyeOpen) eyeOpen.classList.toggle('hidden', !isPassword);
+      if (eyeClosed) eyeClosed.classList.toggle('hidden', isPassword);
+      input.focus();
     });
 
-    // --- AUTH + UI wiring (kept minimal & similar to your previous flow) ---
+    // --- Authentication & Data Handlers ---
+    
+    async function getProfile(userId) {
+      if (!userId) return null;
+      try {
+          // FIX: Change path from 5 segments to 6 segments by adding 'metadata' collection.
+          // OLD: const profileDocRef = doc(db, `artifacts/${appId}/users/${userId}/profile`);
+          const profileDocRef = doc(db, `artifacts/${appId}/users/${userId}/metadata/profile`);
+          const profileSnap = await getDoc(profileDocRef);
+          
+          if (profileSnap.exists()) {
+              return profileSnap.data();
+          }
+          console.warn('Profile document not found for user:', userId);
+          return null;
+      } catch (e) {
+          console.error('Error fetching profile:', e);
+          return null;
+      }
+    }
+    
+    function startAttendanceListener(userId) {
+        if (!userId) return;
+        const today = new Date().toISOString().split('T')[0];
+        const attendanceRef = collection(db, `artifacts/${appId}/users/${userId}/attendance`);
+        
+        // Listen for all attendance for today (requires manual filtering if time-based indexing is not possible)
+        // For simplicity and to avoid complex index requirements, we'll fetch all and filter client-side.
+        // A better production setup would store attendance by date (e.g., attendance/{YYYY-MM-DD}/{docId}).
+        
+        // Using onSnapshot on the main attendance collection
+        const unsubscribe = onSnapshot(attendanceRef, (snapshot) => {
+            const listEl = document.getElementById('today-attendance-list');
+            const statusEl = document.getElementById('attendance-status');
+            const checkInBtn = document.getElementById('check-in-button');
+            const checkOutBtn = document.getElementById('check-out-button');
+            
+            const records = [];
+            snapshot.forEach(doc => {
+                records.push({ id: doc.id, ...doc.data() });
+            });
+            
+            // Filter records for today client-side
+            const todayRecords = records
+                .filter(r => r.timestamp && (r.timestamp.toDate ? r.timestamp.toDate().toISOString().startsWith(today) : new Date(r.timestamp).toISOString().startsWith(today)))
+                .sort((a, b) => (a.timestamp.toDate ? a.timestamp.toDate() : new Date(a.timestamp)) - (b.timestamp.toDate ? b.timestamp.toDate() : new Date(b.timestamp)));
+
+            listEl.innerHTML = '';
+            
+            if (todayRecords.length === 0) {
+                listEl.innerHTML = '<p class="text-gray-500">Belum ada data absensi hari ini.</p>';
+                statusEl.textContent = 'Status: Belum Absen Masuk';
+                checkInBtn.disabled = false;
+                checkOutBtn.disabled = true;
+                return;
+            }
+            
+            let lastIn = null;
+            let lastOut = null;
+            
+            todayRecords.forEach(r => {
+                const time = formatTime(r.timestamp);
+                const typeText = r.type === 'check-in' ? 'Absen Masuk' : 'Absen Pulang';
+                const color = r.type === 'check-in' ? 'text-emerald-600' : 'text-orange-600';
+                
+                if (r.type === 'check-in') lastIn = r;
+                if (r.type === 'check-out') lastOut = r;
+
+                listEl.innerHTML += `
+                    <div class="p-3 border border-gray-100 rounded-xl bg-gray-50 flex justify-between items-center">
+                        <span class="font-medium ${color}">${typeText}</span>
+                        <span class="font-mono text-gray-700">${time}</span>
+                    </div>
+                `;
+            });
+            
+            // Update button states
+            if (lastIn && (!lastOut || (lastIn.timestamp > lastOut.timestamp))) {
+                // Last action was Check-In (or Check-In is newer)
+                statusEl.textContent = `Status: Sudah Absen Masuk pada ${formatTime(lastIn.timestamp)}`;
+                checkInBtn.disabled = true;
+                checkOutBtn.disabled = false;
+            } else if (lastOut) {
+                 // Last action was Check-Out
+                statusEl.textContent = `Status: Sudah Absen Pulang pada ${formatTime(lastOut.timestamp)}`;
+                checkInBtn.disabled = true;
+                checkOutBtn.disabled = true;
+            }
+            
+        }, (error) => {
+            console.error('Attendance listener error:', error);
+            showToast('Gagal memuat riwayat absensi.', 'error');
+        });
+
+        return unsubscribe; // Return the unsubscribe function
+    }
+    
+    async function handleAttendance(type) {
+        if (!appState.currentUser || !appState.profile) {
+            showToast('Anda harus login untuk melakukan absensi.', 'error');
+            return;
+        }
+        
+        showLoading(true);
+        try {
+            const attendanceRef = doc(collection(db, `artifacts/${appId}/users/${appState.currentUser.uid}/attendance`));
+            
+            await setDoc(attendanceRef, {
+                userId: appState.currentUser.uid,
+                type: type, // 'check-in' or 'check-out'
+                timestamp: serverTimestamp(),
+                date: new Date().toISOString().split('T')[0], // Store date as string for easy querying/filtering
+                nisn: appState.profile.nisn || 'N/A',
+                full_name: appState.profile.full_name || 'N/A',
+                class_id: appState.profile.class_id || 'N/A',
+            });
+            
+            showToast(`Berhasil Absen ${type === 'check-in' ? 'Masuk' : 'Pulang'}!`, 'success');
+            
+        } catch (error) {
+            console.error('Attendance error:', error);
+            showToast('Gagal mencatat absensi. Coba lagi.', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
     async function initializeMainApp(user) {
       if (!user) return;
-      if (appState.currentUser && appState.currentUser.id === user.id) return;
+      if (appState.currentUser && appState.currentUser.uid === user.uid) return;
       appState.currentUser = user;
+      
       showLoading(true);
       try {
-        const { data: profile, error } = await supabaseClient.from('profiles').select('*, classes(class_name)').eq('id', user.id).maybeSingle();
-        if (error && error.code !== 'PGRST116') throw error;
-        appState.profile = profile || null;
-        document.getElementById('welcome-message').textContent = appState.profile?.full_name || appState.profile?.nisn || user.email?.split('@')[0] || 'User';
+        const profile = await getProfile(user.uid);
+        appState.profile = profile;
+
+        const userName = profile?.full_name || user.email?.split('@')[0] || 'User';
+        const userNISN = profile?.nisn || 'N/A';
+        const userClass = profile?.class_name || 'Kelas: N/A';
+
+        document.getElementById('welcome-message').textContent = userName;
+        document.getElementById('profile-name').textContent = `Nama: ${userName}`;
+        document.getElementById('profile-nisn').textContent = `NISN: ${userNISN}`;
+        document.getElementById('profile-class').textContent = userClass;
+        document.getElementById('user-id-display').textContent = user.uid;
 
         // show main app
-        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('auth-page').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
 
-        // start clock for students
+        // start clock
         if (appState.clockInterval) clearInterval(appState.clockInterval);
         updateClock();
         appState.clockInterval = setInterval(updateClock, 1000);
+        
+        // Start real-time attendance listener
+        if (appState.unsubscribeAttendance) appState.unsubscribeAttendance();
+        appState.unsubscribeAttendance = startAttendanceListener(user.uid);
+
       } catch (err) {
         console.error('initializeMainApp error', err);
         showToast('Gagal memuat aplikasi', 'error');
@@ -341,63 +595,161 @@
     async function handleLogin(e) {
       e.preventDefault();
       const form = e.target;
-      const submit = form.querySelector('button[type="submit"]');
-      const id = form.querySelector('[name="identifier"]').value?.trim();
+      const email = form.querySelector('[name="email"]').value?.trim();
       const pwd = form.querySelector('[name="password"]').value;
-      if (!id || !pwd) { showToast('Email/NISN & password wajib diisi', 'error'); return; }
+      
+      if (!email || !pwd) { showToast('Email & password wajib diisi', 'error'); return; }
 
       showLoading(true);
       try {
-        let email = id;
-        if (!id.includes('@')) {
-          // treat as NISN
-          if (!/^\d{10}$/.test(id)) throw new Error('NISN harus 10 digit');
-          const { data: p, error: pErr } = await supabaseClient.from('profiles').select('email').eq('nisn', id).single();
-          if (pErr || !p) throw new Error('NISN tidak ditemukan');
-          email = p.email;
-        }
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pwd });
-        if (error) throw error;
-        if (!data.user) throw new Error('Login gagal');
-        await initializeMainApp(data.user);
+        // Use Firebase signInWithEmailAndPassword
+        const userCredential = await signInWithEmailAndPassword(auth, email, pwd);
+        await initializeMainApp(userCredential.user);
         showToast('Berhasil masuk', 'success');
       } catch (err) {
-        console.error('login error', err);
-        showToast(err.message || 'Gagal login', 'error');
+        console.error('Login error:', err);
+        let msg = 'Gagal login. Periksa email dan password Anda.';
+        if (err.code === 'auth/user-not-found') msg = 'Akun tidak ditemukan.';
+        if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') msg = 'Password salah.';
+        showToast(msg, 'error');
+      } finally { showLoading(false); }
+    }
+    
+    async function handleSignup(e) {
+      e.preventDefault();
+      const form = e.target;
+      const fullname = form.querySelector('[name="fullname"]').value?.trim();
+      const nisn = form.querySelector('[name="nisn"]').value?.trim();
+      const email = form.querySelector('[name="email"]').value?.trim();
+      const pwd = form.querySelector('[name="password"]').value;
+      
+      if (!fullname || !nisn || !email || !pwd) { showToast('Semua kolom wajib diisi', 'error'); return; }
+      if (!/^\d{10}$/.test(nisn)) { showToast('NISN harus 10 digit angka', 'error'); return; }
+      if (pwd.length < 6) { showToast('Password minimal 6 karakter', 'error'); return; }
+      
+      showLoading(true);
+      try {
+        // 1. Create User in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pwd);
+        const user = userCredential.user;
+        
+        // 2. Save Profile Data to Firestore (Private Path)
+        // Note: For a real app, you would add class_id/class_name logic here
+        const profileData = {
+            full_name: fullname,
+            nisn: nisn,
+            email: email,
+            created_at: serverTimestamp(),
+            class_name: 'X-IPA-1' // Mock class
+            // class_id: 'class_001' 
+        };
+        
+        // FIX: Change path from 5 segments to 6 segments by adding 'metadata' collection.
+        // OLD: const profileDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`);
+        const profileDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/metadata/profile`);
+        await setDoc(profileDocRef, profileData);
+        
+        await initializeMainApp(user);
+        showToast('Pendaftaran Berhasil! Anda sudah login.', 'success');
+      } catch (err) {
+        console.error('Signup error:', err);
+        let msg = 'Pendaftaran gagal.';
+        if (err.code === 'auth/email-already-in-use') msg = 'Email ini sudah terdaftar.';
+        showToast(msg, 'error');
       } finally { showLoading(false); }
     }
 
+    async function handleForgotPassword(e) {
+        e.preventDefault();
+        const email = e.target.querySelector('[name="email"]').value?.trim();
+        if (!email) { showToast('Email wajib diisi', 'error'); return; }
+        
+        showLoading(true);
+        try {
+            await sendPasswordResetEmail(auth, email);
+            showToast(`Tautan reset password telah dikirim ke ${email}. Cek inbox Anda.`, 'success');
+            toggleForm('login'); // Send back to login
+        } catch (err) {
+            console.error('Forgot password error:', err);
+            let msg = 'Gagal mengirim tautan reset.';
+            if (err.code === 'auth/user-not-found') msg = 'Email tidak terdaftar.';
+            showToast(msg, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
     async function handleLogout() {
+      showLoading(true);
       try {
-        await supabaseClient.auth.signOut();
-      } catch (err) { console.warn(err); }
+        if (appState.unsubscribeAttendance) appState.unsubscribeAttendance();
+        await signOut(auth);
+      } catch (err) { console.warn('Logout error:', err); }
+      
       appState.currentUser = null;
       appState.profile = null;
       if (appState.clockInterval) { clearInterval(appState.clockInterval); appState.clockInterval = null; }
+      
+      // Reset UI
       document.getElementById('main-app').classList.add('hidden');
-      document.getElementById('login-page').classList.remove('hidden');
+      document.getElementById('auth-page').classList.remove('hidden');
+      toggleForm('login'); // Ensure it returns to login form
+      showLoading(false);
+      showToast('Berhasil keluar.', 'info');
     }
 
-    // DOM ready wiring
+    // --- Main App Initialization ---
+
+    async function initializeAuth() {
+        if (initialAuthToken) {
+            await signInWithCustomToken(auth, initialAuthToken).catch(e => {
+                console.error('Custom token sign-in failed, falling back to anonymous:', e);
+                return signInAnonymously(auth);
+            });
+        } else {
+            await signInAnonymously(auth);
+        }
+    }
+    
     document.addEventListener('DOMContentLoaded', async () => {
-      // wire form
+      showLoading(true);
+      
+      // Perform initial anonymous/custom token sign-in
+      await initializeAuth();
+      
+      // Wire forms
       document.getElementById('login-form').addEventListener('submit', handleLogin);
+      document.getElementById('signup-form').addEventListener('submit', handleSignup);
+      document.getElementById('forgot-form').addEventListener('submit', handleForgotPassword);
 
-      // nav buttons
+      // Wire navigation
       document.getElementById('logout-button')?.addEventListener('click', handleLogout);
+      document.getElementById('show-signup-button')?.addEventListener('click', () => toggleForm('signup'));
+      document.getElementById('show-login-button')?.addEventListener('click', () => toggleForm('login'));
+      document.getElementById('show-forgot-button')?.addEventListener('click', () => toggleForm('forgot'));
+      
+      // Wire attendance buttons
+      document.getElementById('check-in-button')?.addEventListener('click', () => handleAttendance('check-in'));
+      document.getElementById('check-out-button')?.addEventListener('click', () => handleAttendance('check-out'));
 
-      // quick check for existing session
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session?.user) await initializeMainApp(session.user);
-      } catch (err) {
-        console.warn('getSession:', err);
-      }
-    });
-
-    // keep clock accurate on visibility
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) updateClock();
+      // Listener for Auth State Changes
+      onAuthStateChanged(auth, (user) => {
+        if (user && user.isAnonymous === false) {
+          // User is signed in (not anonymously)
+          initializeMainApp(user);
+        } else {
+          // User is signed out or anonymous
+          handleLogout(); 
+          showLoading(false);
+        }
+      });
+      
+      // keep clock accurate on visibility
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) updateClock();
+      });
+      
+      // The onAuthStateChanged listener handles the initial session check and loading screen close.
     });
   </script>
 </body>
