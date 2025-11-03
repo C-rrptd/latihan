@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Memuat Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
-    <!-- Memuat Supabase JS -->
+    <!-- Memuat Supabase JS (UMD Build untuk menghindari masalah module) -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
@@ -241,12 +241,13 @@
 
     <!-- Script Aplikasi Supabase -->
     <script>
-        // --- 1. Konfigurasi Supabase (HARUS DIGANTI) ---
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Ganti dengan URL Proyek Supabase Anda
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Ganti dengan Anon Key Proyek Supabase Anda
         
-        // Buat klien Supabase
-        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- 1. Konfigurasi Supabase (Telah Diperbarui dengan Kredensial Anda) ---
+        const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'; 
+        
+        // Buat klien Supabase (Menggunakan global window.supabase dari UMD)
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- 2. Variabel State Global ---
         const appState = {
@@ -426,8 +427,7 @@
                 appState.profile = { id: user.id, full_name: name, nis: nis, role: role, avatar_url: null };
             } catch (error) {
                 showToast(`Gagal menyimpan profil: ${error.message}`, 'error');
-                // Hapus akun Supabase jika gagal membuat profil
-                await supabase.auth.admin.deleteUser(user.id);
+                // Note: Pada lingkungan produksi, Supabase RLS harus mengizinkan INSERT ke profiles
             }
         }
 
@@ -441,10 +441,14 @@
             if (session) {
                 appState.user = session.user;
                 appState.profile = await fetchUserProfile(session.user.id);
-                if (!appState.profile) {
-                    // Kasus khusus: user terautentikasi tapi profil belum ada (misal setelah daftar)
-                    showToast('Profil belum lengkap. Silakan lengkapi profil Anda.', 'info');
-                    // Biasanya profil dibuat saat signup, jadi ini hanya fallback.
+                
+                // Jika user baru dan profil belum ada (setelah signup, sebelum verifikasi email)
+                if (!appState.profile && event === 'SIGNED_IN') {
+                    // Coba ambil metadata dari user object yang mungkin disimpan saat signup
+                    const metadata = session.user.user_metadata;
+                    if (metadata.full_name && metadata.nis && metadata.role) {
+                        await createInitialProfile(session.user, metadata.full_name, metadata.nis, metadata.role);
+                    }
                 }
 
                 toggleAppView(true); // Tampilkan Dashboard
@@ -492,7 +496,7 @@
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email, 
                     password,
-                    // Tambahkan data profil di sini agar tersedia saat onAuthStateChange dipanggil
+                    // Simpan data profil di metadata, akan digunakan setelah verifikasi/login
                     options: {
                         data: {
                             full_name: name,
@@ -504,11 +508,15 @@
                 
                 if (authError) throw authError;
 
-                // 2. Buat entri profil di database
-                await createInitialProfile(authData.user, name, nis, role);
-
-                showToast('Pendaftaran berhasil! Silakan periksa email Anda untuk verifikasi.', 'success');
-                showAuthView('login');
+                // Supabase biasanya mengirim email konfirmasi. Setelah konfirmasi, user akan sign in.
+                if (authData.user && authData.user.identities && authData.user.identities.length > 0) {
+                     // User langsung signed in (misal email confirmation diabaikan di config)
+                     showToast('Pendaftaran berhasil! Anda berhasil masuk.', 'success');
+                } else {
+                    // Menunggu verifikasi email
+                    showToast('Pendaftaran berhasil! Silakan periksa email Anda untuk verifikasi. Anda akan masuk otomatis setelah verifikasi.', 'success');
+                    showAuthView('login');
+                }
             } catch (error) {
                 showToast(`Pendaftaran gagal: ${error.message}`, 'error');
             }
@@ -858,7 +866,7 @@
             const currentProfile = appState.profile;
             const userId = appState.user.id;
             
-            if (!currentProfile || !userId) return showToast('Error: Sesi penggunahttps://qvunfkabbhulwqfnkren.supabase.co tidak ditemukan.', 'error');
+            if (!currentProfile || !userId) return showToast('Error: Sesi pengguna tidak ditemukan.', 'error');
             
             let avatarUrl = currentProfile.avatar_url;
             showToast('Menyimpan profil...', 'info');
@@ -970,7 +978,6 @@
             
             // Listeners navigasi Auth
             document.getElementById('show-signup-button')?.addEventListener('click', () => showAuthView('signup'));
-            document.getElementById('show-login-button')?.addEventListener('click', () => showAuthView('login'));
             document.getElementById('show-forgot-password-button')?.addEventListener('click', () => showAuthView('forgotPassword'));
             document.getElementById('back-to-login-button')?.addEventListener('click', () => showAuthView('login'));
             
