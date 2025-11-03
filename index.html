@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Absensi Sekolah Online</title>
+    <title>Sistem Absensi Sekolah Online - Glassmorphism Clean</title>
     <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Memuat Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
-    <!-- Memuat Supabase JS (UMD Build untuk menghindari masalah module) -->
+    <!-- Memuat Supabase JS (UMD Build) -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
@@ -20,28 +22,66 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Latar Belakang Gelap untuk Kontras Glassmorphism */
+            background: linear-gradient(135deg, #3a2559 0%, #0c082e 100%);
             min-height: 100vh;
+            background-attachment: fixed;
         }
         
         .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            /* Inti Glassmorphism yang lebih kalem */
+            background: rgba(255, 255, 255, 0.15); /* Opasitas sedikit lebih rendah */
+            backdrop-filter: blur(15px); /* Blur Disesuaikan */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Border lebih halus */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); 
+            transition: all 0.3s ease;
         }
 
-        /* Styling tambahan untuk memusatkan toast */
+        .text-on-glass {
+            color: #ffffff;
+            /* Text shadow dikurangi agar lebih clean */
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3); 
+        }
+
         #toast-container {
             z-index: 1000;
-            top: 1rem;
+            top: 1.5rem;
             left: 50%;
             transform: translateX(-50%);
             max-width: 90%;
+            min-width: 280px;
         }
 
         .btn-primary {
-            @apply bg-indigo-600 text-white font-semibold py-2 px-4 rounded-xl hover:bg-indigo-700 transition duration-300 shadow-md;
+            /* Tombol lebih bulat dan kontras */
+            @apply bg-indigo-500 text-white font-semibold py-3 px-6 rounded-full hover:bg-indigo-600 transition duration-300 shadow-xl shadow-indigo-500/50;
+        }
+
+        .input-field {
+            /* Input lebih jelas, menggunakan background putih semi-transparan yang lebih tebal */
+            @apply w-full pl-12 pr-4 py-3 border border-white/30 bg-white/15 text-white placeholder-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200;
+        }
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .log-item {
+            /* Item log dengan glass effect yang sama untuk konsistensi */
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .log-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #attendance-log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        #attendance-log-container::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -53,35 +93,49 @@
     </div>
 
     <!-- Modal Profil Pengguna -->
-    <div id="profile-modal" class="fixed inset-0 z-40 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4 transition-opacity duration-300 opacity-0">
-        <div class="glass-effect p-6 rounded-2xl w-full max-w-md transform transition-transform duration-300 scale-95">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2 flex justify-between items-center">
-                Edit Profil
-                <button onclick="closeProfileModal()" class="text-gray-500 hover:text-gray-700">
+    <div id="profile-modal" class="fixed inset-0 z-40 bg-gray-900 bg-opacity-70 hidden items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="glass-effect p-8 rounded-3xl w-full max-w-lg transform transition-transform duration-300 scale-95">
+            <h2 class="text-2xl font-bold mb-6 text-white border-b border-white/30 pb-3 flex justify-between items-center text-on-glass">
+                <i data-lucide="settings" class="w-6 h-6 text-indigo-300 mr-2"></i>
+                Pengaturan Profil
+                <button onclick="closeProfileModal()" class="text-white hover:text-indigo-300 transition duration-200">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
             </h2>
             <form id="profile-form">
-                <div class="mb-4 text-center">
-                    <label class="block text-gray-700 font-medium mb-2">Foto Profil</label>
-                    <div class="relative w-24 h-24 mx-auto rounded-full bg-gray-200 flex items-center justify-center cursor-pointer overflow-hidden">
+                <div class="mb-6 text-center">
+                    <label class="block text-gray-200 font-medium mb-3">Foto Profil</label>
+                    <div class="relative w-28 h-28 mx-auto rounded-full bg-indigo-600 flex items-center justify-center cursor-pointer overflow-hidden shadow-lg border-4 border-white transform hover:scale-[1.03] transition duration-200" title="Klik untuk mengganti foto">
                         <img id="profile-image-preview" src="" alt="Profil" class="w-full h-full object-cover hidden">
-                        <i id="profile-image-icon" data-lucide="user" class="w-12 h-12 text-gray-500"></i>
+                        <i id="profile-image-icon" data-lucide="user-plus" class="w-14 h-14 text-white"></i>
                         <input type="file" id="profile-image-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
                     </div>
-                    <button type="button" id="remove-profile-image" class="mt-2 text-sm text-red-600 hover:text-red-800 hidden">Hapus Foto</button>
+                    <button type="button" id="remove-profile-image" class="mt-3 text-sm text-red-400 hover:text-red-300 font-medium hidden">Hapus Foto</button>
                 </div>
-                <div class="mb-4">
-                    <label for="profile-name" class="block text-gray-700 font-medium mb-2">Nama Lengkap</label>
-                    <input type="text" id="profile-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                <div class="space-y-4">
+                    <div>
+                        <label for="profile-name" class="block text-gray-200 font-medium mb-1 text-sm">Nama Lengkap</label>
+                        <div class="relative">
+                            <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                            <input type="text" id="profile-name" class="input-field text-white" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="profile-nis" class="block text-gray-200 font-medium mb-1 text-sm">NIS / ID</label>
+                        <div class="relative">
+                            <i data-lucide="credit-card" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                            <input type="text" id="profile-nis" class="input-field bg-white/5 cursor-not-allowed text-gray-300" readonly>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label for="profile-nis" class="block text-gray-700 font-medium mb-2">NIS / ID</label>
-                    <input type="text" id="profile-nis" class="w-full px-3 py-2 border border-gray-300 bg-gray-100 rounded-lg focus:outline-none" readonly>
-                </div>
-                <button type="submit" id="save-profile-button" class="btn-primary w-full mt-4">Simpan Perubahan</button>
+                <button type="submit" id="save-profile-button" class="btn-primary w-full mt-6">
+                    <i data-lucide="save" class="w-5 h-5 mr-2"></i>
+                    Simpan Perubahan
+                </button>
             </form>
-            <button onclick="changePassword()" class="text-sm text-indigo-600 hover:text-indigo-800 mt-4 block text-center">Ubah Password</button>
+            <button onclick="changePassword()" class="text-sm text-indigo-300 hover:text-indigo-100 mt-4 block mx-auto font-medium transition duration-200">
+                Ubah Password
+            </button>
         </div>
     </div>
 
@@ -89,151 +143,178 @@
     <div class="container mx-auto p-4 flex items-center justify-center min-h-screen">
         
         <!-- View Autentikasi (Login, Daftar, Lupa Password) -->
-        <div id="auth-view" class="w-full max-w-sm">
-            <div class="glass-effect p-8 rounded-2xl shadow-xl">
-                <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6" id="auth-title">Login</h1>
+        <div id="auth-view" class="w-full max-w-md">
+            <div class="glass-effect p-10 rounded-3xl shadow-2xl">
+                <h1 class="text-3xl font-extrabold text-center text-white mb-8 text-on-glass" id="auth-title">Selamat Datang</h1>
                 
                 <!-- Form Login -->
-                <form id="login-form" class="space-y-4">
+                <form id="login-form" class="space-y-5">
                     <div class="relative">
-                        <i data-lucide="mail" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <input type="email" id="login-email" placeholder="Email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <input type="email" id="login-email" placeholder="Email" class="input-field" required>
                     </div>
                     <div class="relative">
-                        <i data-lucide="lock" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <input type="password" id="login-password" placeholder="Password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                        <button type="button" class="toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500" aria-label="Toggle Password Visibility">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <input type="password" id="login-password" placeholder="Password" class="input-field pr-12" required>
+                        <button type="button" class="toggle-password absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-indigo-300 transition duration-200" aria-label="Toggle Password Visibility">
                             <i data-lucide="eye-off" class="w-5 h-5"></i>
                         </button>
                     </div>
-                    <button type="submit" class="btn-primary w-full py-3">
-                        Masuk
+                    <button type="submit" class="btn-primary w-full flex items-center justify-center space-x-2">
+                        <i data-lucide="log-in" class="w-5 h-5"></i>
+                        <span>Masuk ke Akun</span>
                     </button>
                     <div class="text-center text-sm">
-                        <button type="button" id="show-forgot-password-button" class="text-indigo-600 hover:text-indigo-800 transition duration-300">Lupa Password?</button>
+                        <button type="button" id="show-forgot-password-button" class="text-indigo-300 hover:text-indigo-100 font-medium transition duration-300">Lupa Password?</button>
                     </div>
-                    <div class="text-center text-sm pt-4 border-t border-gray-200">
-                        Belum punya akun? 
-                        <button type="button" id="show-signup-button" class="text-indigo-600 font-semibold hover:text-indigo-800 transition duration-300">Daftar Sekarang</button>
+                    <div class="text-center text-sm pt-6 border-t border-white/20">
+                        <span class="text-gray-200">Belum punya akun?</span> 
+                        <button type="button" id="show-signup-button" class="text-indigo-300 font-bold hover:text-indigo-100 transition duration-300">Daftar Sekarang</button>
                     </div>
                 </form>
 
                 <!-- Form Daftar (Signup) -->
-                <form id="signup-form" class="space-y-4 hidden">
+                <form id="signup-form" class="space-y-5 hidden">
                     <div class="relative">
-                        <i data-lucide="mail" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <input type="email" id="signup-email" placeholder="Email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <input type="email" id="signup-email" placeholder="Email" class="input-field" required>
                     </div>
                     <div class="relative">
-                        <i data-lucide="user" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <input type="text" id="signup-name" placeholder="Nama Lengkap" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <input type="text" id="signup-name" placeholder="Nama Lengkap" class="input-field" required>
                     </div>
                     <div class="relative">
-                        <i data-lucide="credit-card" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <input type="text" id="signup-nis" placeholder="NIS / ID Karyawan" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <i data-lucide="credit-card" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <input type="text" id="signup-nis" placeholder="NIS / ID Karyawan" class="input-field" required>
                     </div>
                     <div class="relative">
-                        <i data-lucide="lock" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <input type="password" id="signup-password" placeholder="Password (min 6 karakter)" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required minlength="6">
-                        <button type="button" class="toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500" aria-label="Toggle Password Visibility">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <input type="password" id="signup-password" placeholder="Password (min 6 karakter)" class="input-field pr-12" required minlength="6">
+                        <button type="button" class="toggle-password absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-indigo-300 transition duration-200" aria-label="Toggle Password Visibility">
                             <i data-lucide="eye-off" class="w-5 h-5"></i>
                         </button>
                     </div>
                     <div class="relative">
-                        <i data-lucide="shield" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <select id="signup-role" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="student">Siswa/i</option>
-                            <option value="admin">Admin/Guru</option>
+                        <i data-lucide="shield" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <select id="signup-role" class="input-field appearance-none cursor-pointer text-white">
+                            <option value="student" class="bg-gray-800 text-white">Siswa/i</option>
+                            <option value="admin" class="bg-gray-800 text-white">Admin/Guru</option>
                         </select>
+                        <i data-lucide="chevron-down" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none"></i>
                     </div>
 
-                    <button type="submit" class="btn-primary w-full py-3">
-                        Daftar
+                    <button type="submit" class="btn-primary w-full flex items-center justify-center space-x-2">
+                        <i data-lucide="user-plus" class="w-5 h-5"></i>
+                        <span>Daftar Akun Baru</span>
                     </button>
-                    <div class="text-center text-sm pt-4 border-t border-gray-200">
-                        Sudah punya akun? 
-                        <button type="button" id="back-to-login-button" class="text-indigo-600 font-semibold hover:text-indigo-800 transition duration-300">Masuk</button>
+                    <div class="text-center text-sm pt-6 border-t border-white/20">
+                        <span class="text-gray-200">Sudah punya akun?</span> 
+                        <button type="button" id="back-to-login-button" class="text-indigo-300 font-bold hover:text-indigo-100 transition duration-300">Masuk</button>
                     </div>
                 </form>
 
                 <!-- Form Lupa Password -->
-                <form id="forgot-password-form" class="space-y-4 hidden">
-                    <p class="text-sm text-gray-600">Masukkan email Anda. Kami akan mengirimkan tautan reset password.</p>
+                <form id="forgot-password-form" class="space-y-5 hidden">
+                    <p class="text-sm text-gray-200 text-center">Masukkan email Anda. Kami akan mengirimkan tautan reset password.</p>
                     <div class="relative">
-                        <i data-lucide="mail" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <input type="email" id="forgot-email" placeholder="Email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <input type="email" id="forgot-email" placeholder="Email" class="input-field" required>
                     </div>
-                    <button type="submit" class="btn-primary w-full py-3">
-                        Kirim Tautan Reset
+                    <button type="submit" class="btn-primary w-full flex items-center justify-center space-x-2">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                        <span>Kirim Tautan Reset</span>
                     </button>
-                    <div class="text-center text-sm pt-4 border-t border-gray-200">
-                        <button type="button" onclick="showAuthView('login')" class="text-indigo-600 font-semibold hover:text-indigo-800 transition duration-300">Kembali ke Login</button>
+                    <div class="text-center text-sm pt-6 border-t border-white/20">
+                        <button type="button" onclick="showAuthView('login')" class="text-indigo-300 font-bold hover:text-indigo-100 transition duration-300">Kembali ke Login</button>
                     </div>
                 </form>
             </div>
         </div>
 
         <!-- View Dashboard -->
-        <div id="dashboard-view" class="w-full max-w-4xl hidden transition-opacity duration-500 opacity-0 transform translate-y-4">
-            <div class="glass-effect p-8 rounded-2xl shadow-xl">
+        <div id="dashboard-view" class="w-full max-w-5xl hidden transition-opacity duration-500 opacity-0 transform translate-y-4">
+            <div class="glass-effect p-8 rounded-3xl shadow-2xl">
                 
                 <!-- Header Dashboard -->
-                <header class="flex justify-between items-center mb-6 border-b pb-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="relative w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center cursor-pointer overflow-hidden" onclick="showProfileModal()">
+                <header class="flex justify-between items-center mb-8 border-b border-white/20 pb-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center cursor-pointer overflow-hidden shadow-lg border-2 border-white transform hover:scale-[1.03] transition duration-200" onclick="showProfileModal()">
                             <img id="dashboard-profile-image" src="" alt="P" class="w-full h-full object-cover hidden">
-                            <i id="dashboard-profile-icon" data-lucide="user" class="w-6 h-6 text-white"></i>
+                            <i id="dashboard-profile-icon" data-lucide="user" class="w-7 h-7 text-white"></i>
                         </div>
                         <div>
-                            <p class="text-lg font-semibold text-gray-800" id="user-name-display">Memuat...</p>
-                            <p class="text-sm text-gray-600" id="user-role-display">Memuat...</p>
+                            <p class="text-xl font-bold text-white text-on-glass" id="user-name-display">Memuat...</p>
+                            <p class="text-sm font-medium text-indigo-300 flex items-center space-x-1" id="user-role-display">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                                <span>Memuat...</span>
+                            </p>
                         </div>
                     </div>
-                    <button onclick="signOut()" class="text-sm text-red-500 hover:text-red-700 font-medium flex items-center space-x-1">
+                    <button onclick="signOut()" class="text-sm text-red-300 hover:text-white hover:bg-red-500 py-2 px-4 rounded-full font-medium flex items-center space-x-1 transition duration-200 border border-red-300/50">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span>Keluar</span>
                     </button>
                 </header>
 
-                <!-- Bagian Absensi (Hanya untuk Siswa/Student) -->
-                <div id="attendance-section" class="mb-8 p-4 bg-indigo-50 rounded-xl border border-indigo-200 shadow-inner">
-                    <h2 class="text-xl font-bold text-indigo-700 mb-4 flex items-center space-x-2">
-                        <i data-lucide="check-circle" class="w-6 h-6"></i>
-                        <span>Absensi Hari Ini</span>
-                    </h2>
-                    <div id="attendance-status" class="text-center p-3 rounded-lg text-lg font-medium bg-yellow-100 text-yellow-700 mb-4">
-                        Status: Belum Absen
+                <!-- Konten Dashboard -->
+                <div class="grid md:grid-cols-3 gap-8">
+                    
+                    <!-- Kolom Kiri: Absensi & Status -->
+                    <div class="md:col-span-1 space-y-8">
+                        <!-- Bagian Absensi (Hanya untuk Siswa/Student) -->
+                        <div id="attendance-section" class="p-6 glass-effect rounded-2xl border border-indigo-500/30 shadow-xl hidden">
+                            <h2 class="text-xl font-extrabold text-white mb-4 flex items-center space-x-2 text-on-glass border-b border-white/10 pb-2">
+                                <i data-lucide="calendar-check" class="w-6 h-6 text-indigo-300"></i>
+                                <span>Absensi Hari Ini</span>
+                            </h2>
+                            <div id="attendance-status" class="text-center p-4 rounded-xl text-lg font-bold transition-all duration-300 mb-6 bg-yellow-400/10 text-yellow-300 border border-yellow-400/20">
+                                Status: Belum Absen
+                            </div>
+                            <button id="record-attendance-button" class="btn-primary w-full py-4 flex items-center justify-center space-x-2 text-lg">
+                                <i data-lucide="map-pin" class="w-6 h-6"></i>
+                                <span>Rekam Absensi Sekarang</span>
+                            </button>
+                        </div>
+
+                        <!-- Sidebar Info Tambahan (Bisa Disesuaikan) -->
+                        <div class="p-6 glass-effect rounded-2xl border border-white/20">
+                            <h3 class="font-bold text-lg text-white mb-3 flex items-center space-x-2 text-on-glass border-b border-white/10 pb-2">
+                                <i data-lucide="info" class="w-5 h-5 text-indigo-300"></i>
+                                <span>Pemberitahuan Cepat</span>
+                            </h3>
+                            <p class="text-sm text-gray-200">Pastikan GPS Anda aktif dan berada di lokasi sekolah saat merekam absensi.</p>
+                            <a href="#" class="text-xs text-indigo-300 hover:text-indigo-100 font-medium mt-3 block">Baca Panduan Absensi</a>
+                        </div>
                     </div>
-                    <button id="record-attendance-button" class="btn-primary w-full py-3 flex items-center justify-center space-x-2">
-                        <i data-lucide="camera" class="w-5 h-5"></i>
-                        <span>Rekam Absensi</span>
-                    </button>
-                </div>
 
-                <!-- Bagian Log Absensi (Untuk Semua Role) -->
-                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center space-x-2">
-                    <i data-lucide="list-ordered" class="w-6 h-6"></i>
-                    <span>Riwayat Absensi</span>
-                </h2>
+                    <!-- Kolom Kanan: Log Absensi (Riwayat) -->
+                    <div class="md:col-span-2">
+                        <h2 class="text-xl font-extrabold text-white mb-4 border-b border-white/20 pb-2 flex items-center space-x-2 text-on-glass">
+                            <i data-lucide="archive" class="w-6 h-6 text-indigo-300"></i>
+                            <span>Riwayat Absensi</span>
+                        </h2>
 
-                <!-- Kotak Pencarian (Hanya untuk Admin) -->
-                <div id="search-container" class="mb-4 hidden">
-                    <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
-                        <input type="text" id="search-student-input" placeholder="Cari berdasarkan NIS/Nama Siswa" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <!-- Kotak Pencarian (Hanya untuk Admin) -->
+                        <div id="search-container" class="mb-5 hidden">
+                            <div class="relative">
+                                <i data-lucide="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                                <input type="text" id="search-student-input" placeholder="Cari NIS/Nama Siswa untuk Filter Data..." class="input-field">
+                            </div>
+                        </div>
+
+                        <!-- Daftar Log Absensi -->
+                        <div id="attendance-log-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                            <p class="text-center text-gray-300 p-8" id="log-loading-message">Memuat log absensi...</p>
+                            <!-- Log Absensi akan dimasukkan di sini oleh JS -->
+                        </div>
+
+                        <div id="empty-log-message" class="hidden text-center text-gray-300 p-10 border-2 border-dashed border-white/30 rounded-xl mt-4 bg-white/10">
+                            <i data-lucide="database" class="w-8 h-8 mx-auto mb-2"></i>
+                            <p class="font-medium">Belum ada data absensi yang tercatat.</p>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Daftar Log Absensi -->
-                <div id="attendance-log-container" class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                    <p class="text-center text-gray-500" id="log-loading-message">Memuat log absensi...</p>
-                    <!-- Log Absensi akan dimasukkan di sini oleh JS -->
-                </div>
-
-                <div id="empty-log-message" class="hidden text-center text-gray-500 p-8 border border-dashed rounded-lg mt-4">
-                    Belum ada data absensi yang tercatat.
-                </div>
-
+                
             </div>
         </div>
 
@@ -242,22 +323,28 @@
     <!-- Script Aplikasi Supabase -->
     <script>
         
-        // --- 1. Konfigurasi Supabase (Telah Diperbarui dengan Kredensial Anda) ---
+        // --- 1. Konfigurasi Supabase (Harap Ganti dengan Kunci Anda) ---
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cw11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'; 
         
-        // Buat klien Supabase (Menggunakan global window.supabase dari UMD)
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- PERBAIKAN: Menangani masalah ReferenceError: Supabase is not defined ---
+        const SupabaseClient = window.supabase || window.Supabase;
+
+        if (!SupabaseClient) {
+            console.error("Supabase client library not loaded. Check your script tag and network connection!");
+            throw new ReferenceError("Supabase client library (supabase-js) not found in global scope. Cannot initialize application.");
+        }
+
+        // Buat klien Supabase
+        const supabase = SupabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // --- 2. Variabel State Global ---
         const appState = {
             user: null,
             profile: null,
             isAuthReady: false,
-            // State untuk modal profil
             profileImageFile: null,
             profileImageToDelete: false,
-            // ID unik untuk bucket penyimpanan Supabase
             SUPABASE_STORAGE_BUCKET: 'profile-images' 
         };
 
@@ -274,27 +361,26 @@
             
             let color, icon;
             if (type === 'success') {
-                color = 'bg-green-500';
+                color = 'bg-green-600';
                 icon = 'check-circle';
             } else if (type === 'error') {
-                color = 'bg-red-500';
+                color = 'bg-red-600';
                 icon = 'x-circle';
             } else {
-                color = 'bg-blue-500';
+                color = 'bg-blue-600';
                 icon = 'info';
             }
 
-            toast.className = `flex items-center space-x-3 ${color} text-white text-sm font-medium py-3 px-4 rounded-xl shadow-lg transition duration-300 transform translate-y-0`;
+            toast.className = `flex items-center space-x-3 ${color} text-white font-semibold py-3 px-5 rounded-xl shadow-xl transition duration-300 transform translate-y-0 opacity-100`;
             toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><span>${message}</span>`;
             
-            // Tambahkan ikon dari lucide
             lucide.createIcons({ attr: 'data-lucide', elements: [toast] });
 
             container.prepend(toast);
 
             // Sembunyikan dan hapus toast setelah 4 detik
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-full');
+                toast.classList.add('opacity-0', 'translate-y-4');
                 toast.addEventListener('transitionend', () => toast.remove());
             }, 4000);
         }
@@ -308,30 +394,28 @@
             const dashboardView = document.getElementById('dashboard-view');
             
             if (showDashboard) {
-                // Sembunyikan Auth
                 authView.classList.add('hidden');
                 
-                // Tampilkan Dashboard dengan transisi
                 dashboardView.classList.remove('hidden');
                 setTimeout(() => {
                     dashboardView.classList.remove('opacity-0', 'translate-y-4');
                 }, 10);
             } else {
-                // Sembunyikan Dashboard dengan transisi
                 dashboardView.classList.add('opacity-0', 'translate-y-4');
                 setTimeout(() => {
                     dashboardView.classList.add('hidden');
                     authView.classList.remove('hidden');
-                }, 500); // Tunggu transisi selesai
+                }, 500);
             }
         }
 
         /**
          * Mengubah tampilan form di Auth View (Login/Daftar/Lupa Password).
-         * @param {'login'|'signup'|'forgotPassword'} view - Tampilan yang akan ditampilkan.
          */
         function showAuthView(view) {
-            document.getElementById('auth-title').textContent = view === 'login' ? 'Masuk' : view === 'signup' ? 'Daftar Akun' : 'Reset Password';
+            const titleEl = document.getElementById('auth-title');
+            titleEl.textContent = view === 'login' ? 'Masuk ke Sistem' : view === 'signup' ? 'Daftar Akun Baru' : 'Reset Password';
+            titleEl.classList.add('text-on-glass'); // Pastikan judul terlihat di atas glass
             document.getElementById('login-form').classList.toggle('hidden', view !== 'login');
             document.getElementById('signup-form').classList.toggle('hidden', view !== 'signup');
             document.getElementById('forgot-password-form').classList.toggle('hidden', view !== 'forgotPassword');
@@ -343,7 +427,8 @@
         function updateUserProfileDisplay() {
             const { profile } = appState;
             const nameDisplay = document.getElementById('user-name-display');
-            const roleDisplay = document.getElementById('user-role-display');
+            const roleDisplay = document.getElementById('user-role-display').querySelector('span');
+            const roleIcon = document.getElementById('user-role-display').querySelector('i');
             const imgEl = document.getElementById('dashboard-profile-image');
             const iconEl = document.getElementById('dashboard-profile-icon');
             const attendanceSection = document.getElementById('attendance-section');
@@ -352,6 +437,8 @@
             if (profile) {
                 nameDisplay.textContent = profile.full_name || 'Pengguna';
                 roleDisplay.textContent = profile.role === 'admin' ? 'Admin/Guru' : 'Siswa/i';
+                roleIcon.setAttribute('data-lucide', profile.role === 'admin' ? 'crown' : 'graduation-cap');
+                lucide.createIcons();
 
                 // Tampilkan/Sembunyikan bagian sesuai peran
                 if (profile.role === 'admin') {
@@ -383,16 +470,13 @@
             } else {
                 nameDisplay.textContent = 'Memuat...';
                 roleDisplay.textContent = 'Memuat...';
+                roleIcon.setAttribute('data-lucide', 'shield-check');
+                lucide.createIcons();
             }
         }
 
         // --- 4. Fungsi Supabase Auth ---
 
-        /**
-         * Mengambil data profil dari tabel 'profiles' Supabase.
-         * @param {string} userId - ID pengguna Supabase.
-         * @returns {Promise<object|null>} Data profil.
-         */
         async function fetchUserProfile(userId) {
             try {
                 const { data, error } = await supabase
@@ -401,7 +485,7 @@
                     .eq('id', userId)
                     .single();
 
-                if (error && error.code !== 'PGRST116') throw error; // PGRST116: data tidak ditemukan (diabaikan saat daftar)
+                if (error && error.code !== 'PGRST116') throw error;
                 return data;
             } catch (error) {
                 showToast(`Gagal memuat profil: ${error.message}`, 'error');
@@ -409,9 +493,6 @@
             }
         }
 
-        /**
-         * Membuat profil baru di tabel 'profiles' setelah pendaftaran.
-         */
         async function createInitialProfile(user, name, nis, role) {
             try {
                 const { error } = await supabase
@@ -427,13 +508,9 @@
                 appState.profile = { id: user.id, full_name: name, nis: nis, role: role, avatar_url: null };
             } catch (error) {
                 showToast(`Gagal menyimpan profil: ${error.message}`, 'error');
-                // Note: Pada lingkungan produksi, Supabase RLS harus mengizinkan INSERT ke profiles
             }
         }
 
-        /**
-         * Mendengarkan perubahan status autentikasi.
-         */
         supabase.auth.onAuthStateChange(async (event, session) => {
             console.log('Auth state changed:', event);
             appState.isAuthReady = true;
@@ -442,21 +519,20 @@
                 appState.user = session.user;
                 appState.profile = await fetchUserProfile(session.user.id);
                 
-                // Jika user baru dan profil belum ada (setelah signup, sebelum verifikasi email)
                 if (!appState.profile && event === 'SIGNED_IN') {
-                    // Coba ambil metadata dari user object yang mungkin disimpan saat signup
                     const metadata = session.user.user_metadata;
                     if (metadata.full_name && metadata.nis && metadata.role) {
                         await createInitialProfile(session.user, metadata.full_name, metadata.nis, metadata.role);
                     }
                 }
 
-                toggleAppView(true); // Tampilkan Dashboard
+                toggleAppView(true);
                 updateUserProfileDisplay();
+                setupRealtimeAttendanceListener(); // Mulai listener real-time setelah login
             } else {
                 appState.user = null;
                 appState.profile = null;
-                toggleAppView(false); // Tampilkan Auth View
+                toggleAppView(false);
                 showAuthView('login');
             }
         });
@@ -492,11 +568,9 @@
             showToast('Memproses pendaftaran...', 'info');
 
             try {
-                // 1. Daftar di Auth Supabase
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email, 
                     password,
-                    // Simpan data profil di metadata, akan digunakan setelah verifikasi/login
                     options: {
                         data: {
                             full_name: name,
@@ -508,13 +582,10 @@
                 
                 if (authError) throw authError;
 
-                // Supabase biasanya mengirim email konfirmasi. Setelah konfirmasi, user akan sign in.
                 if (authData.user && authData.user.identities && authData.user.identities.length > 0) {
-                     // User langsung signed in (misal email confirmation diabaikan di config)
                      showToast('Pendaftaran berhasil! Anda berhasil masuk.', 'success');
                 } else {
-                    // Menunggu verifikasi email
-                    showToast('Pendaftaran berhasil! Silakan periksa email Anda untuk verifikasi. Anda akan masuk otomatis setelah verifikasi.', 'success');
+                    showToast('Pendaftaran berhasil! Silakan periksa email Anda untuk verifikasi.', 'success');
                     showAuthView('login');
                 }
             } catch (error) {
@@ -530,7 +601,7 @@
 
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin, // Redirect kembali ke aplikasi setelah reset
+                    redirectTo: window.location.origin,
                 });
                 
                 if (error) throw error;
@@ -553,7 +624,7 @@
         }
 
         async function changePassword() {
-            const newPassword = prompt("Masukkan password baru Anda:");
+            const newPassword = prompt("Masukkan password baru Anda (minimal 6 karakter):");
             if (!newPassword) return;
             if (newPassword.length < 6) {
                 showToast("Password minimal 6 karakter.", 'error');
@@ -563,7 +634,9 @@
             try {
                 const { error } = await supabase.auth.updateUser({ password: newPassword });
                 if (error) throw error;
-                showToast('Password berhasil diubah. Anda mungkin perlu login ulang.', 'success');
+                showToast('Password berhasil diubah. Silakan login ulang.', 'success');
+                closeProfileModal();
+                signOut();
             } catch (error) {
                 showToast(`Gagal mengubah password: ${error.message}`, 'error');
             }
@@ -572,16 +645,10 @@
 
         // --- 6. Fungsi Supabase Database & Real-time (Attendance) ---
 
-        /**
-         * Mendapatkan tanggal hari ini dalam format YYYY-MM-DD.
-         */
         function getTodayDateString() {
             return new Date().toISOString().split('T')[0];
         }
 
-        /**
-         * Memeriksa apakah siswa sudah absen hari ini.
-         */
         async function checkTodayAttendance() {
             const { user, profile } = appState;
             if (!user || profile?.role !== 'student') return;
@@ -602,20 +669,22 @@
 
                 if (data.length > 0) {
                     statusEl.textContent = 'Status: Sudah Absen Hari Ini';
-                    statusEl.classList.remove('bg-yellow-100', 'text-yellow-700');
-                    statusEl.classList.add('bg-green-100', 'text-green-700');
+                    // Warna untuk Sudah Absen
+                    statusEl.classList.remove('bg-yellow-400/10', 'text-yellow-300');
+                    statusEl.classList.add('bg-green-400/10', 'text-green-300', 'ring-1', 'ring-green-400');
                     buttonEl.disabled = true;
-                    buttonEl.textContent = 'Absensi Selesai';
-                    buttonEl.classList.add('opacity-50', 'cursor-not-allowed');
-                    buttonEl.classList.remove('btn-primary');
+                    buttonEl.innerHTML = '<i data-lucide="check" class="w-6 h-6"></i><span>Absensi Selesai</span>';
+                    buttonEl.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400/50', 'shadow-none');
+                    buttonEl.classList.remove('btn-primary', 'hover:bg-indigo-600');
                 } else {
                     statusEl.textContent = 'Status: Belum Absen';
-                    statusEl.classList.remove('bg-green-100', 'text-green-700');
-                    statusEl.classList.add('bg-yellow-100', 'text-yellow-700');
+                    // Warna untuk Belum Absen
+                    statusEl.classList.remove('bg-green-400/10', 'text-green-300', 'ring-1', 'ring-green-400');
+                    statusEl.classList.add('bg-yellow-400/10', 'text-yellow-300');
                     buttonEl.disabled = false;
-                    buttonEl.innerHTML = '<i data-lucide="camera" class="w-5 h-5"></i><span>Rekam Absensi</span>';
-                    buttonEl.classList.remove('opacity-50', 'cursor-not-allowed');
-                    buttonEl.classList.add('btn-primary');
+                    buttonEl.innerHTML = '<i data-lucide="map-pin" class="w-6 h-6"></i><span>Rekam Absensi Sekarang</span>';
+                    buttonEl.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400/50', 'shadow-none');
+                    buttonEl.classList.add('btn-primary', 'hover:bg-indigo-600');
                     lucide.createIcons();
                 }
             } catch (error) {
@@ -623,9 +692,6 @@
             }
         }
 
-        /**
-         * Merekan data absensi.
-         */
         document.getElementById('record-attendance-button')?.addEventListener('click', () => {
             if (appState.profile?.role !== 'student') return;
 
@@ -649,12 +715,12 @@
                             nis: appState.profile.nis,
                             latitude: latitude,
                             longitude: longitude,
-                            status: 'Hadir' // Status default
+                            status: 'Hadir'
                         });
 
                     if (error) throw error;
                     showToast('Absensi berhasil dicatat!', 'success');
-                    checkTodayAttendance(); // Perbarui status
+                    checkTodayAttendance();
                 } catch (error) {
                     showToast(`Gagal merekam absensi: ${error.message}`, 'error');
                 }
@@ -663,9 +729,6 @@
             });
         });
 
-        /**
-         * Mengambil dan merender log absensi.
-         */
         async function renderAllAttendanceLog(searchTerm = '') {
             const container = document.getElementById('attendance-log-container');
             const loadingMessage = document.getElementById('log-loading-message');
@@ -680,14 +743,11 @@
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                // Filter untuk pengguna non-admin (hanya log sendiri)
                 if (appState.profile?.role !== 'admin') {
                     query = query.eq('user_id', appState.user.id);
                 }
 
-                // Pencarian (hanya berlaku untuk admin, atau saat admin mencari log sendiri)
                 if (searchTerm.trim()) {
-                    // Supabase Full-Text Search (FTS) atau ILIKE sederhana
                     query = query.or(`nis.ilike.%${searchTerm}%,user_name.ilike.%${searchTerm}%`);
                 }
 
@@ -705,23 +765,27 @@
                 logs.forEach(log => {
                     const date = new Date(log.created_at);
                     const formattedDate = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-                    const formattedTime = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    const formattedTime = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: undefined });
 
                     const isSelf = log.user_id === appState.user.id;
                     const logItem = document.createElement('div');
-                    logItem.className = 'bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center';
+                    // Menggunakan glass effect ringan untuk setiap item log
+                    logItem.className = 'log-item p-4 rounded-xl shadow-md border border-white/20 flex justify-between items-center transition duration-200 hover:shadow-lg';
                     logItem.innerHTML = `
-                        <div>
-                            <p class="font-semibold text-gray-800">${log.user_name} (${log.nis}) ${isSelf ? '<span class="text-xs text-indigo-500 font-medium">(Anda)</span>' : ''}</p>
-                            <p class="text-xs text-gray-500 mt-1 flex items-center space-x-1">
-                                <i data-lucide="clock" class="w-3 h-3"></i>
-                                <span>${formattedDate} Pukul ${formattedTime}</span>
-                            </p>
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="user-check" class="w-6 h-6 text-indigo-300"></i>
+                            <div>
+                                <p class="font-bold text-white text-on-glass">${log.user_name} <span class="text-sm font-medium text-gray-300">(${log.nis})</span> ${isSelf ? '<span class="text-xs text-green-300 font-medium bg-green-500/20 px-2 py-0.5 rounded-full border border-green-500/30">Anda</span>' : ''}</p>
+                                <p class="text-xs text-gray-300 mt-1 flex items-center space-x-1">
+                                    <i data-lucide="clock" class="w-3 h-3"></i>
+                                    <span>${formattedDate} Pukul ${formattedTime}</span>
+                                </p>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">${log.status}</span>
-                            <a href="https://www.google.com/maps/search/?api=1&query=${log.latitude},${log.longitude}" target="_blank" class="text-xs text-indigo-500 hover:text-indigo-700 mt-1 block">
-                                Lihat Lokasi <i data-lucide="external-link" class="w-3 h-3 inline"></i>
+                        <div class="text-right flex flex-col items-end">
+                            <span class="inline-block px-3 py-1 text-xs font-bold rounded-full bg-indigo-500/30 text-indigo-300 border border-indigo-500/30">${log.status}</span>
+                            <a href="https://www.google.com/maps/search/?api=1&query=${log.latitude},${log.longitude}" target="_blank" class="text-xs text-indigo-300 hover:text-indigo-100 font-medium mt-1 flex items-center space-x-1">
+                                <span>Lokasi</span> <i data-lucide="map" class="w-3 h-3 inline"></i>
                             </a>
                         </div>
                     `;
@@ -736,21 +800,15 @@
 
         // --- 7. Real-time Supabase untuk Log Absensi ---
 
-        /**
-         * Setup real-time listener untuk log absensi.
-         */
         function setupRealtimeAttendanceListener() {
-            // Unsubscribe channel jika sudah ada (untuk menghindari duplikasi)
             supabase.removeAllChannels(); 
 
-            // Subscribe ke channel 'attendance'
             supabase
                 .channel('attendance_changes')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance' }, (payload) => {
                     console.log('Real-time attendance change:', payload);
-                    // Panggil ulang render untuk memperbarui daftar
+                    // Tambahkan debounce atau throttle jika performa terpengaruh oleh banyak event.
                     renderAllAttendanceLog(document.getElementById('search-student-input')?.value || '');
-                    // Periksa kembali status absensi hari ini (jika student)
                     if (appState.profile?.role === 'student') checkTodayAttendance();
                 })
                 .subscribe();
@@ -758,9 +816,6 @@
 
         // --- 8. Fungsi Supabase Storage & Profile Modal ---
 
-        /**
-         * Menampilkan Modal Profil.
-         */
         function showProfileModal() {
             const { profile } = appState;
             const modal = document.getElementById('profile-modal');
@@ -768,11 +823,9 @@
             const iconEl = document.getElementById('profile-image-icon');
             const removeBtn = document.getElementById('remove-profile-image');
             
-            // Isi form dengan data profil saat ini
             document.getElementById('profile-name').value = profile?.full_name || '';
             document.getElementById('profile-nis').value = profile?.nis || '';
 
-            // Tampilkan atau sembunyikan gambar
             if (profile?.avatar_url) {
                 imgPreview.src = profile.avatar_url;
                 imgPreview.classList.remove('hidden');
@@ -788,7 +841,6 @@
             appState.profileImageFile = null;
             appState.profileImageToDelete = false;
 
-            // Tampilkan modal
             modal.classList.remove('hidden', 'opacity-0', 'scale-95');
             modal.classList.add('flex');
             setTimeout(() => {
@@ -796,9 +848,6 @@
             }, 10);
         }
 
-        /**
-         * Menyembunyikan Modal Profil.
-         */
         function closeProfileModal() {
             const modal = document.getElementById('profile-modal');
             modal.classList.add('opacity-0', 'scale-95');
@@ -808,10 +857,6 @@
             }, 300);
         }
 
-        /**
-         * Upload gambar profil ke Supabase Storage.
-         * @returns {Promise<string|null>} URL publik gambar.
-         */
         async function uploadProfileImage(file, userId) {
             const filePath = `${userId}/${Date.now()}-${file.name}`;
             
@@ -819,12 +864,11 @@
                 .from(appState.SUPABASE_STORAGE_BUCKET)
                 .upload(filePath, file, {
                     cacheControl: '3600',
-                    upsert: false // Jangan timpa jika sudah ada (karena menggunakan timestamp)
+                    upsert: false
                 });
             
             if (error) throw error;
 
-            // Dapatkan URL publik
             const { data: publicUrlData } = supabase.storage
                 .from(appState.SUPABASE_STORAGE_BUCKET)
                 .getPublicUrl(filePath);
@@ -832,16 +876,12 @@
             return publicUrlData.publicUrl;
         }
         
-        /**
-         * Hapus gambar profil dari Supabase Storage.
-         * @param {string} url - URL gambar yang akan dihapus.
-         */
         async function deleteProfileImage(url) {
              try {
-                // Ekstrak path file dari URL publik Supabase
                 const pathSegments = new URL(url).pathname.split('/');
-                // Path di storage setelah bucket name
-                const filePath = pathSegments.slice(pathSegments.indexOf(appState.SUPABASE_STORAGE_BUCKET) + 1).join('/');
+                const bucketIndex = pathSegments.indexOf(appState.SUPABASE_STORAGE_BUCKET);
+                if (bucketIndex === -1) return console.warn('Could not find bucket in URL path.');
+                const filePath = pathSegments.slice(bucketIndex + 1).join('/');
 
                 const { error } = await supabase.storage
                     .from(appState.SUPABASE_STORAGE_BUCKET)
@@ -850,15 +890,10 @@
                 if (error) throw error;
                 console.log('Gambar lama berhasil dihapus dari storage.');
              } catch (error) {
-                // Logging error penghapusan tapi tidak menghentikan proses save profil
                 console.error('Gagal menghapus gambar lama:', error);
              }
         }
 
-
-        /**
-         * Handler untuk menyimpan perubahan profil.
-         */
         document.getElementById('profile-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -873,17 +908,12 @@
 
             try {
                 // --- 1. Kelola Gambar Profil ---
-                
-                // Jika ada file baru yang diupload
                 if (appState.profileImageFile) {
-                    // Hapus gambar lama (jika ada)
                     if (currentProfile.avatar_url) {
                         await deleteProfileImage(currentProfile.avatar_url);
                     }
-                    // Upload gambar baru
                     avatarUrl = await uploadProfileImage(appState.profileImageFile, userId);
                 } 
-                // Jika tombol hapus ditekan
                 else if (appState.profileImageToDelete) {
                     if (currentProfile.avatar_url) {
                         await deleteProfileImage(currentProfile.avatar_url);
@@ -907,7 +937,7 @@
                 
                 showToast('Profil berhasil diperbarui!', 'success');
                 closeProfileModal();
-                updateUserProfileDisplay(); // Perbarui tampilan dashboard
+                updateUserProfileDisplay();
             } catch (error) {
                 showToast(`Gagal menyimpan profil: ${error.message}`, 'error');
             }
@@ -916,15 +946,11 @@
         // --- 9. Inisialisasi dan Event Listeners Lainnya ---
 
         window.addEventListener('load', () => {
-            // Inisialisasi Real-time listener Supabase
-            setupRealtimeAttendanceListener(); 
-
-            // Listener untuk upload gambar di modal
             document.getElementById('profile-image-input')?.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
-                if (file.size > 2 * 1024 * 1024) { // Batasi 2MB
+                if (file.size > 2 * 1024 * 1024) {
                     showToast('Ukuran gambar maksimal 2MB.', 'error');
                     e.target.value = '';
                     return;
@@ -950,7 +976,6 @@
                 img.src = URL.createObjectURL(file);
             });
 
-            // Listener untuk menghapus gambar di modal
             document.getElementById('remove-profile-image')?.addEventListener('click', function() {
                 const preview = document.getElementById('profile-image-preview');
                 const icon = document.getElementById('profile-image-icon');
@@ -966,22 +991,18 @@
                 appState.profileImageToDelete = true;
             });
 
-            // Tutup modal saat klik di luar modal
             document.getElementById('profile-modal')?.addEventListener('click', (e) => {
                 if (e.target.id === 'profile-modal') closeProfileModal();
             });
 
-            // Listener Pencarian (Admin)
             document.getElementById('search-student-input')?.addEventListener('input', (e) => {
                 renderAllAttendanceLog(e.target.value);
             });
             
-            // Listeners navigasi Auth
             document.getElementById('show-signup-button')?.addEventListener('click', () => showAuthView('signup'));
             document.getElementById('show-forgot-password-button')?.addEventListener('click', () => showAuthView('forgotPassword'));
             document.getElementById('back-to-login-button')?.addEventListener('click', () => showAuthView('login'));
             
-            // Listener untuk tombol toggle password
             document.querySelectorAll('.toggle-password').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const input = this.parentElement.querySelector('input');
@@ -995,7 +1016,6 @@
                 });
             });
 
-            // Inisialisasi ikon Lucide
             lucide.createIcons();
         });
     </script>
