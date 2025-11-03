@@ -576,6 +576,9 @@
         </div>
     </div>
 
+    <!-- lucide icon library (needed to render <i data-lucide="..."> icons) -->
+    <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
+
     <script>
         const supabaseClient = supabase.createClient(
             'https://qvunfkabbhulwqfnkren.supabase.co', 
@@ -623,7 +626,8 @@
             clockInterval: null,
             selectedAdminClassId: null,
             profileImageFile: null,
-            profileImageToDelete: false
+            profileImageToDelete: false,
+            loadingTimeout: null
         };
 
         function setButtonLoading(btn, loading) {
@@ -638,8 +642,28 @@
             }
         }
 
+        // showLoading now has a safety timeout to avoid getting stuck
         function showLoading(loading) { 
-            document.getElementById('loading-screen')?.classList.toggle('hidden', !loading); 
+            const el = document.getElementById('loading-screen');
+            if (!el) return;
+            el.classList.toggle('hidden', !loading);
+
+            // Clear previous timeout
+            if (appState.loadingTimeout) {
+                clearTimeout(appState.loadingTimeout);
+                appState.loadingTimeout = null;
+            }
+
+            // If showing loading, add a fail-safe to auto-hide after 20s
+            if (loading) {
+                appState.loadingTimeout = setTimeout(() => {
+                    if (el && !el.classList.contains('hidden')) {
+                        console.warn('Auto-hiding loading-screen after timeout');
+                        el.classList.add('hidden');
+                    }
+                    appState.loadingTimeout = null;
+                }, 20000);
+            }
         }
 
         function showToast(msg, type = 'success') {
@@ -721,6 +745,12 @@
         }
 
         async function initializeMainApp(user) {
+            // Prevent re-init for the same user (helps avoid repeated loading-screen toggles)
+            if (appState.currentUser && appState.currentUser.id === user.id) {
+                console.log('initializeMainApp: already initialized for this user, skipping.');
+                return;
+            }
+
             appState.currentUser = user;
             showLoading(true);
             try {
@@ -766,6 +796,16 @@
                     appState.clockInterval = setInterval(updateClock, 1000);
                     updateClock();
                 }
+
+                // Ensure lucide icons are created after dynamic DOM is present
+                try {
+                    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                        window.lucide.createIcons();
+                    }
+                } catch (err) {
+                    console.warn('lucide.createIcons failed:', err);
+                }
+
                 navigateTo('app');
             } catch (err) {
                 console.error('App init error:', err);
@@ -811,6 +851,8 @@
             
             if (!appState.scheduleData) {
                 tbody.innerHTML = `<tr><td colspan="${days.length + 1}" class="text-center p-6 text-gray-500">Jadwal belum diatur</td></tr>`;
+                // create icons if needed
+                if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
                 return;
             }
             const todayIndex = new Date().getDay() - 1;
@@ -832,6 +874,9 @@
                 });
                 tbody.appendChild(row);
             });
+
+            // ensure lucide (if present) updates icons after DOM changes
+            if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
         }
 
         async function fetchTodayAttendance() {
@@ -943,6 +988,9 @@
                 row.innerHTML = `<td class="p-3 font-mono">${log.profiles?.nisn || '-'}</td><td class="p-3 font-semibold">${log.profiles?.full_name || log.profiles?.email || '-'}</td><td class="p-3">${log.profiles?.email || '-'}</td><td class="p-3"><span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">${log.profiles?.classes?.class_name || '-'}</span></td><td class="p-3">${log.type === 'check_in' ? 'Masuk' : 'Pulang'}</td><td class="p-3 font-semibold">${log.log_time}</td><td class="p-3"><span class="status-badge ${statusClass}">${log.status}</span></td>`;
                 tbody.appendChild(row);
             });
+
+            // create lucide icons in case any <i data-lucide> were injected
+            if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
         }
 
         function subscribeToAttendanceChanges() {
@@ -1261,7 +1309,8 @@
                     renderSchedule(document.getElementById('admin-schedule-table-body'), true);
                 }
                 
-                lucide.createIcons();
+                // ensure lucide icons appear if any were added/changed
+                if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
             } catch (error) {
                 showToast(error.message, 'error');
                 statusDiv.classList.add('hidden');
@@ -1489,6 +1538,15 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('App initialized');
             
+            // Make sure lucide renders icons that are present in the initial DOM
+            try {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            } catch (err) {
+                console.warn('lucide.createIcons not available on DOMContentLoaded:', err);
+            }
+            
             // Auth state listener
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session?.user) {
@@ -1497,8 +1555,13 @@
 
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 console.log('Auth state change:', event);
+                // Only initialize when needed to avoid repeated showLoading triggers
                 if (event === 'SIGNED_IN' && session?.user) {
-                    await initializeMainApp(session.user);
+                    if (!appState.currentUser || appState.currentUser.id !== session.user.id) {
+                        await initializeMainApp(session.user);
+                    } else {
+                        console.log('onAuthStateChange: same user signed in event - ignored.');
+                    }
                 } else if (event === 'SIGNED_OUT') {
                     navigateTo('login');
                 }
