@@ -26,15 +26,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%); 
+            /* Latar belakang yang lebih hidup */
+            background: linear-gradient(135deg, #4c1d95 0%, #1e40af 100%); 
         }
 
-        /* Glassmorphism Card Effect */
+        /* Glassmorphism Card Effect yang Ditingkatkan */
         .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         }
         
         .text-primary { color: rgb(var(--color-primary-base)); }
@@ -42,50 +43,85 @@
         .hover\:bg-primary-dark:hover { background-color: rgb(var(--color-primary-dark)); }
         .focus\:border-primary:focus { border-color: rgb(var(--color-primary-base)); }
         
+        /* Gaya Tombol Aksi Utama */
+        .primary-btn {
+            background-color: rgb(var(--color-primary-base));
+            box-shadow: 0 4px 15px rgba(var(--color-primary-base), 0.5);
+        }
+        .primary-btn:hover {
+            background-color: rgb(var(--color-primary-dark));
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(var(--color-primary-base), 0.6);
+        }
+
         /* Custom scrollbar for log list */
         #attendance-log, #all-attendance-list {
-            max-height: 250px;
+            max-height: 350px; /* Diperpanjang sedikit */
             overflow-y: auto;
+            border-radius: 12px;
         }
 
         /* Full screen wrapper for centering */
         .wrap {
             width: 100%;
             padding: 1.5rem;
-            max-width: 1000px;
+            max-width: 1100px; /* Lebih lebar untuk admin view */
         }
         
         /* Ensure responsive grid in admin view */
         .admin-grid {
             display: grid;
-            gap: 1.5rem;
+            gap: 2rem; /* Jarak lebih besar */
             grid-template-columns: 1fr;
         }
 
         @media (min-width: 1024px) {
             .admin-grid {
-                grid-template-columns: 2fr 3fr; /* Wider on desktop */
+                grid-template-columns: 1fr 2fr; /* Layout admin: Kontrol (1) & Log (2) */
             }
+        }
+        
+        /* Gaya untuk Status Loading Global */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s;
         }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay (untuk mengatasi UI hilang saat inisialisasi) -->
+    <div id="loading-overlay" class="opacity-100">
+        <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow-2xl">
+            <i data-lucide="zap" class="w-10 h-10 animate-pulse text-primary mb-3"></i>
+            <p class="text-lg font-semibold text-gray-700">Memuat Sistem...</p>
+        </div>
+    </div>
+
     <div class="wrap">
         <!-- Main Card Container -->
-        <div class="glass-card w-full p-6 md:p-8 rounded-3xl transition-shadow duration-300" id="app-container">
+        <div class="glass-card w-full p-6 md:p-10 rounded-3xl transition-shadow duration-300" id="app-container">
             
             <!-- Views Container (Controlled by JS) -->
-            <div id="auth-view" class="max-w-md mx-auto">
+            <div id="auth-view" class="max-w-md mx-auto hidden">
                 <!-- Login View -->
-                <div id="login-form-container" data-view="login" class="current-view">
+                <div id="login-form-container" data-view="login">
                     <div class="text-center mb-8">
-                        <i data-lucide="shield-check" class="w-12 h-12 text-primary mx-auto mb-3 p-2 bg-indigo-100 rounded-full"></i>
+                        <i data-lucide="shield-check" class="w-12 h-12 text-primary mx-auto mb-3 p-2 bg-indigo-100 rounded-full shadow-lg"></i>
                         <h1 class="text-3xl font-extrabold text-gray-800 mb-1">Masuk Sistem Absensi</h1>
                         <p class="text-base text-gray-500">Gunakan NISN atau Email Anda.</p>
                     </div>
 
                     <form id="login-form" autocomplete="on">
-                        <div class="mb-4">
+                        <div class="mb-5">
                             <label for="login-identifier" class="block text-sm font-semibold text-gray-700 mb-2">NISN atau Email</label>
                             <input id="login-identifier" name="identifier" type="text" inputmode="email" 
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150" 
@@ -102,7 +138,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button id="login-btn" class="w-full bg-primary text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-500/50 hover:bg-primary-dark transform hover:scale-[1.00] transition duration-200 disabled:opacity-50" type="submit">
+                        <button id="login-btn" class="w-full primary-btn text-white font-bold py-3.5 rounded-xl transition duration-200 disabled:opacity-50" type="submit">
                             <i data-lucide="log-in" class="w-5 h-5 inline-block mr-2"></i> Masuk
                         </button>
                     </form>
@@ -116,7 +152,7 @@
                 <!-- Signup View (Hidden by default) -->
                 <div id="signup-form-container" data-view="signup" class="hidden">
                      <div class="text-center mb-8">
-                        <i data-lucide="user-plus" class="w-12 h-12 text-green-600 mx-auto mb-3 p-2 bg-green-100 rounded-full"></i>
+                        <i data-lucide="user-plus" class="w-12 h-12 text-green-600 mx-auto mb-3 p-2 bg-green-100 rounded-full shadow-lg"></i>
                         <h1 class="text-3xl font-extrabold text-gray-800 mb-1">Daftar Akun Baru</h1>
                         <p class="text-base text-gray-500">Hanya untuk siswa/staf terdaftar (gunakan email sekolah).</p>
                     </div>
@@ -139,7 +175,7 @@
                             <label for="signup-nisn" class="block text-sm font-semibold text-gray-700 mb-2">NISN (10 Digit)</label>
                             <input id="signup-nisn" type="text" inputmode="numeric" pattern="\d{10}" maxlength="10" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50" placeholder="NISN Anda (contoh: 0012345678)" required>
                         </div>
-                        <button id="signup-btn" type="submit" class="w-full bg-green-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/50 hover:bg-green-700 transform hover:scale-[1.00] transition duration-200 disabled:opacity-50">
+                        <button id="signup-btn" type="submit" class="w-full bg-green-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/50 hover:bg-green-700 transition duration-200 disabled:opacity-50">
                             <i data-lucide="user-plus" class="w-5 h-5 inline-block mr-2"></i> Daftar & Lanjutkan
                         </button>
                     </form>
@@ -151,7 +187,7 @@
                 <!-- Forgot Password View (Hidden by default) -->
                 <div id="forgot-password-form-container" data-view="forgotPassword" class="hidden">
                     <div class="text-center mb-8">
-                        <i data-lucide="mail-check" class="w-12 h-12 text-orange-600 mx-auto mb-3 p-2 bg-orange-100 rounded-full"></i>
+                        <i data-lucide="mail-check" class="w-12 h-12 text-orange-600 mx-auto mb-3 p-2 bg-orange-100 rounded-full shadow-lg"></i>
                         <h1 class="text-3xl font-extrabold text-gray-800 mb-1">Lupa Password</h1>
                         <p class="text-base text-gray-500">Masukkan email Anda untuk menerima link reset.</p>
                     </div>
@@ -161,12 +197,12 @@
                             <label for="forgot-email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                             <input id="forgot-email" type="email" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50" placeholder="email@sekolah.id" required>
                         </div>
-                        <button id="forgot-password-btn" type="submit" class="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-500/50 hover:bg-orange-700 transform hover:scale-[1.00] transition duration-200 disabled:opacity-50">
+                        <button id="forgot-password-btn" type="submit" class="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-500/50 hover:bg-orange-700 transition duration-200 disabled:opacity-50">
                             <i data-lucide="send" class="w-5 h-5 inline-block mr-2"></i> Kirim Link Reset
                         </button>
                     </form>
                      <div class="text-center mt-6">
-                        <a href="#" id="back-to-login-button" class="text-primary hover:underline font-semibold text-sm">&larr; Kembali ke Login</a>
+                        <a href="#" class="text-primary hover:underline font-semibold text-sm back-to-login-button">&larr; Kembali ke Login</a>
                     </div>
                 </div>
             </div>
@@ -175,7 +211,8 @@
             <div id="signed-in-view" class="hidden">
                 <header class="flex justify-between items-center pb-4 border-b border-indigo-200 mb-6">
                     <div class="flex items-center gap-4">
-                        <div id="avatar" class="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white shadow-lg">
+                        <!-- Tambahkan tombol untuk buka modal profil -->
+                        <div id="avatar" class="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white shadow-lg cursor-pointer hover:ring-2 ring-indigo-400 transition" title="Lihat Profil">
                             <i data-lucide="user" class="w-6 h-6 text-indigo-100"></i>
                         </div>
                         <div>
@@ -183,33 +220,33 @@
                             <div class="text-sm text-gray-500" id="profile-role"></div>
                         </div>
                     </div>
-                    <button id="logout-btn" class="text-sm text-red-600 font-semibold px-3 py-1.5 rounded-lg border border-red-300 bg-red-50 hover:bg-red-100 transition duration-150 shadow-md">
-                        <i data-lucide="log-out" class="w-4 h-4 inline-block mr-1"></i> Keluar
+                    <button id="logout-btn" class="text-sm text-red-600 font-semibold px-4 py-2 rounded-xl border border-red-300 bg-red-50 hover:bg-red-100 transition duration-150 shadow-md flex items-center gap-1">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
                     </button>
                 </header>
                 
                 <!-- Student Dashboard -->
                 <div id="student-dashboard" class="hidden">
-                    <div class="bg-primary p-5 rounded-2xl shadow-xl shadow-indigo-600/40 text-white mb-8" aria-live="polite">
-                        <div class="flex justify-between items-center border-b border-indigo-400/50 pb-3 mb-3">
-                            <div>
-                                <div class="text-4xl font-extrabold" id="clock">00:00:00</div>
-                                <div class="text-sm opacity-90" id="date">-</div>
-                            </div>
-                            <i data-lucide="calendar-clock" class="w-8 h-8 opacity-70"></i>
+                    <!-- Kartu Jam & Absensi dengan Estetika Lebih Baik -->
+                    <div class="bg-primary p-6 rounded-2xl shadow-xl shadow-indigo-600/50 text-white mb-10" aria-live="polite">
+                        <div class="flex flex-col items-center justify-center border-b border-indigo-400/50 pb-4 mb-4">
+                            <div class="text-5xl font-extrabold tracking-tight" id="clock">00:00:00</div>
+                            <div class="text-base opacity-90 font-medium" id="date">-</div>
                         </div>
                         
                         <div class="grid grid-cols-2 gap-4 pt-2">
-                            <button id="checkin" class="flex items-center justify-center bg-green-500/90 text-white font-bold py-3.5 rounded-xl hover:bg-green-600 transform hover:scale-[1.02] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
-                                <i data-lucide="arrow-down-left" class="w-5 h-5 mr-2"></i> Masuk
+                            <button id="checkin" class="flex items-center justify-center bg-green-500/95 text-white font-extrabold py-4 rounded-xl hover:bg-green-600 shadow-xl shadow-green-500/30 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01]">
+                                <i data-lucide="arrow-down-left" class="w-5 h-5 mr-2"></i> Absen Masuk
                             </button>
-                            <button id="checkout" class="flex items-center justify-center bg-red-500/90 text-white font-bold py-3.5 rounded-xl hover:bg-red-600 transform hover:scale-[1.02] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
-                                <i data-lucide="arrow-up-right" class="w-5 h-5 mr-2"></i> Pulang
+                            <button id="checkout" class="flex items-center justify-center bg-red-500/95 text-white font-extrabold py-4 rounded-xl hover:bg-red-600 shadow-xl shadow-red-500/30 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01]">
+                                <i data-lucide="arrow-up-right" class="w-5 h-5 mr-2"></i> Absen Pulang
                             </button>
                         </div>
                     </div>
 
-                    <h3 class="text-lg font-bold text-gray-700 mb-3 border-b border-gray-100 pb-1">Riwayat Absensi Anda Hari Ini</h3>
+                    <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
+                        <i data-lucide="history" class="w-5 h-5 text-indigo-500"></i> Riwayat Absensi Anda Hari Ini
+                    </h3>
                     <div id="attendance-log" class="space-y-4">
                         <!-- Log entries will be inserted here -->
                     </div>
@@ -219,28 +256,27 @@
                 <div id="admin-dashboard" class="hidden">
                     <div class="admin-grid">
                         <!-- Left Panel: Summary & Filters -->
-                        <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-lg">
-                            <h2 class="text-xl font-extrabold text-gray-800 mb-4 flex items-center gap-2">
-                                <i data-lucide="layout-dashboard" class="w-5 h-5 text-primary"></i> Dashboard Admin
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl">
+                            <h2 class="text-xl font-extrabold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2 border-gray-100">
+                                <i data-lucide="layout-dashboard" class="w-5 h-5 text-primary"></i> Kontrol Admin
                             </h2>
-                            <p class="text-sm text-gray-600 mb-6">Ringkasan cepat dan kontrol data absensi.</p>
-
-                            <div class="space-y-4">
+                            
+                            <div class="space-y-6">
                                 <div>
-                                    <label for="attendance-date-filter" class="block text-sm font-semibold text-gray-700 mb-2">Filter Tanggal Absensi</label>
-                                    <input type="date" id="attendance-date-filter" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150" required>
+                                    <label for="attendance-date-filter" class="block text-sm font-semibold text-gray-700 mb-2">Pilih Tanggal Absensi</label>
+                                    <input type="date" id="attendance-date-filter" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150 shadow-sm" required>
                                 </div>
                                 <div>
                                     <label for="search-student-input" class="block text-sm font-semibold text-gray-700 mb-2">Cari Siswa/NISN</label>
                                     <div class="relative">
                                         <i data-lucide="search" class="w-5 h-5 absolute left-3 top-3.5 text-gray-400"></i>
-                                        <input type="text" id="search-student-input" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150" placeholder="Nama atau NISN">
+                                        <input type="text" id="search-student-input" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150 shadow-sm" placeholder="Nama atau NISN">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mt-8">
-                                <h3 class="font-bold text-gray-700 mb-3">Statistik Hari Ini</h3>
+                                <h3 class="font-bold text-lg text-gray-700 mb-3 border-b pb-1 border-gray-100">Statistik Hari Ini</h3>
                                 <div id="summary-stats" class="grid grid-cols-2 gap-4">
                                     <!-- Stats will be inserted here -->
                                 </div>
@@ -248,9 +284,9 @@
                         </div>
 
                         <!-- Right Panel: Log List -->
-                        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-lg">
-                             <h2 class="text-xl font-extrabold text-gray-800 mb-4 flex items-center gap-2">
-                                <i data-lucide="list-checks" class="w-5 h-5 text-primary"></i> Log Absensi
+                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl">
+                             <h2 class="text-xl font-extrabold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2 border-gray-100">
+                                <i data-lucide="clipboard-list" class="w-5 h-5 text-primary"></i> Log Absensi Lengkap (<span id="log-date-display">...</span>)
                             </h2>
                             <div id="all-attendance-list" class="space-y-3">
                                 <div class="text-sm text-center text-gray-500 p-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl">Memuat data absensi...</div>
@@ -261,7 +297,7 @@
             </div>
 
             <!-- Global Messages/Alerts -->
-            <div id="messages" class="hidden fixed bottom-4 right-4 z-50 p-4 rounded-xl shadow-2xl text-white font-medium transition-all duration-300 min-w-[200px]" role="alert"></div>
+            <div id="messages" class="fixed bottom-4 right-4 z-50 p-4 rounded-xl shadow-2xl text-white font-medium transition-all duration-300 min-w-[250px] transform translate-y-20 opacity-0" role="alert"></div>
             
             <footer class="text-center text-xs text-gray-400 mt-10">
                 Sistem Absensi Digital — Dibuat dengan Supabase & Tailwind CSS
@@ -270,32 +306,16 @@
     </div>
 
     <script>
-        // ---------- FIREBASE CONFIG (MANDATORY USE) ----------
-        // Initialize Firebase config from environment variables
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'school-attendance-app';
-
-        // NOTE: Supabase is used here for simplicity as it offers combined Auth/DB in one SDK which simplifies the logic in a single-file application structure. 
-        // If a transition to Firebase is strictly required, the logic would need significant refactoring. 
-        // For this single-file, self-contained application, we continue using the provided Supabase config.
-
-        // Supabase configuration (INI TELAH DIPERBARUI DENGAN KREDENSIAL ANDA)
+        // ---------- Supabase Config & Initialization ----------
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'; 
-        // ----------------------------------------------------------------------
-
-        // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ----------------------------------------------------
 
         // --- Global State and UI Elements ---
         const UIElements = {
+            appContainer: document.getElementById('app-container'),
+            loadingOverlay: document.getElementById('loading-overlay'),
             authView: document.getElementById('auth-view'),
             signedInView: document.getElementById('signed-in-view'),
             messages: document.getElementById('messages'),
@@ -324,6 +344,7 @@
             searchStudentInput: document.getElementById('search-student-input'),
             allAttendanceList: document.getElementById('all-attendance-list'),
             summaryStats: document.getElementById('summary-stats'),
+            logDateDisplay: document.getElementById('log-date-display'),
         };
 
         let messageTimeout;
@@ -335,8 +356,8 @@
             clearTimeout(messageTimeout);
             
             UIElements.messages.textContent = msg;
-            UIElements.messages.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'bg-indigo-600', 'opacity-0', 'bg-yellow-600');
-            UIElements.messages.classList.add('opacity-100');
+            UIElements.messages.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'bg-indigo-600', 'bg-yellow-600', 'translate-y-20', 'opacity-0');
+            UIElements.messages.classList.add('opacity-100', 'translate-y-0');
 
             if (type === 'error') {
                 UIElements.messages.classList.add('bg-red-600');
@@ -350,9 +371,13 @@
 
             // Hide after 5 seconds
             messageTimeout = setTimeout(() => { 
-                UIElements.messages.classList.remove('opacity-100'); 
-                UIElements.messages.classList.add('opacity-0');
-                setTimeout(() => { UIElements.messages.classList.add('hidden'); }, 300);
+                UIElements.messages.classList.remove('opacity-100', 'translate-y-0'); 
+                UIElements.messages.classList.add('opacity-0', 'translate-y-20');
+                // Hapus kelas warna setelah transisi selesai
+                setTimeout(() => { 
+                    UIElements.messages.classList.add('hidden'); 
+                    UIElements.messages.classList.remove('bg-red-600', 'bg-green-600', 'bg-indigo-600', 'bg-yellow-600');
+                }, 300);
             }, 5000);
         }
 
@@ -406,6 +431,14 @@
             } else { // default to login
                 UIElements.loginContainer.classList.remove('hidden');
             }
+            UIElements.authView.classList.remove('hidden');
+            UIElements.signedInView.classList.add('hidden');
+        }
+
+        function hideLoadingOverlay() {
+            UIElements.loadingOverlay.classList.remove('opacity-100');
+            UIElements.loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => { UIElements.loadingOverlay.classList.add('hidden'); UIElements.appContainer.classList.remove('hidden'); }, 300);
         }
 
         // --- Auth Logic ---
@@ -441,7 +474,7 @@
             
             // Fetch profile data (full_name, role, nisn, etc.)
             const { data: profile, error } = await supabase.from('profiles')
-                .select('id,full_name,email,avatar_url,nisn,role') // Added role
+                .select('id,full_name,email,avatar_url,nisn,role')
                 .eq('id', user_id)
                 .maybeSingle();
             
@@ -467,13 +500,10 @@
             const avatarEl = document.getElementById('avatar');
             avatarEl.innerHTML = profile.avatar_url ? '' : getInitials(name);
             avatarEl.style.backgroundColor = profile.avatar_url ? 'transparent' : '#4f46e5';
-            if (profile.avatar_url) {
-                avatarEl.style.backgroundImage = `url(${profile.avatar_url})`;
-                avatarEl.classList.remove('text-white');
-            } else {
-                avatarEl.style.backgroundImage = 'none';
-                avatarEl.classList.add('text-white');
-            }
+            avatarEl.style.backgroundImage = profile.avatar_url ? `url(${profile.avatar_url})` : 'none';
+            avatarEl.classList.toggle('text-white', !profile.avatar_url);
+            avatarEl.style.backgroundSize = 'cover';
+            avatarEl.style.backgroundPosition = 'center';
 
             // Check Role and show appropriate dashboard
             if (profile.role === 'admin') {
@@ -492,6 +522,7 @@
             }
             
             window.lucide.createIcons();
+            hideLoadingOverlay();
         }
 
         // --- Student Attendance Functions ---
@@ -505,21 +536,21 @@
             if (includeName && record.profiles) {
                 const p = record.profiles;
                 const name = p.full_name || p.nisn;
-                profileInfo = `<div class="font-bold text-sm text-primary">${name}</div><div class="text-xs text-gray-500">NISN: ${p.nisn || '-'}</div>`;
+                profileInfo = `<div class="font-bold text-base text-gray-800">${name}</div><div class="text-xs text-gray-500">NISN: ${p.nisn || '-'}</div>`;
             } else {
                 profileInfo = `<div class="font-bold text-gray-800">${typeText}</div><div class="text-xs text-gray-500">${timeFormatted}</div>`;
             }
 
             return `
-                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition duration-150">
+                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white shadow-md hover:shadow-lg transition duration-150">
                     <div class="flex items-center gap-4">
                         <div class="p-2 rounded-full ${record.type === 'check_in' ? 'bg-indigo-100 text-indigo-600' : 'bg-pink-100 text-pink-600'}">
-                            <i data-lucide="${record.type === 'check_in' ? 'clock-1' : 'clock-3'}" class="w-5 h-5"></i>
+                            <i data-lucide="${record.type === 'check_in' ? 'arrow-down-left' : 'arrow-up-right'}" class="w-5 h-5"></i>
                         </div>
                         <div>${profileInfo}</div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-medium px-2.5 py-1 rounded-full ${statusClass} flex items-center gap-1">
+                        <span class="text-xs font-medium px-3 py-1.5 rounded-full ${statusClass} flex items-center gap-1">
                              <i data-lucide="${statusIcon}" class="w-4 h-4"></i>
                             ${record.status}
                         </span>
@@ -536,14 +567,19 @@
                     .select('*')
                     .eq('user_id', user_id)
                     .eq('log_date', todayISO())
-                    .order('log_time', { ascending: true }); // Order ascending for student view
+                    .order('log_time', { ascending: false }); // Urutkan terbaru di atas
                 
                 if (error) { console.error(error); showMessage('Gagal memuat absensi', 'error'); return; }
 
                 if (!data || data.length === 0) {
                     UIElements.attendanceLog.innerHTML = '<div class="text-sm text-center text-gray-500 p-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl">Absensi Anda hari ini masih kosong. Silakan Absen Masuk.</div>';
-                    UIElements.checkinBtn.disabled = false;
-                    UIElements.checkoutBtn.disabled = true;
+                    // Check logic: Can check in if no check-in record exists for today
+                    const hasIn = data.some(x => x.type === 'check_in');
+                    const hasOut = data.some(x => x.type === 'check_out');
+
+                    UIElements.checkinBtn.disabled = hasIn;
+                    UIElements.checkoutBtn.disabled = (!hasIn) || hasOut;
+
                 } else {
                     data.forEach(r => { 
                         UIElements.attendanceLog.innerHTML += createAttendanceRow(r);
@@ -574,16 +610,30 @@
                 const now = new Date();
                 let status = '';
                 
-                // Assuming WIB (UTC+7) time zone for fixed limits
-                // Check-in limit: 07:15:00
-                const checkinLimit = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 15, 0);
-                // Check-out limit: 15:00:00
-                const checkoutLimit = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0);
+                // Waktu batas di WIB (UTC+7)
+                const checkinLimitHour = 7;
+                const checkinLimitMinute = 15;
+                const checkoutLimitHour = 15;
+                const checkoutLimitMinute = 0;
+                
+                // Ambil jam dan menit saat ini
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
 
                 if (type === 'check_in') {
-                    status = now <= checkinLimit ? 'Tepat Waktu' : 'Terlambat';
-                } else {
-                    status = now >= checkoutLimit ? 'Pulang Tepat Waktu' : 'Pulang Lebih Awal';
+                    // Cek Terlambat: Jika jam > 7, ATAU jam == 7 dan menit > 15
+                    if (currentHour > checkinLimitHour || (currentHour === checkinLimitHour && currentMinute > checkinLimitMinute)) {
+                        status = 'Terlambat';
+                    } else {
+                        status = 'Tepat Waktu';
+                    }
+                } else { // check_out
+                    // Cek Pulang Lebih Awal: Jika jam < 15, ATAU jam == 15 dan menit < 00
+                    if (currentHour < checkoutLimitHour || (currentHour === checkoutLimitHour && currentMinute < checkoutLimitMinute)) {
+                        status = 'Pulang Lebih Awal';
+                    } else {
+                        status = 'Pulang Tepat Waktu';
+                    }
                 }
 
                 // Log time in 'HH:MM:SS' format
@@ -601,6 +651,8 @@
             } catch (err) {
                 console.error(err);
                 showMessage(err.message || 'Gagal mencatat absensi', 'error');
+            } finally {
+                // Tombol akan di-enable/disable lagi di loadTodayAttendance
             }
         }
         
@@ -611,18 +663,14 @@
             
             const dateToFilter = dateFilter || todayISO();
             
+            // Perbarui tampilan tanggal di header
+            UIElements.logDateDisplay.textContent = new Date(dateToFilter).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
+
             let query = supabase.from('attendance_log')
                 .select(`*, profiles:user_id(full_name, nisn)`)
                 .eq('log_date', dateToFilter)
                 .order('log_time', { ascending: false });
 
-            // Apply search filter
-            if (searchFilter) {
-                // Supabase doesn't easily support OR conditions on joined tables in simple queries, 
-                // so we will query all data and filter in memory for simplicity in this single-file demo.
-                // In a production app, this should be done with a more advanced RLS policy or RPC.
-            }
-            
             try {
                 const { data: records, error } = await query;
                 
@@ -647,9 +695,10 @@
 
                 UIElements.allAttendanceList.innerHTML = '';
                 if (filteredRecords.length === 0) {
-                    UIElements.allAttendanceList.innerHTML = `<div class="text-sm text-center text-gray-500 p-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl">Tidak ada data absensi ditemukan untuk tanggal ${dateToFilter} ${searchFilter ? 'dengan filter' : ''}.</div>`;
+                    UIElements.allAttendanceList.innerHTML = `<div class="text-sm text-center text-gray-500 p-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl">Tidak ada data absensi ditemukan untuk tanggal ini.</div>`;
                 } else {
                     filteredRecords.forEach(r => {
+                        // Tambahkan margin-bottom pada setiap baris untuk jarak yang lebih baik
                         UIElements.allAttendanceList.innerHTML += createAttendanceRow(r, true);
                     });
                 }
@@ -679,10 +728,10 @@
             ];
             
             UIElements.summaryStats.innerHTML = stats.map(stat => `
-                <div class="p-3 rounded-xl bg-${stat.color}-100 border border-${stat.color}-300 flex items-center gap-3 shadow-sm">
+                <div class="p-4 rounded-xl bg-${stat.color}-50 border border-${stat.color}-200 flex items-center gap-3 shadow-sm hover:shadow-md transition duration-150">
                     <i data-lucide="${stat.icon}" class="w-6 h-6 text-${stat.color}-600"></i>
                     <div>
-                        <div class="text-lg font-bold text-gray-800">${stat.value}</div>
+                        <div class="text-xl font-extrabold text-gray-800">${stat.value}</div>
                         <div class="text-xs text-${stat.color}-700 font-medium">${stat.label}</div>
                     </div>
                 </div>
@@ -703,21 +752,31 @@
                 ev.preventDefault();
                 const btn = document.getElementById('login-btn');
                 btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-circle" class="w-5 h-5 inline-block mr-2 animate-spin"></i> Memproses...';
+                
                 const id = document.getElementById('login-identifier').value.trim();
                 const pwd = document.getElementById('login-password').value;
+                
                 try {
                     await signInWithIdentifier(id, pwd);
                     showMessage('Sukses masuk! Memuat dashboard...', 'success');
                 } catch (err) {
-                    console.error(err);
-                    showMessage(err.message || 'Gagal login. Cek kembali NISN/Email dan Password.', 'error');
-                } finally { btn.disabled = false; }
+                    console.error('Login Error:', err);
+                    const errorMessage = err.message.includes('Invalid login credentials') ? 'NISN/Email atau Password salah.' : (err.message || 'Gagal login. Cek kembali data Anda.');
+                    showMessage(errorMessage, 'error');
+                } finally { 
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="log-in" class="w-5 h-5 inline-block mr-2"></i> Masuk';
+                    window.lucide.createIcons();
+                }
             });
 
             UIElements.signupForm.addEventListener('submit', async (ev) => {
                 ev.preventDefault();
                 const btn = document.getElementById('signup-btn');
                 btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-circle" class="w-5 h-5 inline-block mr-2 animate-spin"></i> Mendaftar...';
+                
                 const email = document.getElementById('signup-email').value.trim();
                 const password = document.getElementById('signup-password').value;
                 const nisn = document.getElementById('signup-nisn').value.trim();
@@ -726,7 +785,8 @@
                     if (!email || !password || !/^\d{10}$/.test(nisn)) throw new Error('Data pendaftaran tidak lengkap/tidak valid.');
 
                     // 1. Check if NISN is already taken
-                    const { count: nisnCount } = await supabase.from('profiles').select('nisn', { count: 'exact' }).eq('nisn', nisn);
+                    const { count: nisnCount, error: checkError } = await supabase.from('profiles').select('nisn', { count: 'exact' }).eq('nisn', nisn);
+                    if (checkError) throw checkError;
                     if (nisnCount > 0) throw new Error('NISN ini sudah terdaftar. Silakan hubungi admin.');
                     
                     // 2. Auth signup
@@ -748,27 +808,42 @@
                     showAuthView('login');
                     showMessage('Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi (jika diaktifkan) dan coba login.', 'success');
                 } catch (err) {
-                    console.error(err);
+                    console.error('Signup Error:', err);
                     showMessage(err.message || 'Gagal mendaftar', 'error');
-                } finally { btn.disabled = false; }
+                } finally { 
+                    btn.disabled = false; 
+                    btn.innerHTML = '<i data-lucide="user-plus" class="w-5 h-5 inline-block mr-2"></i> Daftar & Lanjutkan';
+                    window.lucide.createIcons();
+                }
             });
             
              UIElements.forgotPasswordForm.addEventListener('submit', async (ev) => {
                 ev.preventDefault();
                 const btn = document.getElementById('forgot-password-btn');
                 btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-circle" class="w-5 h-5 inline-block mr-2 animate-spin"></i> Mengirim...';
+                
                 const email = document.getElementById('forgot-email').value.trim();
                 try {
                     if (!email) throw new Error('Masukkan email Anda.');
 
-                    // NOTE: This requires Supabase to be configured with an external link (URL) for password reset.
-                    // For this environment, we just show a success message.
+                    // NOTE: Supabase call to send reset email
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: window.location.origin, // Gunakan halaman saat ini
+                    });
+
+                    if (error) throw error;
+
                     showMessage(`Link reset password telah dikirim ke ${email}. (Periksa folder spam Anda).`, 'info');
                     
                 } catch (err) {
-                    console.error(err);
+                    console.error('Forgot Password Error:', err);
                     showMessage(err.message || 'Gagal mengirim link reset.', 'error');
-                } finally { btn.disabled = false; }
+                } finally { 
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="send" class="w-5 h-5 inline-block mr-2"></i> Kirim Link Reset';
+                    window.lucide.createIcons();
+                }
             });
 
 
@@ -778,10 +853,7 @@
             
             document.getElementById('logout-btn')?.addEventListener('click', async () => {
                 await supabase.auth.signOut();
-                UIElements.signedInView.classList.add('hidden');
-                UIElements.authView.classList.remove('hidden');
-                showAuthView('login');
-                showMessage('Berhasil keluar. Sampai jumpa lagi!', 'info');
+                // State akan dihandle oleh onAuthStateChange
             });
             
             // --- Admin Actions ---
@@ -795,9 +867,8 @@
             
             // --- UI Navigations ---
             document.getElementById('show-signup-button')?.addEventListener('click', (e) => { e.preventDefault(); showAuthView('signup'); });
-            document.getElementById('show-login-button')?.addEventListener('click', (e) => { e.preventDefault(); showAuthView('login'); });
             document.getElementById('show-forgot-password-button')?.addEventListener('click', (e) => { e.preventDefault(); showAuthView('forgotPassword'); });
-            document.querySelectorAll('#back-to-login-button').forEach(btn => {
+            document.querySelectorAll('.back-to-login-button').forEach(btn => {
                 btn.addEventListener('click', (e) => { e.preventDefault(); showAuthView('login'); });
             });
             
@@ -815,30 +886,37 @@
                 });
             });
 
-            // --- Initial Session Check ---
+            // --- Initial Session Check (PENTING untuk mengatasi UI hilang) ---
             supabase.auth.onAuthStateChange(async (event, session) => {
                 if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) { 
                     await renderDashboard(session.user); 
                 }
                 else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-                    UIElements.signedInView.classList.add('hidden'); 
-                    UIElements.authView.classList.remove('hidden');
-                    showAuthView('login');
+                    showAuthView('login'); // Tampilkan login view
+                    hideLoadingOverlay(); // Sembunyikan loading jika sign out
+                } else if (event === 'INITIAL_SESSION') {
+                    // Hanya perlu menunggu dan event SIGNED_IN/SIGNED_OUT akan terpicu
+                    if (!session?.user) {
+                        showAuthView('login');
+                        hideLoadingOverlay();
+                    }
                 }
             });
             
-            // Trigger initial auth check
-            (async () => {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                    await renderDashboard(session.user);
-                } else {
-                    UIElements.authView.classList.remove('hidden');
-                    showAuthView('login');
-                }
-            })();
-            
+            // Panggil lucide icons setelah DOM siap, sebelum hide overlay
             window.lucide.createIcons();
+            
+            // Trigger initial session check manually if onAuthStateChange hasn't fired yet (fallback)
+            (async () => {
+                 const { data: { session } } = await supabase.auth.getSession();
+                 if (!session?.user) {
+                     // Jika tidak ada sesi saat DOMContentLoaded, pastikan login view muncul
+                     showAuthView('login');
+                     hideLoadingOverlay();
+                 }
+                 // Jika ada sesi, onAuthStateChange akan memicu renderDashboard
+            })();
+
         });
     </script>
 </body>
