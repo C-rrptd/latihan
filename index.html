@@ -168,7 +168,9 @@
             <div id="login-view">
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="school" class="w-10 h-10 text-purple-600"></i>
+                        <svg class="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
                     </div>
                     <h2 class="text-4xl font-bold text-white mb-2">Selamat Datang</h2>
                     <p class="text-purple-100">Masuk ke Sistem Absensi Sekolah</p>
@@ -185,9 +187,15 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                         <div class="relative">
-                            <input type="password" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
-                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            <input type="password" id="login-password-input" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all pr-12">
+                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="login-password-input">
+                                <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -214,7 +222,9 @@
             <div id="signup-view" class="hidden">
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="user-plus" class="w-10 h-10 text-purple-600"></i>
+                        <svg class="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                        </svg>
                     </div>
                     <h2 class="text-4xl font-bold text-white mb-2">Buat Akun</h2>
                     <p class="text-purple-100">Daftar untuk menggunakan sistem</p>
@@ -236,9 +246,15 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                         <div class="relative">
-                            <input type="password" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all">
-                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                                <i data-lucide="eye" class="w-5 h-5"></i>
+                            <input type="password" id="signup-password-input" name="password" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all pr-12">
+                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="signup-password-input">
+                                <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                                </svg>
                             </button>
                         </div>
                         <p class="text-xs text-gray-600 mt-2 ml-1">Minimal 8 karakter</p>
@@ -263,7 +279,9 @@
             <div id="forgot-password-view" class="hidden">
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="key" class="w-10 h-10 text-purple-600"></i>
+                        <svg class="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                        </svg>
                     </div>
                     <h2 class="text-4xl font-bold text-white mb-2">Reset Password</h2>
                     <p class="text-purple-100">Masukkan email untuk reset password</p>
@@ -284,7 +302,9 @@
                 
                 <div class="mt-6 text-center">
                     <button id="back-to-login-button" class="text-white hover:text-purple-200 transition-colors font-medium flex items-center gap-2 mx-auto">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
                         Kembali ke login
                     </button>
                 </div>
@@ -622,18 +642,32 @@
         function showToast(msg, type = 'success') {
             const toast = document.getElementById('toast');
             if (!toast) return;
+            
             clearTimeout(appState.toastTimeout);
+            
             const icons = {
-                success: '<i data-lucide="check-circle" class="w-5 h-5"></i>',
-                error: '<i data-lucide="alert-circle" class="w-5 h-5"></i>',
-                info: '<i data-lucide="info" class="w-5 h-5"></i>'
+                success: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`,
+                error: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`,
+                info: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`
             };
-            const colors = { success: 'bg-emerald-500', error: 'bg-red-500', info: 'bg-blue-500' };
+            
+            const colors = { 
+                success: 'bg-emerald-500', 
+                error: 'bg-red-500', 
+                info: 'bg-blue-500' 
+            };
+            
             toast.className = `fixed bottom-6 right-6 ${colors[type]} text-white py-4 px-6 rounded-xl shadow-2xl z-50 flex items-center gap-3 min-w-[300px] transition-all duration-300`;
             toast.innerHTML = `${icons[type]}<span>${msg}</span>`;
             toast.style.opacity = 1;
             toast.style.transform = 'translateY(0)';
-            lucide.createIcons();
+            
             appState.toastTimeout = setTimeout(() => {
                 if (toast) {
                     toast.style.opacity = 0;
@@ -899,25 +933,60 @@
             const errorEl = document.getElementById('login-error');
             errorEl.classList.add('hidden');
             setButtonLoading(submitBtn, true);
+            
             const formData = new FormData(e.target);
-            const identifier = formData.get('identifier');
+            const identifier = formData.get('identifier')?.trim();
             const password = formData.get('password');
+            
             try {
+                if (!identifier || !password) {
+                    throw new Error('Email/NISN dan password harus diisi');
+                }
+                
                 let email = identifier;
+                
+                // Check if identifier is NISN (10 digits)
                 if (!identifier.includes('@')) {
-                    if (!Validators.nisn(identifier)) throw new Error('NISN tidak valid');
-                    const { data: profile, error } = await supabaseClient.from('profiles').select('email').eq('nisn', identifier).single();
-                    if (error || !profile) throw new Error('NISN tidak ditemukan');
+                    if (!Validators.nisn(identifier)) {
+                        throw new Error('NISN harus 10 digit angka');
+                    }
+                    
+                    // Get email from NISN
+                    const { data: profile, error: profileError } = await supabaseClient
+                        .from('profiles')
+                        .select('email')
+                        .eq('nisn', identifier)
+                        .single();
+                    
+                    if (profileError || !profile) {
+                        throw new Error('NISN tidak ditemukan. Pastikan Anda sudah terdaftar.');
+                    }
+                    
                     email = profile.email;
                 }
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                
+                // Login with email and password
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+                    email, 
+                    password 
+                });
+                
                 if (error) throw error;
-                if (!data.user) throw new Error('Login gagal');
+                if (!data.user) throw new Error('Login gagal. Coba lagi.');
+                
+                // Success - initialize app
                 await initializeMainApp(data.user);
+                
             } catch (error) {
-                errorEl.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${ErrorHandler.handle(error, 'login')}</span>`;
+                console.error('Login error:', error);
+                const errorMsg = ErrorHandler.handle(error, 'login');
+                errorEl.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>${errorMsg}</span>
+                `;
                 errorEl.classList.remove('hidden');
-                lucide.createIcons();
             } finally {
                 setButtonLoading(submitBtn, false);
             }
@@ -929,32 +998,77 @@
             const errorEl = document.getElementById('signup-error');
             errorEl.classList.add('hidden');
             setButtonLoading(submitBtn, true);
+            
             const formData = new FormData(e.target);
-            const email = formData.get('email');
+            const email = formData.get('email')?.trim();
             const password = formData.get('password');
-            const nisn = formData.get('nisn');
+            const nisn = formData.get('nisn')?.trim();
+            
             try {
-                if (!Validators.email(email)) throw new Error(ValidationMessages.email);
-                if (!Validators.nisn(nisn)) throw new Error(ValidationMessages.nisn);
-                if (!Validators.password(password)) throw new Error(ValidationMessages.password);
+                // Validations
+                if (!email || !password || !nisn) {
+                    throw new Error('Semua field harus diisi');
+                }
+                
+                if (!Validators.email(email)) {
+                    throw new Error(ValidationMessages.email);
+                }
+                
+                if (!Validators.nisn(nisn)) {
+                    throw new Error(ValidationMessages.nisn);
+                }
+                
+                if (!Validators.password(password)) {
+                    throw new Error(ValidationMessages.password);
+                }
+                
+                // Check if NISN already exists
+                const { data: existingProfile, error: checkError } = await supabaseClient
+                    .from('profiles')
+                    .select('nisn')
+                    .eq('nisn', nisn)
+                    .single();
+                
+                if (existingProfile) {
+                    throw new Error('NISN sudah terdaftar. Silakan login atau gunakan NISN lain.');
+                }
+                
+                // Sign up user
                 const { data, error: signUpError } = await supabaseClient.auth.signUp({ 
                     email, 
                     password,
                     options: {
                         emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
-                        data: { nisn, role: 'student', email }
+                        data: { 
+                            nisn: nisn, 
+                            role: 'student'
+                        }
                     }
                 });
+                
                 if (signUpError) throw signUpError;
-                if (!data.user) throw new Error('Pendaftaran gagal');
+                if (!data.user) throw new Error('Pendaftaran gagal. Coba lagi.');
+                
+                // Store NISN temporarily
                 localStorage.setItem(`pending_nisn_${data.user.id}`, nisn);
-                showToast('Pendaftaran berhasil! Silakan login', 'success');
+                
+                // Success message
+                showToast('✅ Pendaftaran berhasil! Silakan login.', 'success');
                 e.target.reset();
-                setTimeout(() => showAuthView('login'), 1500);
+                
+                // Navigate to login after 2 seconds
+                setTimeout(() => showAuthView('login'), 2000);
+                
             } catch(error) {
-                errorEl.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${ErrorHandler.handle(error, 'pendaftaran')}</span>`;
+                console.error('Signup error:', error);
+                const errorMsg = ErrorHandler.handle(error, 'pendaftaran');
+                errorEl.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>${errorMsg}</span>
+                `;
                 errorEl.classList.remove('hidden');
-                lucide.createIcons();
             } finally {
                 setButtonLoading(submitBtn, false);
             }
@@ -1056,19 +1170,103 @@
         async function handleAdminClassSelect(e) {
             const classId = e.target.value;
             if (!classId) return;
+            
             appState.selectedAdminClassId = classId;
+            const statusDiv = document.getElementById('admin-schedule-status');
+            const statusText = document.getElementById('schedule-status-text');
+            const createButton = document.getElementById('create-new-schedule-button');
+            const scheduleContainer = document.getElementById('admin-schedule-container');
+            
             showLoading(true);
+            
             try {
-                const { data, error } = await supabaseClient.from('schedules').select('data').eq('class_id', classId).single();
-                if (error && error.code !== 'PGRST116') throw new Error('Gagal memuat jadwal');
-                appState.scheduleData = data?.data || { Senin: Array(12).fill(''), Selasa: Array(12).fill(''), Rabu: Array(12).fill(''), Kamis: Array(12).fill(''), Jumat: Array(12).fill('') };
-                document.getElementById('admin-schedule-container').classList.remove('hidden');
-                renderSchedule(document.getElementById('admin-schedule-table-body'), true);
+                const { data, error } = await supabaseClient
+                    .from('schedules')
+                    .select('data')
+                    .eq('class_id', classId)
+                    .single();
+                    
+                if (error && error.code !== 'PGRST116') {
+                    throw new Error('Gagal memuat jadwal untuk kelas ini');
+                }
+                
+                // Show status
+                statusDiv.classList.remove('hidden');
+                
+                if (!data || !data.data) {
+                    // No schedule exists
+                    statusDiv.className = 'mb-4 p-4 rounded-xl flex items-center justify-between bg-yellow-50 border border-yellow-200';
+                    statusText.className = 'font-semibold text-yellow-800';
+                    statusText.textContent = 'Jadwal belum dibuat untuk kelas ini';
+                    createButton.classList.remove('hidden');
+                    scheduleContainer.classList.add('hidden');
+                    appState.scheduleData = null;
+                } else {
+                    // Schedule exists
+                    statusDiv.className = 'mb-4 p-4 rounded-xl flex items-center justify-between bg-green-50 border border-green-200';
+                    statusText.className = 'font-semibold text-green-800';
+                    statusText.textContent = 'Jadwal sudah ada - Anda dapat mengeditnya';
+                    createButton.classList.add('hidden');
+                    scheduleContainer.classList.remove('hidden');
+                    appState.scheduleData = data.data;
+                    renderSchedule(document.getElementById('admin-schedule-table-body'), true);
+                }
+                
+                lucide.createIcons();
             } catch (error) {
                 showToast(error.message, 'error');
+                statusDiv.classList.add('hidden');
+                scheduleContainer.classList.add('hidden');
             } finally {
                 showLoading(false);
             }
+        }
+        
+        function createNewSchedule() {
+            const scheduleContainer = document.getElementById('admin-schedule-container');
+            const statusDiv = document.getElementById('admin-schedule-status');
+            const statusText = document.getElementById('schedule-status-text');
+            const createButton = document.getElementById('create-new-schedule-button');
+            
+            // Create empty schedule template
+            appState.scheduleData = {
+                Senin: Array(12).fill(''),
+                Selasa: Array(12).fill(''),
+                Rabu: Array(12).fill(''),
+                Kamis: Array(12).fill(''),
+                Jumat: Array(12).fill('')
+            };
+            
+            // Update status
+            statusDiv.className = 'mb-4 p-4 rounded-xl flex items-center justify-between bg-blue-50 border border-blue-200';
+            statusText.className = 'font-semibold text-blue-800';
+            statusText.textContent = 'Jadwal baru - Isi mata pelajaran dan simpan';
+            createButton.classList.add('hidden');
+            
+            // Show schedule editor
+            scheduleContainer.classList.remove('hidden');
+            renderSchedule(document.getElementById('admin-schedule-table-body'), true);
+            
+            showToast('Jadwal baru dibuat. Silakan isi dan simpan', 'info');
+            lucide.createIcons();
+        }
+        
+        function clearSchedule() {
+            if (!confirm('Apakah Anda yakin ingin mengosongkan semua jadwal? Perubahan ini bersifat sementara sampai Anda menekan Simpan.')) {
+                return;
+            }
+            
+            // Clear all schedule data
+            appState.scheduleData = {
+                Senin: Array(12).fill(''),
+                Selasa: Array(12).fill(''),
+                Rabu: Array(12).fill(''),
+                Kamis: Array(12).fill(''),
+                Jumat: Array(12).fill('')
+            };
+            
+            renderSchedule(document.getElementById('admin-schedule-table-body'), true);
+            showToast('Jadwal dikosongkan. Jangan lupa simpan perubahan', 'info');
         }
 
         function exportToCSV() {
@@ -1274,16 +1472,22 @@
             // Password toggle
             document.querySelectorAll('.toggle-password').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const input = this.previousElementSibling;
-                    const icon = this.querySelector('i');
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        icon.setAttribute('data-lucide', 'eye-off');
-                    } else {
-                        input.type = 'password';
-                        icon.setAttribute('data-lucide', 'eye');
+                    const targetId = this.getAttribute('data-target');
+                    const input = document.getElementById(targetId);
+                    const eyeOpen = this.querySelector('.eye-open');
+                    const eyeClosed = this.querySelector('.eye-closed');
+                    
+                    if (input && eyeOpen && eyeClosed) {
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            eyeOpen.classList.add('hidden');
+                            eyeClosed.classList.remove('hidden');
+                        } else {
+                            input.type = 'password';
+                            eyeOpen.classList.remove('hidden');
+                            eyeClosed.classList.add('hidden');
+                        }
                     }
-                    lucide.createIcons();
                 });
             });
 
@@ -1296,6 +1500,12 @@
 
             // Admin class select
             document.getElementById('admin-class-select')?.addEventListener('change', handleAdminClassSelect);
+            
+            // Create new schedule button
+            document.getElementById('create-new-schedule-button')?.addEventListener('click', createNewSchedule);
+            
+            // Clear schedule button
+            document.getElementById('clear-schedule-button')?.addEventListener('click', clearSchedule);
 
             // Save schedule button
             document.getElementById('save-schedule-button')?.addEventListener('click', handleUpdateSchedule);
