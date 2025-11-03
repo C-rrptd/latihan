@@ -328,9 +328,7 @@
                     <button id="profile-button" class="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all shadow-md">
                         <div class="w-8 h-8 rounded-lg overflow-hidden bg-purple-200 flex items-center justify-center">
                             <img id="header-profile-image" class="w-full h-full object-cover hidden" alt="Profile">
-                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
+                            <i data-lucide="user" class="w-4 h-4 text-purple-600"></i>
                         </div>
                         <span class="hidden sm:inline font-semibold">Profil</span>
                     </button>
@@ -744,6 +742,17 @@
             dateEl.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
         }
 
+        // Helper to safely (re)create lucide icons
+        function ensureLucide() {
+            try {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            } catch (err) {
+                console.warn('lucide.createIcons failed:', err);
+            }
+        }
+
         async function initializeMainApp(user) {
             // Prevent re-init for the same user (helps avoid repeated loading-screen toggles)
             if (appState.currentUser && appState.currentUser.id === user.id) {
@@ -797,14 +806,8 @@
                     updateClock();
                 }
 
-                // Ensure lucide icons are created after dynamic DOM is present
-                try {
-                    if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                        window.lucide.createIcons();
-                    }
-                } catch (err) {
-                    console.warn('lucide.createIcons failed:', err);
-                }
+                // Ensure lucide icons are created after dynamic DOM changes
+                ensureLucide();
 
                 navigateTo('app');
             } catch (err) {
@@ -851,8 +854,7 @@
             
             if (!appState.scheduleData) {
                 tbody.innerHTML = `<tr><td colspan="${days.length + 1}" class="text-center p-6 text-gray-500">Jadwal belum diatur</td></tr>`;
-                // create icons if needed
-                if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+                ensureLucide();
                 return;
             }
             const todayIndex = new Date().getDay() - 1;
@@ -875,8 +877,7 @@
                 tbody.appendChild(row);
             });
 
-            // ensure lucide (if present) updates icons after DOM changes
-            if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+            ensureLucide();
         }
 
         async function fetchTodayAttendance() {
@@ -989,8 +990,8 @@
                 tbody.appendChild(row);
             });
 
-            // create lucide icons in case any <i data-lucide> were injected
-            if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+            // ensure lucide icons are created if any were added
+            ensureLucide();
         }
 
         function subscribeToAttendanceChanges() {
@@ -1310,7 +1311,7 @@
                 }
                 
                 // ensure lucide icons appear if any were added/changed
-                if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+                ensureLucide();
             } catch (error) {
                 showToast(error.message, 'error');
                 statusDiv.classList.add('hidden');
@@ -1488,7 +1489,7 @@
                     
                     if (uploadError) throw uploadError;
                     
-                    const { data: { publicUrl } } = supabaseClient.storage
+                    const { data: { publicUrl } } supabaseClient.storage
                         .from('avatars')
                         .getPublicUrl(filePath);
                     
@@ -1538,14 +1539,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('App initialized');
             
-            // Make sure lucide renders icons that are present in the initial DOM
-            try {
-                if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                    window.lucide.createIcons();
-                }
-            } catch (err) {
-                console.warn('lucide.createIcons not available on DOMContentLoaded:', err);
-            }
+            // Ensure lucide renders icons that are present in the initial DOM
+            ensureLucide();
             
             // Auth state listener
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1714,6 +1709,15 @@
             document.getElementById('profile-modal')?.addEventListener('click', (e) => {
                 if (e.target.id === 'profile-modal') closeProfileModal();
             });
+
+            // Ensure lucide icons are re-created when the page regains focus or becomes visible again
+            window.addEventListener('focus', ensureLucide);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) ensureLucide();
+            });
+
+            // safety: attempt a delayed ensure in case scripts loaded after initial run
+            setTimeout(ensureLucide, 500);
         });
     </script>
 </body>
