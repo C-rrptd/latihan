@@ -1,348 +1,488 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sistem Absensi — Supabase only</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Absensi — Supabase & Tailwind</title>
 
-  <!-- Supabase JS (only dependency) -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <!-- Supabase JS (only dependency) -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-  <style>
-    :root{
-      --bg:#6b46c1;
-      --accent:#7c3aed;
-      --card:#ffffff;
-      --muted:#6b7280;
-      --success:#16a34a;
-      --danger:#991b1b;
-    }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#5b21b6);color:#111}
-    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-    .card{width:100%;max-width:520px;background:var(--card);border-radius:12px;padding:22px;box-shadow:0 10px 30px rgba(2,6,23,0.12)}
-    h1{margin:0 0 8px;font-size:26px;color:var(--bg)}
-    p.lead{margin:0 0 18px;color:var(--muted);font-size:14px}
-    label{display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:#222}
-    input[type="text"],input[type="password"],input[type="email"]{
-      width:100%;padding:10px 12px;border:1px solid #e6e6e6;border-radius:8px;font-size:14px;box-sizing:border-box;
-    }
-    .row{margin-bottom:12px}
-    .actions{display:flex;gap:8px;align-items:center}
-    .btn{background:linear-gradient(90deg,var(--bg),var(--accent));color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:700}
-    .ghost{background:transparent;border:1px solid #e7e7e7;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer}
-    .small{font-size:13px;color:var(--muted);margin-top:10px}
-    .center{text-align:center}
-    .status{padding:8px;border-radius:8px;background:#f8fafc;border:1px solid #eee;margin-top:12px}
-    .attendance-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:#fafafa;border:1px solid #f0f0f0;margin-top:8px}
-    .muted{color:var(--muted)}
-    .toggle-password{position:relative;display:inline-flex;align-items:center}
-    .toggle-password button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;padding:6px;border-radius:6px}
-    .hidden{display:none}
-    .profile{display:flex;gap:12px;align-items:center}
-    .avatar{width:44px;height:44px;border-radius:8px;background:#eee;display:inline-block;background-size:cover;background-position:center}
-    .danger{background:#fee2e2;color:var(--danger);padding:8px;border-radius:8px;margin-top:12px}
-    footer{margin-top:18px;text-align:center;color:#fff;font-size:12px}
-    @media (max-width:480px){ .card{padding:16px} h1{font-size:20px} }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card" id="app">
-      <div id="not-signed-in">
-        <h1>Sistem Absensi</h1>
-        <p class="lead">Masuk menggunakan Email atau NISN + Password (Supabase only)</p>
-
-        <form id="login-form" autocomplete="on">
-          <div class="row">
-            <label for="identifier">Email atau NISN</label>
-            <input id="identifier" name="identifier" type="text" inputmode="email" placeholder="email@domain.com atau 10 digit NISN" />
-          </div>
-
-          <div class="row toggle-password" style="position:relative">
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password" placeholder="Masukkan password" />
-            <button type="button" id="pwd-toggle" aria-pressed="false" title="Tampilkan password" aria-label="Tampilkan password">
-              <!-- eye open (visible when password hidden) -->
-              <svg id="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-              <!-- eye closed -->
-              <svg id="eye-closed" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 3l18 18"/>
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/>
-              </svg>
-            </button>
-          </div>
-
-          <div class="row actions">
-            <button id="login-btn" class="btn" type="submit">Masuk</button>
-            <button id="signup-btn" class="ghost" type="button">Daftar (opsional)</button>
-          </div>
-        </form>
-
-        <div class="small center muted">Atau masuk dengan NISN (10 digit) — client akan mencari email yang terkait</div>
-      </div>
-
-      <div id="signed-in" class="hidden">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div class="profile">
-            <div class="avatar" id="avatar"></div>
-            <div>
-              <div id="profile-name" style="font-weight:700"></div>
-              <div class="muted" id="profile-email"></div>
-            </div>
-          </div>
-          <div>
-            <button id="logout-btn" class="ghost">Keluar</button>
-          </div>
-        </div>
-
-        <div class="status" aria-live="polite">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-weight:700" id="clock">00:00:00</div>
-              <div class="muted" id="date">-</div>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button id="checkin" class="btn">Absen Masuk</button>
-              <button id="checkout" class="btn">Absen Pulang</button>
-            </div>
-          </div>
-
-          <div id="attendance-list" style="margin-top:12px"></div>
-        </div>
-
-        <div class="small muted" style="margin-top:10px">
-          Signed in with Supabase. All requests go to your Supabase project.
-        </div>
-      </div>
-
-      <div id="messages" class="hidden" style="margin-top:12px"></div>
-      <footer>Supabase only demo — no other libraries</footer>
-    </div>
-  </div>
-
-  <script>
-    // ---------- CONFIG: replace with your Supabase project values ----------
-    const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
-    // ----------------------------------------------------------------------
-
-    // Initialize Supabase client (safe check that the script provided window.supabase)
-    if (!(window.supabase && typeof window.supabase.createClient === 'function')) {
-      throw new Error('Supabase script failed to load. Check network or script URL.');
-    }
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // DOM references
-    const notSigned = document.getElementById('not-signed-in');
-    const signed = document.getElementById('signed-in');
-    const messages = document.getElementById('messages');
-    const loginForm = document.getElementById('login-form');
-    const identifierInput = document.getElementById('identifier');
-    const passwordInput = document.getElementById('password');
-    const loginBtn = document.getElementById('login-btn');
-    const signupBtn = document.getElementById('signup-btn');
-    const pwdToggleBtn = document.getElementById('pwd-toggle');
-    const eyeOpen = document.getElementById('eye-open');
-    const eyeClosed = document.getElementById('eye-closed');
-    const avatarEl = document.getElementById('avatar');
-    const profileNameEl = document.getElementById('profile-name');
-    const profileEmailEl = document.getElementById('profile-email');
-    const logoutBtn = document.getElementById('logout-btn');
-    const checkinBtn = document.getElementById('checkin');
-    const checkoutBtn = document.getElementById('checkout');
-    const attendanceList = document.getElementById('attendance-list');
-    const clockEl = document.getElementById('clock');
-    const dateEl = document.getElementById('date');
-
-    // Helpers
-    function show(msg, type='info') {
-      messages.classList.remove('hidden');
-      messages.textContent = msg;
-      messages.className = type === 'error' ? 'danger' : '';
-      setTimeout(()=>{ messages.classList.add('hidden'); messages.textContent=''; }, 4000);
-    }
-
-    function updateClock() {
-      const now = new Date();
-      clockEl.textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-      const days = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-      const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-      dateEl.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-    }
-
-    // Password toggle (toggle input.type first, then update icons)
-    pwdToggleBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const nowIsPassword = passwordInput.type === 'password';
-      // toggle
-      passwordInput.type = nowIsPassword ? 'text' : 'password';
-      pwdToggleBtn.setAttribute('aria-pressed', String(nowIsPassword));
-      // icons: show eye-closed when password is visible (type=text)
-      if (nowIsPassword) { eyeOpen.classList.add('hidden'); eyeClosed.classList.remove('hidden'); pwdToggleBtn.title = 'Sembunyikan password'; }
-      else { eyeOpen.classList.remove('hidden'); eyeClosed.classList.add('hidden'); pwdToggleBtn.title = 'Tampilkan password'; }
-      // keep caret at end
-      try { passwordInput.focus(); const len = passwordInput.value.length; passwordInput.setSelectionRange(len, len); } catch(e){}
-    });
-
-    // Auth helpers
-    async function signInWithIdentifier(identifier, password) {
-      if (!identifier) throw new Error('Masukkan email atau NISN.');
-      if (!password) throw new Error('Masukkan password.');
-      // email path
-      if (identifier.includes('@')) {
-        return await supabase.auth.signInWithPassword({ email: identifier, password });
-      }
-      // NISN path (10 digits)
-      const nisn = identifier.trim();
-      if (!/^\d{10}$/.test(nisn)) throw new Error('NISN harus 10 digit atau gunakan email.');
-      const { data: prof, error: pErr } = await supabase.from('profiles').select('email').eq('nisn', nisn).single();
-      if (pErr || !prof?.email) throw new Error('NISN tidak ditemukan.');
-      return await supabase.auth.signInWithPassword({ email: prof.email, password });
-    }
-
-    async function refreshProfile() {
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData?.user || null;
-      if (!user) return null;
-      const { data: profile, error } = await supabase.from('profiles').select('id,full_name,email,avatar_url,nisn,class_id').eq('id', user.id).maybeSingle();
-      if (error) console.warn('profile fetch error', error);
-      return { user, profile };
-    }
-
-    // Render UI
-    async function renderSignedIn() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData?.session?.user;
-      if (!user) {
-        notSigned.classList.remove('hidden');
-        signed.classList.add('hidden');
-        return;
-      }
-      const res = await refreshProfile();
-      const profile = res?.profile || {};
-      notSigned.classList.add('hidden');
-      signed.classList.remove('hidden');
-      profileNameEl.textContent = profile.full_name || profile.nisn || (user.email || '');
-      profileEmailEl.textContent = user.email || '';
-      if (profile.avatar_url) avatarEl.style.backgroundImage = `url(${profile.avatar_url})`;
-      else avatarEl.style.backgroundImage = '';
-      updateClock();
-      setInterval(updateClock, 1000);
-      await loadTodayAttendance(user.id);
-    }
-
-    // Attendance helpers
-    function todayISO() { return new Date().toISOString().slice(0,10); }
-
-    async function loadTodayAttendance(user_id) {
-      attendanceList.innerHTML = '';
-      try {
-        const { data, error } = await supabase.from('attendance_log').select('*').eq('user_id', user_id).eq('log_date', todayISO()).order('log_time', { ascending: false });
-        if (error) { console.warn(error); show('Gagal memuat absensi', 'error'); return; }
-        if (!data || data.length === 0) {
-          attendanceList.innerHTML = '<div class="muted small">Belum ada riwayat absensi hari ini</div>';
-          checkinBtn.disabled = false;
-          checkoutBtn.disabled = true;
-        } else {
-          data.forEach(r => {
-            const d = document.createElement('div');
-            d.className = 'attendance-row';
-            d.innerHTML = `<div><strong>${r.type === 'check_in' ? 'Absen Masuk' : 'Absen Pulang'}</strong><div class="muted" style="font-size:13px">${r.log_time} — ${r.status || ''}</div></div>`;
-            attendanceList.appendChild(d);
-          });
-          const hasIn = data.some(x => x.type === 'check_in');
-          const hasOut = data.some(x => x.type === 'check_out');
-          checkinBtn.disabled = hasIn;
-          checkoutBtn.disabled = (!hasIn) || hasOut;
+    <style>
+        /* Custom config for Tailwind */
+        :root {
+            --color-primary-base: 109 40 217; /* #6d28d9 - Purple 700 */
         }
-      } catch (err) {
-        console.error(err);
-        show('Terjadi kesalahan saat memuat absensi', 'error');
-      }
-    }
+        
+        .bg-primary { background-color: rgb(var(--color-primary-base)); }
+        .text-primary { color: rgb(var(--color-primary-base)); }
+        .hover\:bg-primary-dark:hover { background-color: #5b21b6; }
+        .gradient-bg { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 
-    async function doAttendance(type) {
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const user = sessionData?.session?.user;
-        if (!user) { show('Anda harus login', 'error'); return; }
-        const now = new Date();
-        let status = '';
-        if (type === 'check_in') status = (now.getHours() < 7 || (now.getHours() === 7 && now.getMinutes() <= 15)) ? 'Tepat Waktu' : 'Terlambat';
-        else status = now.getHours() >= 15 ? 'Pulang Tepat Waktu' : 'Pulang Lebih Awal';
-        const record = { user_id: user.id, type, status, log_time: now.toTimeString().slice(0,8), log_date: todayISO() };
-        const { error } = await supabase.from('attendance_log').insert(record);
-        if (error) throw error;
-        show('Absensi tercatat', 'success');
-        await loadTodayAttendance(user.id);
-      } catch (err) {
-        console.error(err);
-        show(err.message || 'Gagal mencatat absensi', 'error');
-      }
-    }
+        body {
+            font-family: 'Inter', system-ui, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+        }
 
-    // UI wiring
-    loginForm.addEventListener('submit', async (ev) => {
-      ev.preventDefault();
-      loginBtn.disabled = true;
-      const id = identifierInput.value.trim();
-      const pwd = passwordInput.value;
-      try {
-        await signInWithIdentifier(id, pwd);
-        await renderSignedIn();
-        show('Sukses masuk', 'success');
-      } catch (err) {
-        console.error(err);
-        show(err.message || 'Gagal login', 'error');
-      } finally { loginBtn.disabled = false; }
-    });
+        /* Responsive Wrapper */
+        .wrap {
+            width: 100%;
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <div class="wrap">
+        <div class="w-full max-w-lg bg-white p-6 md:p-8 rounded-xl shadow-2xl" id="app">
+            
+            <!-- Not Signed In View -->
+            <div id="not-signed-in">
+                <h1 class="text-3xl font-extrabold text-primary mb-2">Sistem Absensi</h1>
+                <p class="text-sm text-gray-500 mb-6">Masuk menggunakan Email atau NISN + Password.</p>
 
-    signupBtn.addEventListener('click', async () => {
-      const id = identifierInput.value.trim();
-      const pwd = passwordInput.value;
-      if (!id || !pwd) return show('Isi identifier & password untuk daftar', 'error');
-      try {
-        if (!id.includes('@')) return show('Untuk pendaftaran gunakan email.', 'error');
-        const { data, error } = await supabase.auth.signUp({ email: id, password: pwd });
-        if (error) throw error;
-        show('Pendaftaran berhasil. Cek email untuk verifikasi jika diperlukan.', 'success');
-      } catch (err) {
-        console.error(err);
-        show(err.message || 'Gagal mendaftar', 'error');
-      }
-    });
+                <form id="login-form" autocomplete="on">
+                    <div class="mb-4">
+                        <label for="identifier" class="block text-sm font-semibold text-gray-700 mb-1">Email atau NISN</label>
+                        <input id="identifier" name="identifier" type="text" inputmode="email" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150" 
+                               placeholder="email@domain.com atau 10 digit NISN" required />
+                    </div>
 
-    logoutBtn.addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      notSigned.classList.remove('hidden');
-      signed.classList.add('hidden');
-    });
+                    <div class="mb-6">
+                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+                        <div class="relative">
+                            <input id="password" name="password" type="password" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 pr-10" 
+                                   placeholder="Masukkan password" required />
+                            <button type="button" id="pwd-toggle" class="absolute right-0 top-0 mt-2.5 mr-3 text-gray-400 hover:text-gray-600" aria-pressed="false" title="Tampilkan password">
+                                <i data-lucide="eye" id="eye-icon" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
 
-    checkinBtn.addEventListener('click', () => doAttendance('check_in'));
-    checkoutBtn.addEventListener('click', () => doAttendance('check_out'));
+                    <div class="flex flex-col sm:flex-row gap-3 items-center">
+                        <button id="login-btn" class="flex-1 w-full sm:w-auto bg-primary text-white font-bold py-2.5 rounded-lg shadow-md hover:bg-primary-dark transition duration-150 disabled:opacity-50" type="submit">
+                            Masuk
+                        </button>
+                        <button id="signup-btn" class="flex-1 w-full sm:w-auto text-primary border border-primary font-semibold py-2.5 rounded-lg bg-white hover:bg-indigo-50 transition duration-150" type="button">
+                            Daftar (Email)
+                        </button>
+                    </div>
+                </form>
 
-    // session listener to keep UI in sync
-    if (supabase.auth.onAuthStateChange) {
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session?.user) await renderSignedIn();
-        else { notSigned.classList.remove('hidden'); signed.classList.add('hidden'); }
-      });
-    }
+                <div class="text-xs text-center text-gray-400 mt-4">
+                    NISN akan otomatis dicari email yang terdaftar.
+                </div>
+            </div>
 
-    // initial boot
-    (async function init(){
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) await renderSignedIn();
-      } catch (e) {
-        console.warn('init session check failed', e);
-      }
-      updateClock();
-      setInterval(updateClock,1000);
-    })();
-  </script>
+            <!-- Signed In View -->
+            <div id="signed-in" class="hidden">
+                <!-- Profile Header -->
+                <header class="flex justify-between items-center pb-4 border-b border-gray-100 mb-4">
+                    <div class="flex items-center gap-3">
+                        <div id="avatar" class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-white text-lg font-bold">
+                            <i data-lucide="user" class="w-6 h-6 text-gray-500"></i>
+                        </div>
+                        <div>
+                            <div id="profile-name" class="font-bold text-gray-800 text-lg"></div>
+                            <div class="text-sm text-gray-500" id="profile-email"></div>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="text-sm text-red-500 font-semibold px-3 py-1 rounded-lg border border-red-200 hover:bg-red-50 transition duration-150">
+                        Keluar
+                    </button>
+                </header>
+                
+                <!-- Attendance Status & Action -->
+                <div class="bg-indigo-50 p-4 rounded-xl shadow-inner mb-4" aria-live="polite">
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <div class="text-2xl font-extrabold text-indigo-700" id="clock">00:00:00</div>
+                            <div class="text-sm text-indigo-500" id="date">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2.5">
+                        <button id="checkin" class="flex-1 flex items-center justify-center bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition duration-150 disabled:opacity-50">
+                            <i data-lucide="log-in" class="w-5 h-5 mr-2"></i> Absen Masuk
+                        </button>
+                        <button id="checkout" class="flex-1 flex items-center justify-center bg-red-500 text-white font-bold py-3 rounded-lg hover:bg-red-600 transition duration-150 disabled:opacity-50">
+                            <i data-lucide="log-out" class="w-5 h-5 mr-2"></i> Absen Pulang
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Attendance Log -->
+                <h3 class="text-md font-bold text-gray-700 mb-2">Riwayat Absensi Hari Ini</h3>
+                <div id="attendance-list" class="space-y-2">
+                    <!-- Log entries will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Global Messages/Alerts -->
+            <div id="messages" class="hidden fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl text-white font-medium transition-all duration-300" role="alert"></div>
+            
+            <footer class="text-center text-xs text-gray-400 mt-6">
+                Supabase only demo — no other libraries
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // ---------- CONFIG: replace with your Supabase project values ----------
+        const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; // REPLACE ME
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'; // REPLACE ME
+        // ----------------------------------------------------------------------
+
+        // Initialize Supabase client
+        if (!(window.supabase && typeof window.supabase.createClient === 'function')) {
+            throw new Error('Supabase script failed to load. Check network or script URL.');
+        }
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // DOM references
+        const notSigned = document.getElementById('not-signed-in');
+        const signed = document.getElementById('signed-in');
+        const messages = document.getElementById('messages');
+        const loginForm = document.getElementById('login-form');
+        const identifierInput = document.getElementById('identifier');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+        const signupBtn = document.getElementById('signup-btn');
+        const pwdToggleBtn = document.getElementById('pwd-toggle');
+        const eyeIcon = document.getElementById('eye-icon');
+        const avatarEl = document.getElementById('avatar');
+        const profileNameEl = document.getElementById('profile-name');
+        const profileEmailEl = document.getElementById('profile-email');
+        const logoutBtn = document.getElementById('logout-btn');
+        const checkinBtn = document.getElementById('checkin');
+        const checkoutBtn = document.getElementById('checkout');
+        const attendanceList = document.getElementById('attendance-list');
+        const clockEl = document.getElementById('clock');
+        const dateEl = document.getElementById('date');
+
+        let messageTimeout;
+
+        // Helpers
+        function showMessage(msg, type = 'info') {
+            clearTimeout(messageTimeout);
+            
+            messages.textContent = msg;
+            messages.classList.remove('hidden', 'bg-red-500', 'bg-green-500', 'bg-blue-500');
+
+            if (type === 'error') {
+                messages.classList.add('bg-red-500');
+            } else if (type === 'success') {
+                messages.classList.add('bg-green-500');
+            } else {
+                messages.classList.add('bg-blue-500');
+            }
+
+            messageTimeout = setTimeout(() => { messages.classList.add('hidden'); }, 5000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            // Use Indonesian locale for formatting
+            clockEl.textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateEl.textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        // Password toggle
+        pwdToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const nowIsPassword = passwordInput.type === 'password';
+            
+            passwordInput.type = nowIsPassword ? 'text' : 'password';
+            pwdToggleBtn.setAttribute('aria-pressed', String(nowIsPassword));
+            
+            // Update lucide icon
+            const iconName = nowIsPassword ? 'eye-off' : 'eye';
+            eyeIcon.setAttribute('data-lucide', iconName);
+            // Re-render lucide icon
+            window.lucide.createIcons();
+            
+            pwdToggleBtn.title = nowIsPassword ? 'Sembunyikan password' : 'Tampilkan password';
+            
+            // keep caret at end
+            try { passwordInput.focus(); const len = passwordInput.value.length; passwordInput.setSelectionRange(len, len); } catch(e){}
+        });
+
+        // Auth helpers
+        async function signInWithIdentifier(identifier, password) {
+            if (!identifier) throw new Error('Masukkan email atau NISN.');
+            if (!password) throw new Error('Masukkan password.');
+            
+            // 1. Email path
+            if (identifier.includes('@')) {
+                const { data, error } = await supabase.auth.signInWithPassword({ email: identifier, password });
+                if (error) throw error;
+                return data;
+            }
+
+            // 2. NISN path (10 digits)
+            const nisn = identifier.trim();
+            if (!/^\d{10}$/.test(nisn)) throw new Error('NISN harus 10 digit atau gunakan format email yang valid.');
+            
+            // Lookup email by NISN in 'profiles' table
+            const { data: prof, error: pErr } = await supabase.from('profiles').select('email').eq('nisn', nisn).maybeSingle();
+            
+            if (pErr) console.error("NISN lookup error:", pErr);
+            if (!prof?.email) throw new Error('NISN tidak ditemukan atau tidak terhubung dengan akun.');
+            
+            // Use the found email to sign in
+            const { data, error } = await supabase.auth.signInWithPassword({ email: prof.email, password });
+            if (error) throw error;
+            return data;
+        }
+
+        async function refreshProfile() {
+            const { data: userData } = await supabase.auth.getUser();
+            const user = userData?.user || null;
+            if (!user) return null;
+            
+            // Fetch profile data (full_name, avatar_url, nisn, etc.)
+            const { data: profile, error } = await supabase.from('profiles')
+                .select('id,full_name,email,avatar_url,nisn,class_id')
+                .eq('id', user.id)
+                .maybeSingle();
+            
+            if (error) console.warn('Gagal memuat profil', error);
+            return { user, profile };
+        }
+
+        // Render UI
+        async function renderSignedIn() {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const user = sessionData?.session?.user;
+            
+            if (!user) {
+                notSigned.classList.remove('hidden');
+                signed.classList.add('hidden');
+                return;
+            }
+            
+            const res = await refreshProfile();
+            const profile = res?.profile || {};
+            
+            notSigned.classList.add('hidden');
+            signed.classList.remove('hidden');
+
+            // Update profile info
+            const name = profile.full_name || profile.nisn || (user.email || 'Pengguna');
+            profileNameEl.textContent = name;
+            profileEmailEl.textContent = user.email || '-';
+
+            // Update avatar
+            if (profile.avatar_url) {
+                avatarEl.innerHTML = '';
+                avatarEl.style.backgroundImage = `url(${profile.avatar_url})`;
+            } else {
+                avatarEl.style.backgroundImage = 'none';
+                avatarEl.innerHTML = `<i data-lucide="user" class="w-6 h-6 text-gray-500"></i>`;
+                window.lucide.createIcons(); // Re-render icon
+            }
+
+            // Load attendance data
+            await loadTodayAttendance(user.id);
+        }
+
+        // Attendance helpers
+        function todayISO() { return new Date().toISOString().slice(0,10); }
+
+        function formatTime(timeStr) {
+            // Converts 'HH:MM:SS' string to a human readable time (e.g., 08:00:00 -> 08:00)
+            try {
+                const parts = timeStr.split(':');
+                if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+            } catch (e) {
+                return timeStr;
+            }
+            return timeStr;
+        }
+
+        function createAttendanceRow(record) {
+            const typeText = record.type === 'check_in' ? 'Absen Masuk' : 'Absen Pulang';
+            const statusClass = record.status.includes('Tepat Waktu') ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100';
+            const timeFormatted = formatTime(record.log_time);
+
+            return `
+                <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="${record.type === 'check_in' ? 'arrow-down-left' : 'arrow-up-right'}" class="w-5 h-5 text-gray-500"></i>
+                        <div>
+                            <div class="font-semibold text-gray-800">${typeText}</div>
+                            <div class="text-xs text-gray-500">${timeFormatted}</div>
+                        </div>
+                    </div>
+                    <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${statusClass}">
+                        ${record.status}
+                    </span>
+                </div>
+            `;
+        }
+
+
+        async function loadTodayAttendance(user_id) {
+            attendanceList.innerHTML = '';
+            try {
+                const { data, error } = await supabase.from('attendance_log')
+                    .select('*')
+                    .eq('user_id', user_id)
+                    .eq('log_date', todayISO())
+                    .order('log_time', { ascending: false });
+                
+                if (error) { console.error(error); showMessage('Gagal memuat absensi', 'error'); return; }
+
+                if (!data || data.length === 0) {
+                    attendanceList.innerHTML = '<div class="text-sm text-center text-gray-400 p-4 border border-dashed rounded-lg">Belum ada riwayat absensi hari ini</div>';
+                    checkinBtn.disabled = false;
+                    checkoutBtn.disabled = true;
+                } else {
+                    data.reverse().forEach(r => { // Reverse to show check-in first
+                        attendanceList.innerHTML += createAttendanceRow(r);
+                    });
+                    
+                    window.lucide.createIcons(); // Re-render icons after adding new HTML
+                    
+                    const hasIn = data.some(x => x.type === 'check_in');
+                    const hasOut = data.some(x => x.type === 'check_out');
+                    
+                    checkinBtn.disabled = hasIn;
+                    checkoutBtn.disabled = (!hasIn) || hasOut;
+                }
+            } catch (err) {
+                console.error(err);
+                showMessage('Terjadi kesalahan saat memuat absensi', 'error');
+            }
+        }
+
+        async function doAttendance(type) {
+            const btn = type === 'check_in' ? checkinBtn : checkoutBtn;
+            btn.disabled = true;
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const user = sessionData?.session?.user;
+                if (!user) { showMessage('Anda harus login', 'error'); return; }
+
+                const now = new Date();
+                let status = '';
+                
+                // Define time limits for status in WIB/ID locale (assuming 7:15 AM check-in, 3:00 PM checkout)
+                if (type === 'check_in') {
+                    // Check-in time: before 7:15 AM
+                    const checkinLimit = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 15, 0);
+                    status = now <= checkinLimit ? 'Tepat Waktu' : 'Terlambat';
+                } else {
+                    // Check-out time: after 3:00 PM
+                    const checkoutLimit = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0);
+                    status = now >= checkoutLimit ? 'Pulang Tepat Waktu' : 'Pulang Lebih Awal';
+                }
+
+                // Log time in 'HH:MM:SS' format
+                const logTime = now.toTimeString().slice(0,8); 
+
+                const record = { user_id: user.id, type, status, log_time: logTime, log_date: todayISO() };
+                
+                const { error } = await supabase.from('attendance_log').insert(record);
+                
+                if (error) throw error;
+                
+                showMessage(`Absen ${type === 'check_in' ? 'Masuk' : 'Pulang'} tercatat: ${status}`, 'success');
+                await loadTodayAttendance(user.id);
+
+            } catch (err) {
+                console.error(err);
+                showMessage(err.message || 'Gagal mencatat absensi', 'error');
+            } finally {
+                // Re-enable is handled by loadTodayAttendance
+                if (btn.disabled) btn.disabled = false; // Fallback in case load didn't run
+            }
+        }
+
+        // UI wiring
+        loginForm.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            loginBtn.disabled = true;
+            const id = identifierInput.value.trim();
+            const pwd = passwordInput.value;
+            try {
+                await signInWithIdentifier(id, pwd);
+                await renderSignedIn();
+                showMessage('Sukses masuk! Selamat bekerja/belajar.', 'success');
+            } catch (err) {
+                console.error(err);
+                showMessage(err.message || 'Gagal login. Cek kembali NISN/Email dan Password.', 'error');
+            } finally { loginBtn.disabled = false; }
+        });
+
+        signupBtn.addEventListener('click', async () => {
+            const id = identifierInput.value.trim();
+            const pwd = passwordInput.value;
+            if (!id || !pwd) return showMessage('Isi Email & Password untuk daftar.', 'error');
+            
+            signupBtn.disabled = true;
+            try {
+                if (!id.includes('@')) throw new Error('Untuk pendaftaran, wajib menggunakan Email.');
+                
+                const { data, error } = await supabase.auth.signUp({ email: id, password: pwd });
+                if (error) throw error;
+
+                // After sign up, insert a profile record (optional, but good practice for NISN lookup later)
+                await supabase.from('profiles').insert({ id: data.user.id, email: id, full_name: 'Pengguna Baru' });
+
+                showMessage('Pendaftaran berhasil! Silakan login.', 'success');
+            } catch (err) {
+                console.error(err);
+                showMessage(err.message || 'Gagal mendaftar', 'error');
+            } finally { signupBtn.disabled = false; }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            notSigned.classList.remove('hidden');
+            signed.classList.add('hidden');
+            showMessage('Berhasil keluar.', 'info');
+        });
+
+        checkinBtn.addEventListener('click', () => doAttendance('check_in'));
+        checkoutBtn.addEventListener('click', () => doAttendance('check_out'));
+
+        // Initial boot and session listener
+        (async function init(){
+            // Start clock immediately and set interval
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            // Handle initial session check
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) await renderSignedIn();
+            } catch (e) {
+                console.warn('init session check failed', e);
+            }
+
+            // session listener to keep UI in sync (optional, as initial boot handles it, but good for real-time)
+            supabase.auth.onAuthStateChange(async (event, session) => {
+                if (session?.user && event === 'SIGNED_IN') await renderSignedIn();
+                else if (event === 'SIGNED_OUT') {
+                    notSigned.classList.remove('hidden'); 
+                    signed.classList.add('hidden');
+                }
+            });
+            
+            // Initial Lucide icon rendering
+            window.lucide.createIcons();
+        })();
+    </script>
 </body>
 </html>
