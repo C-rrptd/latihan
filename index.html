@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Absensi Sekolah Online - Glassmorphism Clean</title>
+    <title>Sistem Absensi Sekolah Online - Rapi & Minimalis</title>
     <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Memuat Inter Font -->
@@ -22,25 +22,24 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            /* Latar Belakang Gelap untuk Kontras Glassmorphism */
-            background: linear-gradient(135deg, #3a2559 0%, #0c082e 100%);
+            /* Latar Belakang Gradient yang Lebih Cerah dan Profesional */
+            background: linear-gradient(135deg, #6A82FB 0%, #FC5C7D 100%);
             min-height: 100vh;
             background-attachment: fixed;
         }
         
         .glass-effect {
-            /* Inti Glassmorphism yang lebih kalem */
-            background: rgba(255, 255, 255, 0.15); /* Opasitas sedikit lebih rendah */
-            backdrop-filter: blur(15px); /* Blur Disesuaikan */
-            border: 1px solid rgba(255, 255, 255, 0.3); /* Border lebih halus */
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); 
+            /* Glassmorphism yang lebih clean dan solid */
+            background: rgba(255, 255, 255, 0.4); /* Meningkatkan opasitas (kaca lebih padat) */
+            backdrop-filter: blur(12px); /* Blur yang pas */
+            border: 1px solid rgba(255, 255, 255, 0.5); /* Border lebih tipis dan terang */
+            box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1); 
             transition: all 0.3s ease;
         }
 
         .text-on-glass {
-            color: #ffffff;
-            /* Text shadow dikurangi agar lebih clean */
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3); 
+            color: #1f2937; /* Warna teks gelap agar kontras dengan latar kaca terang */
+            text-shadow: none; 
         }
 
         #toast-container {
@@ -53,34 +52,41 @@
         }
 
         .btn-primary {
-            /* Tombol lebih bulat dan kontras */
-            @apply bg-indigo-500 text-white font-semibold py-3 px-6 rounded-full hover:bg-indigo-600 transition duration-300 shadow-xl shadow-indigo-500/50;
+            /* Tombol yang lebih clean dan modern */
+            @apply bg-white text-indigo-600 font-bold py-3 px-6 rounded-full hover:bg-gray-100 transition duration-300 shadow-lg shadow-indigo-400/50 transform hover:scale-[1.02];
         }
 
         .input-field {
-            /* Input lebih jelas, menggunakan background putih semi-transparan yang lebih tebal */
-            @apply w-full pl-12 pr-4 py-3 border border-white/30 bg-white/15 text-white placeholder-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200;
+            /* Input yang sangat bersih, hampir transparan */
+            @apply w-full pl-12 pr-4 py-3 border border-white/70 bg-white/30 text-gray-800 placeholder-gray-500 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200;
         }
         .input-field::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(75, 85, 99, 0.8);
+        }
+        
+        /* Menggunakan warna yang lebih cerah untuk tautan dan teks penting */
+        .text-link {
+            @apply text-indigo-600 font-medium hover:text-indigo-800 transition duration-300;
         }
 
         .log-item {
             /* Item log dengan glass effect yang sama untuk konsistensi */
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.6);
+            border-left: 5px solid #6A82FB;
         }
 
         .log-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.7);
         }
-
+        
+        /* Perbaikan untuk scrollbar agar terlihat lebih elegan */
         #attendance-log-container::-webkit-scrollbar {
             width: 8px;
         }
         #attendance-log-container::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(106, 130, 251, 0.5);
             border-radius: 10px;
         }
     </style>
@@ -93,38 +99,38 @@
     </div>
 
     <!-- Modal Profil Pengguna -->
-    <div id="profile-modal" class="fixed inset-0 z-40 bg-gray-900 bg-opacity-70 hidden items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+    <div id="profile-modal" class="fixed inset-0 z-40 bg-gray-900 bg-opacity-50 hidden items-center justify-center p-4 transition-opacity duration-300 opacity-0">
         <div class="glass-effect p-8 rounded-3xl w-full max-w-lg transform transition-transform duration-300 scale-95">
-            <h2 class="text-2xl font-bold mb-6 text-white border-b border-white/30 pb-3 flex justify-between items-center text-on-glass">
-                <i data-lucide="settings" class="w-6 h-6 text-indigo-300 mr-2"></i>
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b border-gray-300 pb-3 flex justify-between items-center text-on-glass">
+                <i data-lucide="settings" class="w-6 h-6 text-indigo-600 mr-2"></i>
                 Pengaturan Profil
-                <button onclick="closeProfileModal()" class="text-white hover:text-indigo-300 transition duration-200">
+                <button onclick="closeProfileModal()" class="text-gray-600 hover:text-indigo-600 transition duration-200">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
             </h2>
             <form id="profile-form">
                 <div class="mb-6 text-center">
-                    <label class="block text-gray-200 font-medium mb-3">Foto Profil</label>
-                    <div class="relative w-28 h-28 mx-auto rounded-full bg-indigo-600 flex items-center justify-center cursor-pointer overflow-hidden shadow-lg border-4 border-white transform hover:scale-[1.03] transition duration-200" title="Klik untuk mengganti foto">
+                    <label class="block text-gray-600 font-medium mb-3">Foto Profil</label>
+                    <div class="relative w-28 h-28 mx-auto rounded-full bg-indigo-500 flex items-center justify-center cursor-pointer overflow-hidden shadow-lg border-4 border-white transform hover:scale-[1.03] transition duration-200" title="Klik untuk mengganti foto">
                         <img id="profile-image-preview" src="" alt="Profil" class="w-full h-full object-cover hidden">
-                        <i id="profile-image-icon" data-lucide="user-plus" class="w-14 h-14 text-white"></i>
+                        <i id="profile-image-icon" data-lucide="user" class="w-14 h-14 text-white"></i>
                         <input type="file" id="profile-image-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
                     </div>
-                    <button type="button" id="remove-profile-image" class="mt-3 text-sm text-red-400 hover:text-red-300 font-medium hidden">Hapus Foto</button>
+                    <button type="button" id="remove-profile-image" class="mt-3 text-sm text-red-500 hover:text-red-700 font-medium hidden">Hapus Foto</button>
                 </div>
                 <div class="space-y-4">
                     <div>
-                        <label for="profile-name" class="block text-gray-200 font-medium mb-1 text-sm">Nama Lengkap</label>
+                        <label for="profile-name" class="block text-gray-600 font-medium mb-1 text-sm">Nama Lengkap</label>
                         <div class="relative">
-                            <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
-                            <input type="text" id="profile-name" class="input-field text-white" required>
+                            <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
+                            <input type="text" id="profile-name" class="input-field" required>
                         </div>
                     </div>
                     <div>
-                        <label for="profile-nis" class="block text-gray-200 font-medium mb-1 text-sm">NIS / ID</label>
+                        <label for="profile-nis" class="block text-gray-600 font-medium mb-1 text-sm">NIS / ID</label>
                         <div class="relative">
-                            <i data-lucide="credit-card" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
-                            <input type="text" id="profile-nis" class="input-field bg-white/5 cursor-not-allowed text-gray-300" readonly>
+                            <i data-lucide="credit-card" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
+                            <input type="text" id="profile-nis" class="input-field bg-gray-200/50 cursor-not-allowed text-gray-500" readonly>
                         </div>
                     </div>
                 </div>
@@ -133,7 +139,7 @@
                     Simpan Perubahan
                 </button>
             </form>
-            <button onclick="changePassword()" class="text-sm text-indigo-300 hover:text-indigo-100 mt-4 block mx-auto font-medium transition duration-200">
+            <button onclick="changePassword()" class="text-sm text-link mt-4 block mx-auto">
                 Ubah Password
             </button>
         </div>
@@ -145,18 +151,18 @@
         <!-- View Autentikasi (Login, Daftar, Lupa Password) -->
         <div id="auth-view" class="w-full max-w-md">
             <div class="glass-effect p-10 rounded-3xl shadow-2xl">
-                <h1 class="text-3xl font-extrabold text-center text-white mb-8 text-on-glass" id="auth-title">Selamat Datang</h1>
+                <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-8 text-on-glass" id="auth-title">Selamat Datang</h1>
                 
                 <!-- Form Login -->
                 <form id="login-form" class="space-y-5">
                     <div class="relative">
-                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
                         <input type="email" id="login-email" placeholder="Email" class="input-field" required>
                     </div>
                     <div class="relative">
-                        <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
                         <input type="password" id="login-password" placeholder="Password" class="input-field pr-12" required>
-                        <button type="button" class="toggle-password absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-indigo-300 transition duration-200" aria-label="Toggle Password Visibility">
+                        <button type="button" class="toggle-password absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition duration-200" aria-label="Toggle Password Visibility">
                             <i data-lucide="eye-off" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -165,67 +171,67 @@
                         <span>Masuk ke Akun</span>
                     </button>
                     <div class="text-center text-sm">
-                        <button type="button" id="show-forgot-password-button" class="text-indigo-300 hover:text-indigo-100 font-medium transition duration-300">Lupa Password?</button>
+                        <button type="button" id="show-forgot-password-button" class="text-link">Lupa Password?</button>
                     </div>
-                    <div class="text-center text-sm pt-6 border-t border-white/20">
-                        <span class="text-gray-200">Belum punya akun?</span> 
-                        <button type="button" id="show-signup-button" class="text-indigo-300 font-bold hover:text-indigo-100 transition duration-300">Daftar Sekarang</button>
+                    <div class="text-center text-sm pt-6 border-t border-gray-300">
+                        <span class="text-gray-600">Belum punya akun?</span> 
+                        <button type="button" id="show-signup-button" class="text-link font-bold">Daftar Sekarang</button>
                     </div>
                 </form>
 
                 <!-- Form Daftar (Signup) -->
                 <form id="signup-form" class="space-y-5 hidden">
                     <div class="relative">
-                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
                         <input type="email" id="signup-email" placeholder="Email" class="input-field" required>
                     </div>
                     <div class="relative">
-                        <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
                         <input type="text" id="signup-name" placeholder="Nama Lengkap" class="input-field" required>
                     </div>
                     <div class="relative">
-                        <i data-lucide="credit-card" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <i data-lucide="credit-card" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
                         <input type="text" id="signup-nis" placeholder="NIS / ID Karyawan" class="input-field" required>
                     </div>
                     <div class="relative">
-                        <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
                         <input type="password" id="signup-password" placeholder="Password (min 6 karakter)" class="input-field pr-12" required minlength="6">
-                        <button type="button" class="toggle-password absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-indigo-300 transition duration-200" aria-label="Toggle Password Visibility">
+                        <button type="button" class="toggle-password absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition duration-200" aria-label="Toggle Password Visibility">
                             <i data-lucide="eye-off" class="w-5 h-5"></i>
                         </button>
                     </div>
                     <div class="relative">
-                        <i data-lucide="shield" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
-                        <select id="signup-role" class="input-field appearance-none cursor-pointer text-white">
-                            <option value="student" class="bg-gray-800 text-white">Siswa/i</option>
-                            <option value="admin" class="bg-gray-800 text-white">Admin/Guru</option>
+                        <i data-lucide="shield" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
+                        <select id="signup-role" class="input-field appearance-none text-gray-700 cursor-pointer">
+                            <option value="student" class="bg-white">Siswa/i</option>
+                            <option value="admin" class="bg-white">Admin/Guru</option>
                         </select>
-                        <i data-lucide="chevron-down" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none"></i>
+                        <i data-lucide="chevron-down" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none"></i>
                     </div>
 
                     <button type="submit" class="btn-primary w-full flex items-center justify-center space-x-2">
                         <i data-lucide="user-plus" class="w-5 h-5"></i>
                         <span>Daftar Akun Baru</span>
                     </button>
-                    <div class="text-center text-sm pt-6 border-t border-white/20">
-                        <span class="text-gray-200">Sudah punya akun?</span> 
-                        <button type="button" id="back-to-login-button" class="text-indigo-300 font-bold hover:text-indigo-100 transition duration-300">Masuk</button>
+                    <div class="text-center text-sm pt-6 border-t border-gray-300">
+                        <span class="text-gray-600">Sudah punya akun?</span> 
+                        <button type="button" id="back-to-login-button" class="text-link font-bold">Masuk</button>
                     </div>
                 </form>
 
                 <!-- Form Lupa Password -->
                 <form id="forgot-password-form" class="space-y-5 hidden">
-                    <p class="text-sm text-gray-200 text-center">Masukkan email Anda. Kami akan mengirimkan tautan reset password.</p>
+                    <p class="text-sm text-gray-600 text-center">Masukkan email Anda. Kami akan mengirimkan tautan reset password.</p>
                     <div class="relative">
-                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
                         <input type="email" id="forgot-email" placeholder="Email" class="input-field" required>
                     </div>
                     <button type="submit" class="btn-primary w-full flex items-center justify-center space-x-2">
                         <i data-lucide="send" class="w-5 h-5"></i>
                         <span>Kirim Tautan Reset</span>
                     </button>
-                    <div class="text-center text-sm pt-6 border-t border-white/20">
-                        <button type="button" onclick="showAuthView('login')" class="text-indigo-300 font-bold hover:text-indigo-100 transition duration-300">Kembali ke Login</button>
+                    <div class="text-center text-sm pt-6 border-t border-gray-300">
+                        <button type="button" onclick="showAuthView('login')" class="text-link font-bold">Kembali ke Login</button>
                     </div>
                 </form>
             </div>
@@ -236,38 +242,39 @@
             <div class="glass-effect p-8 rounded-3xl shadow-2xl">
                 
                 <!-- Header Dashboard -->
-                <header class="flex justify-between items-center mb-8 border-b border-white/20 pb-4">
+                <header class="flex justify-between items-center mb-8 border-b border-gray-300 pb-4">
                     <div class="flex items-center space-x-4">
-                        <div class="relative w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center cursor-pointer overflow-hidden shadow-lg border-2 border-white transform hover:scale-[1.03] transition duration-200" onclick="showProfileModal()">
+                        <div class="relative w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center cursor-pointer overflow-hidden shadow-lg border-2 border-white transform hover:scale-[1.03] transition duration-200" onclick="showProfileModal()">
                             <img id="dashboard-profile-image" src="" alt="P" class="w-full h-full object-cover hidden">
                             <i id="dashboard-profile-icon" data-lucide="user" class="w-7 h-7 text-white"></i>
                         </div>
                         <div>
-                            <p class="text-xl font-bold text-white text-on-glass" id="user-name-display">Memuat...</p>
-                            <p class="text-sm font-medium text-indigo-300 flex items-center space-x-1" id="user-role-display">
+                            <p class="text-xl font-bold text-gray-800 text-on-glass" id="user-name-display">Memuat...</p>
+                            <p class="text-sm font-medium text-indigo-600 flex items-center space-x-1" id="user-role-display">
                                 <i data-lucide="shield-check" class="w-4 h-4"></i>
                                 <span>Memuat...</span>
                             </p>
                         </div>
                     </div>
-                    <button onclick="signOut()" class="text-sm text-red-300 hover:text-white hover:bg-red-500 py-2 px-4 rounded-full font-medium flex items-center space-x-1 transition duration-200 border border-red-300/50">
+                    <button onclick="signOut()" class="text-sm bg-red-500 text-white hover:bg-red-600 py-2 px-4 rounded-full font-medium flex items-center space-x-1 transition duration-200 shadow-md">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span>Keluar</span>
                     </button>
                 </header>
 
-                <!-- Konten Dashboard -->
+                <!-- Konten Dashboard (Grid 2 Kolom) -->
                 <div class="grid md:grid-cols-3 gap-8">
                     
-                    <!-- Kolom Kiri: Absensi & Status -->
-                    <div class="md:col-span-1 space-y-8">
+                    <!-- Kolom Kiri: Absensi & Status (Grid 1) -->
+                    <div class="md:col-span-1 space-y-6">
+                        
                         <!-- Bagian Absensi (Hanya untuk Siswa/Student) -->
-                        <div id="attendance-section" class="p-6 glass-effect rounded-2xl border border-indigo-500/30 shadow-xl hidden">
-                            <h2 class="text-xl font-extrabold text-white mb-4 flex items-center space-x-2 text-on-glass border-b border-white/10 pb-2">
-                                <i data-lucide="calendar-check" class="w-6 h-6 text-indigo-300"></i>
+                        <div id="attendance-section" class="p-6 glass-effect rounded-2xl shadow-lg border-t-4 border-indigo-500 hidden">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center space-x-2 text-on-glass border-b border-gray-300 pb-2">
+                                <i data-lucide="calendar-check" class="w-6 h-6 text-indigo-500"></i>
                                 <span>Absensi Hari Ini</span>
                             </h2>
-                            <div id="attendance-status" class="text-center p-4 rounded-xl text-lg font-bold transition-all duration-300 mb-6 bg-yellow-400/10 text-yellow-300 border border-yellow-400/20">
+                            <div id="attendance-status" class="text-center p-4 rounded-xl text-base font-semibold transition-all duration-300 mb-6 bg-yellow-100 text-yellow-800 border border-yellow-300">
                                 Status: Belum Absen
                             </div>
                             <button id="record-attendance-button" class="btn-primary w-full py-4 flex items-center justify-center space-x-2 text-lg">
@@ -276,40 +283,39 @@
                             </button>
                         </div>
 
-                        <!-- Sidebar Info Tambahan (Bisa Disesuaikan) -->
-                        <div class="p-6 glass-effect rounded-2xl border border-white/20">
-                            <h3 class="font-bold text-lg text-white mb-3 flex items-center space-x-2 text-on-glass border-b border-white/10 pb-2">
-                                <i data-lucide="info" class="w-5 h-5 text-indigo-300"></i>
+                        <!-- Info Cepat -->
+                        <div class="p-6 glass-effect rounded-2xl border border-white/50">
+                            <h3 class="font-bold text-lg text-gray-800 mb-3 flex items-center space-x-2 text-on-glass border-b border-gray-300 pb-2">
+                                <i data-lucide="info" class="w-5 h-5 text-indigo-500"></i>
                                 <span>Pemberitahuan Cepat</span>
                             </h3>
-                            <p class="text-sm text-gray-200">Pastikan GPS Anda aktif dan berada di lokasi sekolah saat merekam absensi.</p>
-                            <a href="#" class="text-xs text-indigo-300 hover:text-indigo-100 font-medium mt-3 block">Baca Panduan Absensi</a>
+                            <p class="text-sm text-gray-700">Pastikan GPS Anda aktif dan berada di lokasi yang ditentukan saat merekam absensi.</p>
                         </div>
                     </div>
 
-                    <!-- Kolom Kanan: Log Absensi (Riwayat) -->
+                    <!-- Kolom Kanan: Log Absensi (Riwayat) (Grid 2) -->
                     <div class="md:col-span-2">
-                        <h2 class="text-xl font-extrabold text-white mb-4 border-b border-white/20 pb-2 flex items-center space-x-2 text-on-glass">
-                            <i data-lucide="archive" class="w-6 h-6 text-indigo-300"></i>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 border-b border-gray-300 pb-2 flex items-center space-x-2 text-on-glass">
+                            <i data-lucide="archive" class="w-6 h-6 text-indigo-500"></i>
                             <span>Riwayat Absensi</span>
                         </h2>
 
                         <!-- Kotak Pencarian (Hanya untuk Admin) -->
                         <div id="search-container" class="mb-5 hidden">
                             <div class="relative">
-                                <i data-lucide="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300"></i>
+                                <i data-lucide="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
                                 <input type="text" id="search-student-input" placeholder="Cari NIS/Nama Siswa untuk Filter Data..." class="input-field">
                             </div>
                         </div>
 
                         <!-- Daftar Log Absensi -->
-                        <div id="attendance-log-container" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                            <p class="text-center text-gray-300 p-8" id="log-loading-message">Memuat log absensi...</p>
+                        <div id="attendance-log-container" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                            <p class="text-center text-gray-600 p-8" id="log-loading-message">Memuat log absensi...</p>
                             <!-- Log Absensi akan dimasukkan di sini oleh JS -->
                         </div>
 
-                        <div id="empty-log-message" class="hidden text-center text-gray-300 p-10 border-2 border-dashed border-white/30 rounded-xl mt-4 bg-white/10">
-                            <i data-lucide="database" class="w-8 h-8 mx-auto mb-2"></i>
+                        <div id="empty-log-message" class="hidden text-center text-gray-600 p-10 border-2 border-dashed border-gray-400 rounded-xl mt-4 bg-white/50">
+                            <i data-lucide="database" class="w-8 h-8 mx-auto mb-2 text-gray-500"></i>
                             <p class="font-medium">Belum ada data absensi yang tercatat.</p>
                         </div>
                     </div>
@@ -361,13 +367,13 @@
             
             let color, icon;
             if (type === 'success') {
-                color = 'bg-green-600';
+                color = 'bg-green-500';
                 icon = 'check-circle';
             } else if (type === 'error') {
-                color = 'bg-red-600';
+                color = 'bg-red-500';
                 icon = 'x-circle';
             } else {
-                color = 'bg-blue-600';
+                color = 'bg-blue-500';
                 icon = 'info';
             }
 
@@ -670,21 +676,21 @@
                 if (data.length > 0) {
                     statusEl.textContent = 'Status: Sudah Absen Hari Ini';
                     // Warna untuk Sudah Absen
-                    statusEl.classList.remove('bg-yellow-400/10', 'text-yellow-300');
-                    statusEl.classList.add('bg-green-400/10', 'text-green-300', 'ring-1', 'ring-green-400');
+                    statusEl.classList.remove('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
+                    statusEl.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
                     buttonEl.disabled = true;
                     buttonEl.innerHTML = '<i data-lucide="check" class="w-6 h-6"></i><span>Absensi Selesai</span>';
-                    buttonEl.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400/50', 'shadow-none');
-                    buttonEl.classList.remove('btn-primary', 'hover:bg-indigo-600');
+                    buttonEl.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-300', 'shadow-none', 'text-gray-600');
+                    buttonEl.classList.remove('btn-primary', 'hover:bg-gray-100');
                 } else {
                     statusEl.textContent = 'Status: Belum Absen';
                     // Warna untuk Belum Absen
-                    statusEl.classList.remove('bg-green-400/10', 'text-green-300', 'ring-1', 'ring-green-400');
-                    statusEl.classList.add('bg-yellow-400/10', 'text-yellow-300');
+                    statusEl.classList.remove('bg-green-100', 'text-green-800', 'border-green-300');
+                    statusEl.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
                     buttonEl.disabled = false;
                     buttonEl.innerHTML = '<i data-lucide="map-pin" class="w-6 h-6"></i><span>Rekam Absensi Sekarang</span>';
-                    buttonEl.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400/50', 'shadow-none');
-                    buttonEl.classList.add('btn-primary', 'hover:bg-indigo-600');
+                    buttonEl.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-300', 'shadow-none', 'text-gray-600');
+                    buttonEl.classList.add('btn-primary', 'hover:bg-gray-100');
                     lucide.createIcons();
                 }
             } catch (error) {
@@ -769,22 +775,22 @@
 
                     const isSelf = log.user_id === appState.user.id;
                     const logItem = document.createElement('div');
-                    // Menggunakan glass effect ringan untuk setiap item log
-                    logItem.className = 'log-item p-4 rounded-xl shadow-md border border-white/20 flex justify-between items-center transition duration-200 hover:shadow-lg';
+                    // Item log dengan border kiri warna utama
+                    logItem.className = 'log-item p-4 rounded-xl shadow-md flex justify-between items-center transition duration-200';
                     logItem.innerHTML = `
                         <div class="flex items-center space-x-3">
-                            <i data-lucide="user-check" class="w-6 h-6 text-indigo-300"></i>
+                            <i data-lucide="user-check" class="w-6 h-6 text-indigo-600"></i>
                             <div>
-                                <p class="font-bold text-white text-on-glass">${log.user_name} <span class="text-sm font-medium text-gray-300">(${log.nis})</span> ${isSelf ? '<span class="text-xs text-green-300 font-medium bg-green-500/20 px-2 py-0.5 rounded-full border border-green-500/30">Anda</span>' : ''}</p>
-                                <p class="text-xs text-gray-300 mt-1 flex items-center space-x-1">
+                                <p class="font-bold text-gray-800">${log.user_name} <span class="text-sm font-medium text-gray-500">(${log.nis})</span> ${isSelf ? '<span class="text-xs text-indigo-600 font-medium bg-indigo-100 px-2 py-0.5 rounded-full">Anda</span>' : ''}</p>
+                                <p class="text-xs text-gray-500 mt-1 flex items-center space-x-1">
                                     <i data-lucide="clock" class="w-3 h-3"></i>
                                     <span>${formattedDate} Pukul ${formattedTime}</span>
                                 </p>
                             </div>
                         </div>
                         <div class="text-right flex flex-col items-end">
-                            <span class="inline-block px-3 py-1 text-xs font-bold rounded-full bg-indigo-500/30 text-indigo-300 border border-indigo-500/30">${log.status}</span>
-                            <a href="https://www.google.com/maps/search/?api=1&query=${log.latitude},${log.longitude}" target="_blank" class="text-xs text-indigo-300 hover:text-indigo-100 font-medium mt-1 flex items-center space-x-1">
+                            <span class="inline-block px-3 py-1 text-xs font-bold rounded-full bg-indigo-500 text-white">${log.status}</span>
+                            <a href="https://www.google.com/maps/search/?api=1&query=${log.latitude},${log.longitude}" target="_blank" class="text-xs text-link font-medium mt-1 flex items-center space-x-1">
                                 <span>Lokasi</span> <i data-lucide="map" class="w-3 h-3 inline"></i>
                             </a>
                         </div>
