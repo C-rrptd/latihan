@@ -6,7 +6,6 @@
     <title>Sistem Absensi Sekolah Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
@@ -329,12 +328,16 @@
                     <button id="profile-button" class="flex items-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-all shadow-md">
                         <div class="w-8 h-8 rounded-lg overflow-hidden bg-purple-200 flex items-center justify-center">
                             <img id="header-profile-image" class="w-full h-full object-cover hidden" alt="Profile">
-                            <i data-lucide="user" class="w-4 h-4 text-purple-600"></i>
+                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
                         </div>
                         <span class="hidden sm:inline font-semibold">Profil</span>
                     </button>
                     <button id="logout-button" class="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-md">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
                         <span class="hidden sm:inline">Keluar</span>
                     </button>
                 </div>
@@ -848,19 +851,39 @@
             if (!list) return;
             list.innerHTML = '';
             if (appState.attendanceLogs.length === 0) {
-                list.innerHTML = `<div class="text-center py-8"><i data-lucide="calendar-x" class="w-12 h-12 mx-auto text-gray-300 mb-2"></i><p class="text-gray-500">Belum ada riwayat absensi hari ini</p></div>`;
-                lucide.createIcons();
+                list.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg class="w-12 h-12 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-gray-500">Belum ada riwayat absensi hari ini</p>
+                    </div>
+                `;
                 return;
             }
-            appState.attendanceLogs.forEach((log, idx) => {
+            appState.attendanceLogs.forEach((log) => {
                 const div = document.createElement('div');
                 div.className = 'flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors';
                 const statusClass = log.status.includes('Tepat') ? 'status-success' : 'status-warning';
-                const icon = log.type === 'check_in' ? 'log-in' : 'log-out';
-                div.innerHTML = `<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border"><i data-lucide="${icon}" class="w-5 h-5 text-purple-600"></i></div><div><p class="font-semibold text-gray-800">${log.type === 'check_in' ? 'Absen Masuk' : 'Absen Pulang'}</p><p class="text-sm text-gray-500">${log.log_time}</p></div></div><span class="status-badge ${statusClass}">${log.status}</span>`;
+                const iconPath = log.type === 'check_in' 
+                    ? 'M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1'
+                    : 'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">${log.type === 'check_in' ? 'Absen Masuk' : 'Absen Pulang'}</p>
+                            <p class="text-sm text-gray-500">${log.log_time}</p>
+                        </div>
+                    </div>
+                    <span class="status-badge ${statusClass}">${log.status}</span>
+                `;
                 list.appendChild(div);
             });
-            lucide.createIcons();
         }
 
         function updateAttendanceButtons() {
@@ -901,8 +924,16 @@
                        log.profiles?.classes?.class_name?.toLowerCase().includes(searchTerm);
             });
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center p-8"><i data-lucide="search-x" class="w-12 h-12 mx-auto text-gray-300 mb-2"></i><p class="text-gray-500">${filter ? 'Tidak ada data yang sesuai' : 'Belum ada data absensi hari ini'}</p></td></tr>`;
-                lucide.createIcons();
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center p-8">
+                            <svg class="w-12 h-12 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <p class="text-gray-500">${filter ? 'Tidak ada data yang sesuai' : 'Belum ada data absensi hari ini'}</p>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
             filtered.forEach(log => {
@@ -999,12 +1030,14 @@
             errorEl.classList.add('hidden');
             setButtonLoading(submitBtn, true);
             
-            const formData = new FormData(e.target);
-            const email = formData.get('email')?.trim();
-            const password = formData.get('password');
-            const nisn = formData.get('nisn')?.trim();
-            
             try {
+                const formData = new FormData(e.target);
+                const email = formData.get('email')?.trim();
+                const password = formData.get('password');
+                const nisn = formData.get('nisn')?.trim();
+                
+                console.log('Sign up attempt:', { email, nisn });
+                
                 // Validations
                 if (!email || !password || !nisn) {
                     throw new Error('Semua field harus diisi');
@@ -1023,31 +1056,39 @@
                 }
                 
                 // Check if NISN already exists
-                const { data: existingProfile, error: checkError } = await supabaseClient
+                const { data: existingProfile } = await supabaseClient
                     .from('profiles')
                     .select('nisn')
                     .eq('nisn', nisn)
-                    .single();
+                    .maybeSingle();
                 
                 if (existingProfile) {
                     throw new Error('NISN sudah terdaftar. Silakan login atau gunakan NISN lain.');
                 }
+                
+                console.log('Creating user account...');
                 
                 // Sign up user
                 const { data, error: signUpError } = await supabaseClient.auth.signUp({ 
                     email, 
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
                         data: { 
-                            nisn: nisn, 
-                            role: 'student'
+                            nisn: nisn
                         }
                     }
                 });
                 
-                if (signUpError) throw signUpError;
-                if (!data.user) throw new Error('Pendaftaran gagal. Coba lagi.');
+                if (signUpError) {
+                    console.error('Signup error:', signUpError);
+                    throw signUpError;
+                }
+                
+                if (!data.user) {
+                    throw new Error('Pendaftaran gagal. Coba lagi.');
+                }
+                
+                console.log('User created:', data.user.id);
                 
                 // Store NISN temporarily
                 localStorage.setItem(`pending_nisn_${data.user.id}`, nisn);
@@ -1061,7 +1102,15 @@
                 
             } catch(error) {
                 console.error('Signup error:', error);
-                const errorMsg = ErrorHandler.handle(error, 'pendaftaran');
+                let errorMsg = error.message || 'Terjadi kesalahan saat pendaftaran';
+                
+                // Handle specific errors
+                if (error.message?.includes('already registered')) {
+                    errorMsg = 'Email sudah terdaftar. Silakan login atau gunakan email lain.';
+                } else if (error.message?.includes('Email rate limit exceeded')) {
+                    errorMsg = 'Terlalu banyak percobaan. Tunggu beberapa menit.';
+                }
+                
                 errorEl.innerHTML = `
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -1248,7 +1297,6 @@
             renderSchedule(document.getElementById('admin-schedule-table-body'), true);
             
             showToast('Jadwal baru dibuat. Silakan isi dan simpan', 'info');
-            lucide.createIcons();
         }
         
         function clearSchedule() {
@@ -1312,19 +1360,20 @@
             }, 100);
             
             const preview = document.getElementById('profile-image-preview');
+            const placeholderIcon = preview.nextElementSibling;
             const removeBtn = document.getElementById('remove-profile-image');
+            
             if (appState.profile.avatar_url) {
                 preview.src = appState.profile.avatar_url;
                 preview.classList.remove('hidden');
-                preview.nextElementSibling?.classList.add('hidden');
+                if (placeholderIcon) placeholderIcon.classList.add('hidden');
                 removeBtn.classList.remove('hidden');
             } else {
                 preview.classList.add('hidden');
-                preview.nextElementSibling?.classList.remove('hidden');
+                if (placeholderIcon) placeholderIcon.classList.remove('hidden');
                 removeBtn.classList.add('hidden');
                 preview.src = '';
             }
-            lucide.createIcons();
         }
 
         function updateHeaderProfileImage() {
@@ -1438,7 +1487,7 @@
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', async () => {
-            lucide.createIcons();
+            console.log('App initialized');
             
             // Auth state listener
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1447,6 +1496,7 @@
             }
 
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                console.log('Auth state change:', event);
                 if (event === 'SIGNED_IN' && session?.user) {
                     await initializeMainApp(session.user);
                 } else if (event === 'SIGNED_OUT') {
