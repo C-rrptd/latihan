@@ -5,20 +5,26 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sistem Absensi Sekolah Online</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Use compiled Tailwind CSS (production) instead of the CDN -->
+  <link rel="stylesheet" href="/dist/styles.css">
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Supabase client -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
   <style>
-    :root { --from: #667eea; --to: #764ba2; }
-    * { box-sizing: border-box; }
+    :root { --primary-from: #667eea; --primary-to: #764ba2; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(135deg, var(--primary-from) 0%, var(--primary-to) 100%);
       min-height: 100vh;
-      background: linear-gradient(135deg, var(--from) 0%, var(--to) 100%);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
+    /* Glass card */
     .glass {
       background: rgba(255,255,255,0.95);
       backdrop-filter: blur(8px);
@@ -27,16 +33,26 @@
     }
 
     .gradient-text {
-      background: linear-gradient(135deg, var(--from), var(--to));
+      background: linear-gradient(135deg, var(--primary-from) 0%, var(--primary-to) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
     }
 
     /* spinner */
-    .spinner { border-radius: 9999px; border: 4px solid rgba(255,255,255,0.3); border-top-color: var(--from); width: 48px; height: 48px; animation: spin 1s linear infinite; }
+    .spinner, .btn-spinner {
+      border-radius: 9999px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: var(--primary-from);
+      animation: spin 1s linear infinite;
+    }
+    .spinner { width: 48px; height: 48px; }
+    .btn-spinner { width: 22px; height: 22px; border-width: 3px; border-top-color: #fff; }
+
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* toggle button */
+    /* toggle-password button */
     .toggle-password {
       position: absolute;
       right: 0.5rem;
@@ -45,7 +61,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 3rem;   /* large hit area */
+      width: 3rem;      /* 48px hit area */
       height: 3rem;
       background: transparent;
       border: none;
@@ -53,22 +69,28 @@
       margin: 0;
       cursor: pointer;
       color: #6b7280;
-      border-radius: 0.5rem;
-      z-index: 50;   /* ensure it's above input */
+      border-radius: .5rem;
+      z-index: 40;
     }
     .toggle-password:focus {
       outline: none;
       box-shadow: 0 0 0 4px rgba(102,126,234,0.12);
     }
-    .toggle-password .icon { width: 1.3rem; height: 1.3rem; pointer-events: none; display:block; }
+    .toggle-password .icon {
+      width: 1.25rem;   /* 20px */
+      height: 1.25rem;
+      display: block;
+      pointer-events: none;
+    }
 
-    /* ensure inputs with toggles have room */
-    .has-password-toggle { padding-right: 4rem !important; }
+    /* ensure inputs with toggles have enough padding */
+    .has-password-toggle { padding-right: 4rem !important; } /* ~64px */
 
     /* toast */
-    #toast { position: fixed; right: 1rem; bottom: 1.25rem; z-index: 60; transition: all .25s ease; opacity: 0; transform: translateY(8px); }
+    #toast { position: fixed; right: 1.25rem; bottom: 1.5rem; z-index: 60; transition: all .25s ease; opacity: 0; transform: translateY(10px); }
     #toast.show { opacity: 1; transform: translateY(0); }
 
+    /* responsiveness tweaks */
     @media (max-width: 640px) {
       .toggle-password { width: 2.5rem; height: 2.5rem; }
       .has-password-toggle { padding-right: 3.5rem !important; }
@@ -78,8 +100,8 @@
 <body>
   <!-- Loading overlay -->
   <div id="loading-screen" class="fixed inset-0 flex items-center justify-center z-50 hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-gradient-to-br from-purple-700 to-indigo-700 opacity-80"></div>
-    <div class="relative z-10 flex flex-col items-center gap-4">
+    <div class="bg-gradient-to-br from-purple-700 to-indigo-700 w-full h-full absolute opacity-80"></div>
+    <div class="relative z-60 flex flex-col items-center gap-4">
       <div class="spinner"></div>
       <p class="text-white font-semibold">Memuat...</p>
     </div>
@@ -88,12 +110,16 @@
   <!-- Toast -->
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <!-- Login page -->
+  <!-- Auth page -->
   <main id="login-page" class="min-h-screen flex items-start justify-center py-12 px-4">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
+        <!-- inline book icon -->
         <div class="mx-auto w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4">
-          <svg class="w-10 h-10 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5a2 2 0 012-2h2l2 2h6l2-2h2a2 2 0 012 2v13a1 1 0 01-1 1H4a1 1 0 01-1-1V5z"/><path d="M7 7v12"/></svg>
+          <svg class="w-10 h-10 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 5a2 2 0 012-2h2l2 2h6l2-2h2a2 2 0 012 2v13a1 1 0 01-1 1H4a1 1 0 01-1-1V5z"></path>
+            <path d="M7 7v12"></path>
+          </svg>
         </div>
 
         <h1 class="text-4xl font-extrabold text-white gradient-text">Selamat Datang</h1>
@@ -115,15 +141,14 @@
                    class="w-full has-password-toggle px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                    placeholder="Masukkan password" autocomplete="current-password" />
 
-            <!-- Single toggle button (login) -->
+            <!-- Toggle: data-action used to avoid conflicts -->
             <button type="button" class="toggle-password" data-action="toggle-password" data-target="password" aria-label="Tampilkan password" aria-pressed="false" title="Tampilkan password">
-              <!-- eye open (visible when password is hidden) -->
+              <!-- eye open (visible when input.type === 'password') -->
               <svg class="icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <path d="M2.5 12s3.5-7.5 9.5-7.5S21.5 12 21.5 12 18 19.5 12 19.5 2.5 12 2.5 12z"/>
                 <circle cx="12" cy="12" r="3.2"/>
               </svg>
-
-              <!-- eye closed (hidden initially) -->
+              <!-- eye closed (hidden by default) -->
               <svg class="icon eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <path d="M3 3l18 18"/>
                 <path d="M10.6 10.6a3 3 0 014.2 4.2" />
@@ -135,8 +160,8 @@
 
           <div>
             <button id="login-submit" type="submit"
-                    class="w-full font-bold py-3 rounded-xl shadow-md text-white"
-                    style="background: linear-gradient(135deg,var(--from),var(--to));">
+                    class="w-full btn-primary text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
+                    style="background: linear-gradient(135deg,var(--primary-from),var(--primary-to));">
               Masuk
             </button>
           </div>
@@ -181,12 +206,13 @@
     </header>
 
     <section class="max-w-7xl mx-auto p-6 space-y-6">
+      <!-- Dashboard simplified for brevity -->
       <div class="glass rounded-2xl p-8 text-center">
         <h2 id="clock" class="text-5xl font-extrabold gradient-text mb-2">00:00:00</h2>
         <p id="date" class="text-gray-600 mb-6">-</p>
         <div class="flex gap-4 justify-center">
-          <button id="check-in-button" class="px-8 py-3 font-semibold rounded-xl text-white" style="background: linear-gradient(135deg,var(--from),var(--to));">Absen Masuk</button>
-          <button id="check-out-button" class="px-8 py-3 font-semibold rounded-xl text-white" style="background: linear-gradient(135deg,var(--from),var(--to));">Absen Pulang</button>
+          <button id="check-in-button" class="px-8 py-3 btn-primary text-white rounded-xl shadow">Absen Masuk</button>
+          <button id="check-out-button" class="px-8 py-3 btn-primary text-white rounded-xl shadow">Absen Pulang</button>
         </div>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -197,97 +223,138 @@
   </div>
 
   <script>
-    // Supabase client
+    // --- Supabase client (same keys used previously) ---
     const supabaseClient = supabase.createClient(
       'https://qvunfkabbhulwqfnkren.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'
     );
 
-    // small helpers
+    // lightweight utilities
+    const appState = {
+      currentUser: null,
+      profile: null,
+      clockInterval: null,
+      loadingTimeout: null
+    };
+
     function showLoading(on = true) {
       const el = document.getElementById('loading-screen');
       if (!el) return;
       el.classList.toggle('hidden', !on);
+      if (appState.loadingTimeout) { clearTimeout(appState.loadingTimeout); appState.loadingTimeout = null; }
+      if (on) {
+        appState.loadingTimeout = setTimeout(() => {
+          el.classList.add('hidden');
+          appState.loadingTimeout = null;
+        }, 20000);
+      }
     }
 
-    function showToast(msg, type='info') {
+    function showToast(message, type = 'info') {
       const toast = document.getElementById('toast');
       if (!toast) return;
       const colors = { success: 'bg-emerald-500', error: 'bg-red-500', info: 'bg-blue-500' };
-      toast.className = `${colors[type]} text-white px-4 py-3 rounded shadow show`;
-      toast.innerHTML = `<div class="flex items-center gap-3">${msg}</div>`;
+      const icon = type === 'success' ? '✔' : (type === 'error' ? '⚠' : 'ℹ');
+      toast.className = `text-white px-4 py-3 rounded shadow-lg ${colors[type]} show`;
+      toast.innerHTML = `<div class="flex items-center gap-3"><div class="text-xl">${icon}</div><div>${message}</div></div>`;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
+      setTimeout(() => { toast.classList.remove('show'); }, 3500);
     }
 
-    // Toggle handler: use event delegation and update icons based on NEW input.type
+    // Clock
+    function updateClock() {
+      const clock = document.getElementById('clock');
+      const dateEl = document.getElementById('date');
+      if (!clock || !dateEl) return;
+      const now = new Date();
+      clock.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const days = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+      const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+      dateEl.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+
+    // --- PASSWORD TOGGLE HANDLING ---
+    // Use event delegation; works even if DOM changes
     document.addEventListener('click', (ev) => {
       const btn = ev.target.closest('[data-action="toggle-password"]');
       if (!btn) return;
       ev.preventDefault();
       ev.stopPropagation();
 
-      const targetId = btn.getAttribute('data-target');
-      const input = targetId ? document.getElementById(targetId) : btn.closest('.relative')?.querySelector('input[type="password"], input[type="text"]');
-      if (!input) { console.warn('toggle: target input not found'); return; }
-
-      // flip type
-      input.type = (input.type === 'password') ? 'text' : 'password';
-
-      // After change, update icons based on the new type
-      const nowIsPassword = input.type === 'password';
-      btn.setAttribute('aria-pressed', String(!nowIsPassword));
-      btn.title = nowIsPassword ? 'Tampilkan password' : 'Sembunyikan password';
-
-      const eyeOpen = btn.querySelector('.eye-open');
-      const eyeClosed = btn.querySelector('.eye-closed');
-
-      if (eyeOpen) eyeOpen.classList.toggle('hidden', !nowIsPassword);   // show eye-open when type=password (hidden)
-      if (eyeClosed) eyeClosed.classList.toggle('hidden', nowIsPassword); // show eye-closed when type=text (visible)
-
-      // keep focus and move caret to end
       try {
-        input.focus();
-        const len = input.value?.length || 0;
-        input.setSelectionRange(len, len);
-      } catch (e) { /* ignore */ }
+        const targetId = btn.getAttribute('data-target');
+        const input = targetId ? document.getElementById(targetId) : btn.closest('.relative')?.querySelector('input[type="password"], input[type="text"]');
+        if (!input) {
+          console.warn('toggle: no target input found for', btn);
+          return;
+        }
 
-      console.debug('Password toggle clicked — input type is now', input.type);
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        btn.setAttribute('aria-pressed', String(isPassword));
+        btn.title = isPassword ? 'Sembunyikan password' : 'Tampilkan password';
+
+        const eyeOpen = btn.querySelector('.eye-open');
+        const eyeClosed = btn.querySelector('.eye-closed');
+        if (eyeOpen) eyeOpen.classList.toggle('hidden', !isPassword);
+        if (eyeClosed) eyeClosed.classList.toggle('hidden', isPassword);
+
+        // restore focus/caret
+        try {
+          input.focus();
+          const len = input.value?.length || 0;
+          input.setSelectionRange(len, len);
+        } catch (e) { /* ignore */ }
+      } catch (err) {
+        console.error('Error toggling password:', err);
+      }
     });
 
-    // Clock & simple auth wiring (minimal)
-    function updateClock() {
-      const clock = document.getElementById('clock');
-      const dateEl = document.getElementById('date');
-      if (!clock || !dateEl) return;
-      const now = new Date();
-      clock.textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-      const days = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-      const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-      dateEl.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-    }
-
+    // --- AUTH + UI wiring (kept minimal & similar to your previous flow) ---
     async function initializeMainApp(user) {
       if (!user) return;
-      document.getElementById('login-page').classList.add('hidden');
-      document.getElementById('main-app').classList.remove('hidden');
-      updateClock();
-      setInterval(updateClock, 1000);
+      if (appState.currentUser && appState.currentUser.id === user.id) return;
+      appState.currentUser = user;
+      showLoading(true);
+      try {
+        const { data: profile, error } = await supabaseClient.from('profiles').select('*, classes(class_name)').eq('id', user.id).maybeSingle();
+        if (error && error.code !== 'PGRST116') throw error;
+        appState.profile = profile || null;
+        document.getElementById('welcome-message').textContent = appState.profile?.full_name || appState.profile?.nisn || user.email?.split('@')[0] || 'User';
+
+        // show main app
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+
+        // start clock for students
+        if (appState.clockInterval) clearInterval(appState.clockInterval);
+        updateClock();
+        appState.clockInterval = setInterval(updateClock, 1000);
+      } catch (err) {
+        console.error('initializeMainApp error', err);
+        showToast('Gagal memuat aplikasi', 'error');
+      } finally {
+        showLoading(false);
+      }
     }
 
     async function handleLogin(e) {
       e.preventDefault();
-      const id = document.getElementById('identifier').value.trim();
-      const pwd = document.getElementById('password').value;
+      const form = e.target;
+      const submit = form.querySelector('button[type="submit"]');
+      const id = form.querySelector('[name="identifier"]').value?.trim();
+      const pwd = form.querySelector('[name="password"]').value;
       if (!id || !pwd) { showToast('Email/NISN & password wajib diisi', 'error'); return; }
+
       showLoading(true);
       try {
         let email = id;
         if (!id.includes('@')) {
+          // treat as NISN
           if (!/^\d{10}$/.test(id)) throw new Error('NISN harus 10 digit');
-          const { data: profile, error } = await supabaseClient.from('profiles').select('email').eq('nisn', id).single();
-          if (error || !profile) throw new Error('NISN tidak ditemukan');
-          email = profile.email;
+          const { data: p, error: pErr } = await supabaseClient.from('profiles').select('email').eq('nisn', id).single();
+          if (pErr || !p) throw new Error('NISN tidak ditemukan');
+          email = p.email;
         }
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pwd });
         if (error) throw error;
@@ -295,20 +362,42 @@
         await initializeMainApp(data.user);
         showToast('Berhasil masuk', 'success');
       } catch (err) {
-        console.error(err);
+        console.error('login error', err);
         showToast(err.message || 'Gagal login', 'error');
       } finally { showLoading(false); }
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      document.getElementById('login-form').addEventListener('submit', handleLogin);
-      document.getElementById('logout-button')?.addEventListener('click', async () => { await supabaseClient.auth.signOut(); location.reload(); });
+    async function handleLogout() {
+      try {
+        await supabaseClient.auth.signOut();
+      } catch (err) { console.warn(err); }
+      appState.currentUser = null;
+      appState.profile = null;
+      if (appState.clockInterval) { clearInterval(appState.clockInterval); appState.clockInterval = null; }
+      document.getElementById('main-app').classList.add('hidden');
+      document.getElementById('login-page').classList.remove('hidden');
+    }
 
-      // session check
+    // DOM ready wiring
+    document.addEventListener('DOMContentLoaded', async () => {
+      // wire form
+      document.getElementById('login-form').addEventListener('submit', handleLogin);
+
+      // nav buttons
+      document.getElementById('logout-button')?.addEventListener('click', handleLogout);
+
+      // quick check for existing session
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session?.user) await initializeMainApp(session.user);
-      } catch (e) { console.warn('Session check failed', e); }
+      } catch (err) {
+        console.warn('getSession:', err);
+      }
+    });
+
+    // keep clock accurate on visibility
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateClock();
     });
   </script>
 </body>
