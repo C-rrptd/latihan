@@ -1,886 +1,980 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Absensi Sekolah Online</title>
-
-    <!-- Tailwind CSS CDN -->
+    <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
+    <!-- Memuat Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
-    <!-- Supabase JS -->
+    <!-- Memuat Supabase JS -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
-        /* Custom config for Tailwind */
-        :root {
-            --color-primary-light: 124 58 237; /* Violet 600 */
-            --color-primary-base: 79 70 229;  /* Indigo 700 */
-            --color-primary-dark: 67 56 202; /* Indigo 800 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            font-family: 'Inter', system-ui, Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /* Latar belakang yang lebih hidup */
-            background: linear-gradient(135deg, #4c1d95 0%, #1e40af 100%); 
         }
-
-        /* Glassmorphism Card Effect yang Ditingkatkan */
-        .glass-card {
+        
+        .glass-effect {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-        }
-        
-        .text-primary { color: rgb(var(--color-primary-base)); }
-        .bg-primary { background-color: rgb(var(--color-primary-base)); }
-        .hover\:bg-primary-dark:hover { background-color: rgb(var(--color-primary-dark)); }
-        .focus\:border-primary:focus { border-color: rgb(var(--color-primary-base)); }
-        
-        /* Gaya Tombol Aksi Utama */
-        .primary-btn {
-            background-color: rgb(var(--color-primary-base));
-            box-shadow: 0 4px 15px rgba(var(--color-primary-base), 0.5);
-        }
-        .primary-btn:hover {
-            background-color: rgb(var(--color-primary-dark));
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(var(--color-primary-base), 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
 
-        /* Custom scrollbar for log list */
-        #attendance-log, #all-attendance-list {
-            max-height: 350px;
-            overflow-y: auto;
-            border-radius: 12px;
-        }
-
-        /* Full screen wrapper for centering */
-        .wrap {
-            width: 100%;
-            padding: 1.5rem;
-            max-width: 1100px;
-        }
-        
-        /* Ensure responsive grid in admin view */
-        .admin-grid {
-            display: grid;
-            gap: 2rem;
-            grid-template-columns: 1fr;
-        }
-
-        @media (min-width: 1024px) {
-            .admin-grid {
-                grid-template-columns: 1fr 2fr;
-            }
-        }
-        
-        /* Gaya untuk Status Loading Global */
-        #loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
+        /* Styling tambahan untuk memusatkan toast */
+        #toast-container {
             z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.3s;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 90%;
+        }
+
+        .btn-primary {
+            @apply bg-indigo-600 text-white font-semibold py-2 px-4 rounded-xl hover:bg-indigo-700 transition duration-300 shadow-md;
         }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay (untuk mengatasi UI hilang saat inisialisasi) -->
-    <div id="loading-overlay" class="opacity-100">
-        <div class="flex flex-col items-center p-8 bg-white rounded-xl shadow-2xl">
-            <i data-lucide="zap" class="w-10 h-10 animate-pulse text-primary mb-3"></i>
-            <p class="text-lg font-semibold text-gray-700">Memuat Sistem...</p>
+
+    <!-- Kontainer Toast (Pesan Notifikasi) -->
+    <div id="toast-container" class="fixed flex flex-col items-center space-y-2">
+        <!-- Toast akan muncul di sini -->
+    </div>
+
+    <!-- Modal Profil Pengguna -->
+    <div id="profile-modal" class="fixed inset-0 z-40 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="glass-effect p-6 rounded-2xl w-full max-w-md transform transition-transform duration-300 scale-95">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2 flex justify-between items-center">
+                Edit Profil
+                <button onclick="closeProfileModal()" class="text-gray-500 hover:text-gray-700">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </h2>
+            <form id="profile-form">
+                <div class="mb-4 text-center">
+                    <label class="block text-gray-700 font-medium mb-2">Foto Profil</label>
+                    <div class="relative w-24 h-24 mx-auto rounded-full bg-gray-200 flex items-center justify-center cursor-pointer overflow-hidden">
+                        <img id="profile-image-preview" src="" alt="Profil" class="w-full h-full object-cover hidden">
+                        <i id="profile-image-icon" data-lucide="user" class="w-12 h-12 text-gray-500"></i>
+                        <input type="file" id="profile-image-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                    </div>
+                    <button type="button" id="remove-profile-image" class="mt-2 text-sm text-red-600 hover:text-red-800 hidden">Hapus Foto</button>
+                </div>
+                <div class="mb-4">
+                    <label for="profile-name" class="block text-gray-700 font-medium mb-2">Nama Lengkap</label>
+                    <input type="text" id="profile-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="profile-nis" class="block text-gray-700 font-medium mb-2">NIS / ID</label>
+                    <input type="text" id="profile-nis" class="w-full px-3 py-2 border border-gray-300 bg-gray-100 rounded-lg focus:outline-none" readonly>
+                </div>
+                <button type="submit" id="save-profile-button" class="btn-primary w-full mt-4">Simpan Perubahan</button>
+            </form>
+            <button onclick="changePassword()" class="text-sm text-indigo-600 hover:text-indigo-800 mt-4 block text-center">Ubah Password</button>
         </div>
     </div>
 
-    <div class="wrap">
-        <!-- Main Card Container -->
-        <!-- Pastikan app-container disembunyikan di awal, hanya dimunculkan setelah loading selesai di JS -->
-        <div class="glass-card w-full p-6 md:p-10 rounded-3xl transition-shadow duration-300 hidden" id="app-container">
-            
-            <!-- Views Container (Controlled by JS) -->
-            <div id="auth-view" class="max-w-md mx-auto hidden">
-                <!-- Login View -->
-                <div id="login-form-container" data-view="login">
-                    <div class="text-center mb-8">
-                        <i data-lucide="shield-check" class="w-12 h-12 text-primary mx-auto mb-3 p-2 bg-indigo-100 rounded-full shadow-lg"></i>
-                        <h1 class="text-3xl font-extrabold text-gray-800 mb-1">Masuk Sistem Absensi</h1>
-                        <p class="text-base text-gray-500">Gunakan NISN atau Email Anda.</p>
-                    </div>
-
-                    <form id="login-form" autocomplete="on">
-                        <div class="mb-5">
-                            <label for="login-identifier" class="block text-sm font-semibold text-gray-700 mb-2">NISN atau Email</label>
-                            <input id="login-identifier" name="identifier" type="text" inputmode="email" 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150" 
-                                placeholder="NISN (10 digit) atau email" required />
-                        </div>
-                        <div class="mb-8">
-                            <label for="login-password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                            <div class="relative">
-                                <input id="login-password" name="password" type="password" 
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150 pr-12" 
-                                    placeholder="Masukkan password Anda" required />
-                                <button type="button" class="absolute right-0 top-0 mt-3.5 mr-3 text-gray-400 hover:text-gray-600 toggle-password" aria-pressed="false" title="Tampilkan password">
-                                    <i data-lucide="eye" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <button id="login-btn" class="w-full primary-btn text-white font-bold py-3.5 rounded-xl transition duration-200 disabled:opacity-50" type="submit">
-                            <i data-lucide="log-in" class="w-5 h-5 inline-block mr-2"></i> Masuk
-                        </button>
-                    </form>
-
-                    <div class="text-center mt-6 text-sm">
-                        <p class="text-gray-600 mb-3">Belum punya akun? <a href="#" id="show-signup-button" class="text-primary hover:underline font-semibold">Daftar Sekarang</a></p>
-                        <a href="#" id="show-forgot-password-button" class="text-gray-500 hover:text-primary transition duration-150">Lupa Password?</a>
-                    </div>
-                </div>
+    <!-- Kontainer Utama Aplikasi -->
+    <div class="container mx-auto p-4 flex items-center justify-center min-h-screen">
+        
+        <!-- View Autentikasi (Login, Daftar, Lupa Password) -->
+        <div id="auth-view" class="w-full max-w-sm">
+            <div class="glass-effect p-8 rounded-2xl shadow-xl">
+                <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6" id="auth-title">Login</h1>
                 
-                <!-- Signup View (Hidden by default) -->
-                <div id="signup-form-container" data-view="signup" class="hidden">
-                     <div class="text-center mb-8">
-                        <i data-lucide="user-plus" class="w-12 h-12 text-green-600 mx-auto mb-3 p-2 bg-green-100 rounded-full shadow-lg"></i>
-                        <h1 class="text-3xl font-extrabold text-gray-800 mb-1">Daftar Akun Baru</h1>
-                        <p class="text-base text-gray-500">Hanya untuk siswa/staf terdaftar (gunakan email sekolah).</p>
+                <!-- Form Login -->
+                <form id="login-form" class="space-y-4">
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="email" id="login-email" placeholder="Email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
                     </div>
-
-                    <form id="signup-form">
-                         <div class="mb-4">
-                            <label for="signup-email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                            <input id="signup-email" type="email" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50" placeholder="email@sekolah.id" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="signup-password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                            <div class="relative">
-                                <input id="signup-password" type="password" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 pr-12" placeholder="Minimal 6 karakter" required>
-                                <button type="button" class="absolute right-0 top-0 mt-3.5 mr-3 text-gray-400 hover:text-gray-600 toggle-password" aria-pressed="false" title="Tampilkan password">
-                                    <i data-lucide="eye" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                         <div class="mb-8">
-                            <label for="signup-nisn" class="block text-sm font-semibold text-gray-700 mb-2">NISN (10 Digit)</label>
-                            <input id="signup-nisn" type="text" inputmode="numeric" pattern="\d{10}" maxlength="10" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50" placeholder="NISN Anda (contoh: 0012345678)" required>
-                        </div>
-                        <button id="signup-btn" type="submit" class="w-full bg-green-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/50 hover:bg-green-700 transition duration-200 disabled:opacity-50">
-                            <i data-lucide="user-plus" class="w-5 h-5 inline-block mr-2"></i> Daftar & Lanjutkan
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="password" id="login-password" placeholder="Password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <button type="button" class="toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500" aria-label="Toggle Password Visibility">
+                            <i data-lucide="eye-off" class="w-5 h-5"></i>
                         </button>
-                    </form>
-                    <div class="text-center mt-6">
-                        <!-- Perbaikan: Tambahkan class 'back-to-login-button' untuk memastikan listener bekerja -->
-                        <a href="#" class="text-primary hover:underline font-semibold text-sm back-to-login-button">&larr; Kembali ke Login</a>
                     </div>
-                </div>
-
-                <!-- Forgot Password View (Hidden by default) -->
-                <div id="forgot-password-form-container" data-view="forgotPassword" class="hidden">
-                    <div class="text-center mb-8">
-                        <i data-lucide="mail-check" class="w-12 h-12 text-orange-600 mx-auto mb-3 p-2 bg-orange-100 rounded-full shadow-lg"></i>
-                        <h1 class="text-3xl font-extrabold text-gray-800 mb-1">Lupa Password</h1>
-                        <p class="text-base text-gray-500">Masukkan email Anda untuk menerima link reset.</p>
+                    <button type="submit" class="btn-primary w-full py-3">
+                        Masuk
+                    </button>
+                    <div class="text-center text-sm">
+                        <button type="button" id="show-forgot-password-button" class="text-indigo-600 hover:text-indigo-800 transition duration-300">Lupa Password?</button>
                     </div>
+                    <div class="text-center text-sm pt-4 border-t border-gray-200">
+                        Belum punya akun? 
+                        <button type="button" id="show-signup-button" class="text-indigo-600 font-semibold hover:text-indigo-800 transition duration-300">Daftar Sekarang</button>
+                    </div>
+                </form>
 
-                    <form id="forgot-password-form">
-                        <div class="mb-8">
-                            <label for="forgot-email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                            <input id="forgot-email" type="email" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50" placeholder="email@sekolah.id" required>
-                        </div>
-                        <button id="forgot-password-btn" type="submit" class="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-500/50 hover:bg-orange-700 transition duration-200 disabled:opacity-50">
-                            <i data-lucide="send" class="w-5 h-5 inline-block mr-2"></i> Kirim Link Reset
+                <!-- Form Daftar (Signup) -->
+                <form id="signup-form" class="space-y-4 hidden">
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="email" id="signup-email" placeholder="Email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="signup-name" placeholder="Nama Lengkap" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="credit-card" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="signup-nis" placeholder="NIS / ID Karyawan" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="password" id="signup-password" placeholder="Password (min 6 karakter)" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required minlength="6">
+                        <button type="button" class="toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500" aria-label="Toggle Password Visibility">
+                            <i data-lucide="eye-off" class="w-5 h-5"></i>
                         </button>
-                    </form>
-                     <div class="text-center mt-6">
-                        <a href="#" class="text-primary hover:underline font-semibold text-sm back-to-login-button">&larr; Kembali ke Login</a>
                     </div>
-                </div>
+                    <div class="relative">
+                        <i data-lucide="shield" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <select id="signup-role" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="student">Siswa/i</option>
+                            <option value="admin">Admin/Guru</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full py-3">
+                        Daftar
+                    </button>
+                    <div class="text-center text-sm pt-4 border-t border-gray-200">
+                        Sudah punya akun? 
+                        <button type="button" id="back-to-login-button" class="text-indigo-600 font-semibold hover:text-indigo-800 transition duration-300">Masuk</button>
+                    </div>
+                </form>
+
+                <!-- Form Lupa Password -->
+                <form id="forgot-password-form" class="space-y-4 hidden">
+                    <p class="text-sm text-gray-600">Masukkan email Anda. Kami akan mengirimkan tautan reset password.</p>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="email" id="forgot-email" placeholder="Email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <button type="submit" class="btn-primary w-full py-3">
+                        Kirim Tautan Reset
+                    </button>
+                    <div class="text-center text-sm pt-4 border-t border-gray-200">
+                        <button type="button" onclick="showAuthView('login')" class="text-indigo-600 font-semibold hover:text-indigo-800 transition duration-300">Kembali ke Login</button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <!-- Home View (Student & Admin) -->
-            <div id="signed-in-view" class="hidden">
-                <header class="flex justify-between items-center pb-4 border-b border-indigo-200 mb-6">
-                    <div class="flex items-center gap-4">
-                        <!-- Tombol Profil/Avatar -->
-                        <div id="avatar" class="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xl font-bold border-4 border-white shadow-lg cursor-pointer hover:ring-2 ring-indigo-400 transition" title="Lihat Profil">
-                            <i data-lucide="user" class="w-6 h-6 text-indigo-100"></i>
+        <!-- View Dashboard -->
+        <div id="dashboard-view" class="w-full max-w-4xl hidden transition-opacity duration-500 opacity-0 transform translate-y-4">
+            <div class="glass-effect p-8 rounded-2xl shadow-xl">
+                
+                <!-- Header Dashboard -->
+                <header class="flex justify-between items-center mb-6 border-b pb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="relative w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center cursor-pointer overflow-hidden" onclick="showProfileModal()">
+                            <img id="dashboard-profile-image" src="" alt="P" class="w-full h-full object-cover hidden">
+                            <i id="dashboard-profile-icon" data-lucide="user" class="w-6 h-6 text-white"></i>
                         </div>
                         <div>
-                            <div id="profile-name" class="font-extrabold text-gray-800 text-xl leading-tight">Selamat Datang!</div>
-                            <div class="text-sm text-gray-500" id="profile-role"></div>
+                            <p class="text-lg font-semibold text-gray-800" id="user-name-display">Memuat...</p>
+                            <p class="text-sm text-gray-600" id="user-role-display">Memuat...</p>
                         </div>
                     </div>
-                    <button id="logout-btn" class="text-sm text-red-600 font-semibold px-4 py-2 rounded-xl border border-red-300 bg-red-50 hover:bg-red-100 transition duration-150 shadow-md flex items-center gap-1">
-                        <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
+                    <button onclick="signOut()" class="text-sm text-red-500 hover:text-red-700 font-medium flex items-center space-x-1">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span>Keluar</span>
                     </button>
                 </header>
-                
-                <!-- Student Dashboard -->
-                <div id="student-dashboard" class="hidden">
-                    <!-- Kartu Jam & Absensi dengan Estetika Lebih Baik -->
-                    <div class="bg-primary p-6 rounded-2xl shadow-xl shadow-indigo-600/50 text-white mb-10" aria-live="polite">
-                        <div class="flex flex-col items-center justify-center border-b border-indigo-400/50 pb-4 mb-4">
-                            <div class="text-5xl font-extrabold tracking-tight" id="clock">00:00:00</div>
-                            <div class="text-base opacity-90 font-medium" id="date">-</div>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-4 pt-2">
-                            <button id="checkin" class="flex items-center justify-center bg-green-500/95 text-white font-extrabold py-4 rounded-xl hover:bg-green-600 shadow-xl shadow-green-500/30 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01]">
-                                <i data-lucide="arrow-down-left" class="w-5 h-5 mr-2"></i> Absen Masuk
-                            </button>
-                            <button id="checkout" class="flex items-center justify-center bg-red-500/95 text-white font-extrabold py-4 rounded-xl hover:bg-red-600 shadow-xl shadow-red-500/30 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01]">
-                                <i data-lucide="arrow-up-right" class="w-5 h-5 mr-2"></i> Absen Pulang
-                            </button>
-                        </div>
-                    </div>
 
-                    <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-                        <i data-lucide="history" class="w-5 h-5 text-indigo-500"></i> Riwayat Absensi Anda Hari Ini
-                    </h3>
-                    <div id="attendance-log" class="space-y-4">
-                        <!-- Log entries will be inserted here -->
+                <!-- Bagian Absensi (Hanya untuk Siswa/Student) -->
+                <div id="attendance-section" class="mb-8 p-4 bg-indigo-50 rounded-xl border border-indigo-200 shadow-inner">
+                    <h2 class="text-xl font-bold text-indigo-700 mb-4 flex items-center space-x-2">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                        <span>Absensi Hari Ini</span>
+                    </h2>
+                    <div id="attendance-status" class="text-center p-3 rounded-lg text-lg font-medium bg-yellow-100 text-yellow-700 mb-4">
+                        Status: Belum Absen
+                    </div>
+                    <button id="record-attendance-button" class="btn-primary w-full py-3 flex items-center justify-center space-x-2">
+                        <i data-lucide="camera" class="w-5 h-5"></i>
+                        <span>Rekam Absensi</span>
+                    </button>
+                </div>
+
+                <!-- Bagian Log Absensi (Untuk Semua Role) -->
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center space-x-2">
+                    <i data-lucide="list-ordered" class="w-6 h-6"></i>
+                    <span>Riwayat Absensi</span>
+                </h2>
+
+                <!-- Kotak Pencarian (Hanya untuk Admin) -->
+                <div id="search-container" class="mb-4 hidden">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="search-student-input" placeholder="Cari berdasarkan NIS/Nama Siswa" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                 </div>
 
-                <!-- Admin/Teacher Dashboard -->
-                <div id="admin-dashboard" class="hidden">
-                    <div class="admin-grid">
-                        <!-- Left Panel: Summary & Filters -->
-                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl">
-                            <h2 class="text-xl font-extrabold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2 border-gray-100">
-                                <i data-lucide="layout-dashboard" class="w-5 h-5 text-primary"></i> Kontrol Admin
-                            </h2>
-                            
-                            <div class="space-y-6">
-                                <div>
-                                    <label for="attendance-date-filter" class="block text-sm font-semibold text-gray-700 mb-2">Pilih Tanggal Absensi</label>
-                                    <input type="date" id="attendance-date-filter" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150 shadow-sm" required>
-                                </div>
-                                <div>
-                                    <label for="search-student-input" class="block text-sm font-semibold text-gray-700 mb-2">Cari Siswa/NISN</label>
-                                    <div class="relative">
-                                        <i data-lucide="search" class="w-5 h-5 absolute left-3 top-3.5 text-gray-400"></i>
-                                        <input type="text" id="search-student-input" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/50 transition duration-150 shadow-sm" placeholder="Nama atau NISN">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-8">
-                                <h3 class="font-bold text-lg text-gray-700 mb-3 border-b pb-1 border-gray-100">Statistik Hari Ini</h3>
-                                <div id="summary-stats" class="grid grid-cols-2 gap-4">
-                                    <!-- Stats will be inserted here -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Panel: Log List -->
-                        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xl">
-                             <h2 class="text-xl font-extrabold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2 border-gray-100">
-                                <i data-lucide="clipboard-list" class="w-5 h-5 text-primary"></i> Log Absensi Lengkap (<span id="log-date-display">...</span>)
-                            </h2>
-                            <div id="all-attendance-list" class="space-y-3">
-                                <div class="text-sm text-center text-gray-500 p-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl">Memuat data absensi...</div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Daftar Log Absensi -->
+                <div id="attendance-log-container" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <p class="text-center text-gray-500" id="log-loading-message">Memuat log absensi...</p>
+                    <!-- Log Absensi akan dimasukkan di sini oleh JS -->
                 </div>
+
+                <div id="empty-log-message" class="hidden text-center text-gray-500 p-8 border border-dashed rounded-lg mt-4">
+                    Belum ada data absensi yang tercatat.
+                </div>
+
             </div>
-
-            <!-- Global Messages/Alerts -->
-            <div id="messages" class="fixed bottom-4 right-4 z-50 p-4 rounded-xl shadow-2xl text-white font-medium transition-all duration-300 min-w-[250px] transform translate-y-20 opacity-0" role="alert"></div>
-            
-            <footer class="text-center text-xs text-gray-400 mt-10">
-                Sistem Absensi Digital — Dibuat dengan Supabase & Tailwind CSS
-            </footer>
         </div>
+
     </div>
 
+    <!-- Script Aplikasi Supabase -->
     <script>
-        // ---------- Supabase Config & Initialization ----------
-        const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY'; 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        // ----------------------------------------------------
+        // --- 1. Konfigurasi Supabase (HARUS DIGANTI) ---
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Ganti dengan URL Proyek Supabase Anda
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Ganti dengan Anon Key Proyek Supabase Anda
+        
+        // Buat klien Supabase
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- Global State and UI Elements ---
-        const UIElements = {
-            appContainer: document.getElementById('app-container'),
-            loadingOverlay: document.getElementById('loading-overlay'),
-            authView: document.getElementById('auth-view'),
-            signedInView: document.getElementById('signed-in-view'),
-            messages: document.getElementById('messages'),
-            
-            // Auth Views
-            loginContainer: document.getElementById('login-form-container'),
-            signupContainer: document.getElementById('signup-form-container'),
-            forgotPasswordContainer: document.getElementById('forgot-password-form-container'),
-            
-            // Forms
-            loginForm: document.getElementById('login-form'),
-            signupForm: document.getElementById('signup-form'),
-            forgotPasswordForm: document.getElementById('forgot-password-form'),
-            
-            // Student
-            studentDashboard: document.getElementById('student-dashboard'),
-            attendanceLog: document.getElementById('attendance-log'),
-            checkinBtn: document.getElementById('checkin'),
-            checkoutBtn: document.getElementById('checkout'),
-            clockEl: document.getElementById('clock'),
-            dateEl: document.getElementById('date'),
-            
-            // Admin
-            adminDashboard: document.getElementById('admin-dashboard'),
-            dateFilter: document.getElementById('attendance-date-filter'),
-            searchStudentInput: document.getElementById('search-student-input'),
-            allAttendanceList: document.getElementById('all-attendance-list'),
-            summaryStats: document.getElementById('summary-stats'),
-            logDateDisplay: document.getElementById('log-date-display'),
+        // --- 2. Variabel State Global ---
+        const appState = {
+            user: null,
+            profile: null,
+            isAuthReady: false,
+            // State untuk modal profil
+            profileImageFile: null,
+            profileImageToDelete: false,
+            // ID unik untuk bucket penyimpanan Supabase
+            SUPABASE_STORAGE_BUCKET: 'profile-images' 
         };
 
-        let messageTimeout;
-        let currentUserProfile = null; // Store full user profile
+        // --- 3. Utility Functions ---
 
-        // --- Utility Functions ---
-        
-        function showMessage(msg, type = 'info') {
-            clearTimeout(messageTimeout);
+        /**
+         * Menampilkan pesan toast (notifikasi) di layar.
+         * @param {string} message - Pesan yang akan ditampilkan.
+         * @param {'success'|'error'|'info'} type - Jenis pesan.
+         */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
             
-            UIElements.messages.textContent = msg;
-            UIElements.messages.classList.remove('hidden', 'bg-red-600', 'bg-green-600', 'bg-indigo-600', 'bg-yellow-600', 'translate-y-20', 'opacity-0');
-            UIElements.messages.classList.add('opacity-100', 'translate-y-0');
-
-            if (type === 'error') {
-                UIElements.messages.classList.add('bg-red-600');
-            } else if (type === 'success') {
-                UIElements.messages.classList.add('bg-green-600');
-            } else if (type === 'warning') {
-                UIElements.messages.classList.add('bg-yellow-600');
+            let color, icon;
+            if (type === 'success') {
+                color = 'bg-green-500';
+                icon = 'check-circle';
+            } else if (type === 'error') {
+                color = 'bg-red-500';
+                icon = 'x-circle';
             } else {
-                UIElements.messages.classList.add('bg-indigo-600');
+                color = 'bg-blue-500';
+                icon = 'info';
             }
 
-            // Hide after 5 seconds
-            messageTimeout = setTimeout(() => { 
-                UIElements.messages.classList.remove('opacity-100', 'translate-y-0'); 
-                UIElements.messages.classList.add('opacity-0', 'translate-y-20');
-                // Hapus kelas warna setelah transisi selesai
-                setTimeout(() => { 
-                    UIElements.messages.classList.add('hidden'); 
-                    UIElements.messages.classList.remove('bg-red-600', 'bg-green-600', 'bg-indigo-600', 'bg-yellow-600');
-                }, 300);
-            }, 5000);
+            toast.className = `flex items-center space-x-3 ${color} text-white text-sm font-medium py-3 px-4 rounded-xl shadow-lg transition duration-300 transform translate-y-0`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><span>${message}</span>`;
+            
+            // Tambahkan ikon dari lucide
+            lucide.createIcons({ attr: 'data-lucide', elements: [toast] });
+
+            container.prepend(toast);
+
+            // Sembunyikan dan hapus toast setelah 4 detik
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-full');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 4000);
         }
 
-        function updateClock() {
-            const now = new Date();
-            UIElements.clockEl.textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            UIElements.dateEl.textContent = now.toLocaleDateString('id-ID', options);
+        /**
+         * Mengubah tampilan antara Auth dan Dashboard.
+         * @param {boolean} showDashboard - True untuk menampilkan dashboard, false untuk auth.
+         */
+        function toggleAppView(showDashboard) {
+            const authView = document.getElementById('auth-view');
+            const dashboardView = document.getElementById('dashboard-view');
+            
+            if (showDashboard) {
+                // Sembunyikan Auth
+                authView.classList.add('hidden');
+                
+                // Tampilkan Dashboard dengan transisi
+                dashboardView.classList.remove('hidden');
+                setTimeout(() => {
+                    dashboardView.classList.remove('opacity-0', 'translate-y-4');
+                }, 10);
+            } else {
+                // Sembunyikan Dashboard dengan transisi
+                dashboardView.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => {
+                    dashboardView.classList.add('hidden');
+                    authView.classList.remove('hidden');
+                }, 500); // Tunggu transisi selesai
+            }
         }
 
-        function todayISO() { return new Date().toISOString().slice(0,10); }
+        /**
+         * Mengubah tampilan form di Auth View (Login/Daftar/Lupa Password).
+         * @param {'login'|'signup'|'forgotPassword'} view - Tampilan yang akan ditampilkan.
+         */
+        function showAuthView(view) {
+            document.getElementById('auth-title').textContent = view === 'login' ? 'Masuk' : view === 'signup' ? 'Daftar Akun' : 'Reset Password';
+            document.getElementById('login-form').classList.toggle('hidden', view !== 'login');
+            document.getElementById('signup-form').classList.toggle('hidden', view !== 'signup');
+            document.getElementById('forgot-password-form').classList.toggle('hidden', view !== 'forgotPassword');
+        }
 
-        function formatTime(timeStr) {
+        /**
+         * Memperbarui tampilan profil di header dashboard.
+         */
+        function updateUserProfileDisplay() {
+            const { profile } = appState;
+            const nameDisplay = document.getElementById('user-name-display');
+            const roleDisplay = document.getElementById('user-role-display');
+            const imgEl = document.getElementById('dashboard-profile-image');
+            const iconEl = document.getElementById('dashboard-profile-icon');
+            const attendanceSection = document.getElementById('attendance-section');
+            const searchContainer = document.getElementById('search-container');
+
+            if (profile) {
+                nameDisplay.textContent = profile.full_name || 'Pengguna';
+                roleDisplay.textContent = profile.role === 'admin' ? 'Admin/Guru' : 'Siswa/i';
+
+                // Tampilkan/Sembunyikan bagian sesuai peran
+                if (profile.role === 'admin') {
+                    attendanceSection.classList.add('hidden');
+                    searchContainer.classList.remove('hidden');
+                } else {
+                    attendanceSection.classList.remove('hidden');
+                    searchContainer.classList.add('hidden');
+                }
+
+                // Update foto profil
+                if (profile.avatar_url) {
+                    imgEl.src = profile.avatar_url;
+                    imgEl.classList.remove('hidden');
+                    iconEl.classList.add('hidden');
+                } else {
+                    imgEl.classList.add('hidden');
+                    iconEl.classList.remove('hidden');
+                }
+
+                // Periksa status absensi hari ini (jika bukan admin)
+                if (profile.role === 'student') {
+                    checkTodayAttendance();
+                }
+
+                // Muat log absensi
+                renderAllAttendanceLog('');
+
+            } else {
+                nameDisplay.textContent = 'Memuat...';
+                roleDisplay.textContent = 'Memuat...';
+            }
+        }
+
+        // --- 4. Fungsi Supabase Auth ---
+
+        /**
+         * Mengambil data profil dari tabel 'profiles' Supabase.
+         * @param {string} userId - ID pengguna Supabase.
+         * @returns {Promise<object|null>} Data profil.
+         */
+        async function fetchUserProfile(userId) {
             try {
-                const parts = timeStr.split(':');
-                if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
-            } catch (e) {
-                return timeStr;
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') throw error; // PGRST116: data tidak ditemukan (diabaikan saat daftar)
+                return data;
+            } catch (error) {
+                showToast(`Gagal memuat profil: ${error.message}`, 'error');
+                return null;
             }
-            return timeStr;
         }
 
-        function getInitials(fullName) {
-            if (!fullName) return '?';
-            const parts = fullName.split(' ');
-            if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        /**
+         * Membuat profil baru di tabel 'profiles' setelah pendaftaran.
+         */
+        async function createInitialProfile(user, name, nis, role) {
+            try {
+                const { error } = await supabase
+                    .from('profiles')
+                    .insert({ 
+                        id: user.id, 
+                        full_name: name, 
+                        nis: nis, 
+                        role: role 
+                    });
+
+                if (error) throw error;
+                appState.profile = { id: user.id, full_name: name, nis: nis, role: role, avatar_url: null };
+            } catch (error) {
+                showToast(`Gagal menyimpan profil: ${error.message}`, 'error');
+                // Hapus akun Supabase jika gagal membuat profil
+                await supabase.auth.admin.deleteUser(user.id);
+            }
         }
-        
-        function getStatusClasses(status) {
-            if (status.includes('Tepat Waktu') || status.includes('Tepat')) {
-                return { class: 'text-green-700 bg-green-100', icon: 'check-circle' };
-            } else if (status.includes('Terlambat')) {
-                return { class: 'text-yellow-700 bg-yellow-100', icon: 'alert-circle' };
-            } else if (status.includes('Pulang Lebih Awal')) {
-                 return { class: 'text-red-700 bg-red-100', icon: 'x-circle' };
+
+        /**
+         * Mendengarkan perubahan status autentikasi.
+         */
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth state changed:', event);
+            appState.isAuthReady = true;
+
+            if (session) {
+                appState.user = session.user;
+                appState.profile = await fetchUserProfile(session.user.id);
+                if (!appState.profile) {
+                    // Kasus khusus: user terautentikasi tapi profil belum ada (misal setelah daftar)
+                    showToast('Profil belum lengkap. Silakan lengkapi profil Anda.', 'info');
+                    // Biasanya profil dibuat saat signup, jadi ini hanya fallback.
+                }
+
+                toggleAppView(true); // Tampilkan Dashboard
+                updateUserProfileDisplay();
             } else {
-                 return { class: 'text-gray-700 bg-gray-100', icon: 'info' };
+                appState.user = null;
+                appState.profile = null;
+                toggleAppView(false); // Tampilkan Auth View
+                showAuthView('login');
             }
-        }
+        });
 
-        function showAuthView(viewName) {
-            [UIElements.loginContainer, UIElements.signupContainer, UIElements.forgotPasswordContainer].forEach(container => {
-                container.classList.add('hidden');
-            });
+
+        // --- 5. Handlers Form Auth ---
+
+        document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
             
-            if (viewName === 'signup') {
-                UIElements.signupContainer.classList.remove('hidden');
-            } else if (viewName === 'forgotPassword') {
-                UIElements.forgotPasswordContainer.classList.remove('hidden');
-            } else { // default to login
-                UIElements.loginContainer.classList.remove('hidden');
+            showToast('Memproses login...', 'info');
+
+            try {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                
+                if (error) throw error;
+                showToast('Login berhasil!', 'success');
+            } catch (error) {
+                showToast(`Login gagal: ${error.message}`, 'error');
             }
-            UIElements.authView.classList.remove('hidden');
-            UIElements.signedInView.classList.add('hidden');
+        });
+
+        document.getElementById('signup-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const name = document.getElementById('signup-name').value;
+            const nis = document.getElementById('signup-nis').value;
+            const role = document.getElementById('signup-role').value;
+            
+            showToast('Memproses pendaftaran...', 'info');
+
+            try {
+                // 1. Daftar di Auth Supabase
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email, 
+                    password,
+                    // Tambahkan data profil di sini agar tersedia saat onAuthStateChange dipanggil
+                    options: {
+                        data: {
+                            full_name: name,
+                            nis: nis,
+                            role: role
+                        }
+                    }
+                });
+                
+                if (authError) throw authError;
+
+                // 2. Buat entri profil di database
+                await createInitialProfile(authData.user, name, nis, role);
+
+                showToast('Pendaftaran berhasil! Silakan periksa email Anda untuk verifikasi.', 'success');
+                showAuthView('login');
+            } catch (error) {
+                showToast(`Pendaftaran gagal: ${error.message}`, 'error');
+            }
+        });
+
+        document.getElementById('forgot-password-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            
+            showToast('Mengirim tautan reset...', 'info');
+
+            try {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin, // Redirect kembali ke aplikasi setelah reset
+                });
+                
+                if (error) throw error;
+                showToast('Tautan reset password telah dikirim ke email Anda!', 'success');
+                showAuthView('login');
+            } catch (error) {
+                showToast(`Gagal: ${error.message}`, 'error');
+            }
+        });
+
+        async function signOut() {
+            showToast('Memproses keluar...', 'info');
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                showToast('Berhasil keluar.', 'success');
+            } catch (error) {
+                showToast(`Gagal keluar: ${error.message}`, 'error');
+            }
         }
 
-        function hideLoadingOverlay() {
-            UIElements.loadingOverlay.classList.remove('opacity-100');
-            UIElements.loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => { 
-                UIElements.loadingOverlay.classList.add('hidden'); 
-                UIElements.appContainer.classList.remove('hidden'); 
+        async function changePassword() {
+            const newPassword = prompt("Masukkan password baru Anda:");
+            if (!newPassword) return;
+            if (newPassword.length < 6) {
+                showToast("Password minimal 6 karakter.", 'error');
+                return;
+            }
+
+            try {
+                const { error } = await supabase.auth.updateUser({ password: newPassword });
+                if (error) throw error;
+                showToast('Password berhasil diubah. Anda mungkin perlu login ulang.', 'success');
+            } catch (error) {
+                showToast(`Gagal mengubah password: ${error.message}`, 'error');
+            }
+        }
+
+
+        // --- 6. Fungsi Supabase Database & Real-time (Attendance) ---
+
+        /**
+         * Mendapatkan tanggal hari ini dalam format YYYY-MM-DD.
+         */
+        function getTodayDateString() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        /**
+         * Memeriksa apakah siswa sudah absen hari ini.
+         */
+        async function checkTodayAttendance() {
+            const { user, profile } = appState;
+            if (!user || profile?.role !== 'student') return;
+
+            const today = getTodayDateString();
+            const statusEl = document.getElementById('attendance-status');
+            const buttonEl = document.getElementById('record-attendance-button');
+
+            try {
+                const { data, error } = await supabase
+                    .from('attendance')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .gte('created_at', today + 'T00:00:00.000Z')
+                    .lte('created_at', today + 'T23:59:59.999Z');
+
+                if (error) throw error;
+
+                if (data.length > 0) {
+                    statusEl.textContent = 'Status: Sudah Absen Hari Ini';
+                    statusEl.classList.remove('bg-yellow-100', 'text-yellow-700');
+                    statusEl.classList.add('bg-green-100', 'text-green-700');
+                    buttonEl.disabled = true;
+                    buttonEl.textContent = 'Absensi Selesai';
+                    buttonEl.classList.add('opacity-50', 'cursor-not-allowed');
+                    buttonEl.classList.remove('btn-primary');
+                } else {
+                    statusEl.textContent = 'Status: Belum Absen';
+                    statusEl.classList.remove('bg-green-100', 'text-green-700');
+                    statusEl.classList.add('bg-yellow-100', 'text-yellow-700');
+                    buttonEl.disabled = false;
+                    buttonEl.innerHTML = '<i data-lucide="camera" class="w-5 h-5"></i><span>Rekam Absensi</span>';
+                    buttonEl.classList.remove('opacity-50', 'cursor-not-allowed');
+                    buttonEl.classList.add('btn-primary');
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                showToast(`Gagal periksa absensi: ${error.message}`, 'error');
+            }
+        }
+
+        /**
+         * Merekan data absensi.
+         */
+        document.getElementById('record-attendance-button')?.addEventListener('click', () => {
+            if (appState.profile?.role !== 'student') return;
+
+            showToast('Mencari lokasi Anda...', 'info');
+
+            if (!navigator.geolocation) {
+                showToast('Geolocation tidak didukung oleh browser ini.', 'error');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+                showToast('Lokasi ditemukan, merekam absensi...', 'info');
+
+                try {
+                    const { error } = await supabase
+                        .from('attendance')
+                        .insert({
+                            user_id: appState.user.id,
+                            user_name: appState.profile.full_name,
+                            nis: appState.profile.nis,
+                            latitude: latitude,
+                            longitude: longitude,
+                            status: 'Hadir' // Status default
+                        });
+
+                    if (error) throw error;
+                    showToast('Absensi berhasil dicatat!', 'success');
+                    checkTodayAttendance(); // Perbarui status
+                } catch (error) {
+                    showToast(`Gagal merekam absensi: ${error.message}`, 'error');
+                }
+            }, (error) => {
+                showToast(`Gagal mendapatkan lokasi: ${error.message}. Pastikan Anda mengizinkan akses lokasi.`, 'error');
+            });
+        });
+
+        /**
+         * Mengambil dan merender log absensi.
+         */
+        async function renderAllAttendanceLog(searchTerm = '') {
+            const container = document.getElementById('attendance-log-container');
+            const loadingMessage = document.getElementById('log-loading-message');
+            const emptyMessage = document.getElementById('empty-log-message');
+            
+            container.innerHTML = '';
+            loadingMessage.classList.remove('hidden');
+            emptyMessage.classList.add('hidden');
+            
+            try {
+                let query = supabase.from('attendance')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                // Filter untuk pengguna non-admin (hanya log sendiri)
+                if (appState.profile?.role !== 'admin') {
+                    query = query.eq('user_id', appState.user.id);
+                }
+
+                // Pencarian (hanya berlaku untuk admin, atau saat admin mencari log sendiri)
+                if (searchTerm.trim()) {
+                    // Supabase Full-Text Search (FTS) atau ILIKE sederhana
+                    query = query.or(`nis.ilike.%${searchTerm}%,user_name.ilike.%${searchTerm}%`);
+                }
+
+                const { data: logs, error } = await query;
+
+                loadingMessage.classList.add('hidden');
+
+                if (error) throw error;
+
+                if (logs.length === 0) {
+                    emptyMessage.classList.remove('hidden');
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const date = new Date(log.created_at);
+                    const formattedDate = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const formattedTime = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                    const isSelf = log.user_id === appState.user.id;
+                    const logItem = document.createElement('div');
+                    logItem.className = 'bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center';
+                    logItem.innerHTML = `
+                        <div>
+                            <p class="font-semibold text-gray-800">${log.user_name} (${log.nis}) ${isSelf ? '<span class="text-xs text-indigo-500 font-medium">(Anda)</span>' : ''}</p>
+                            <p class="text-xs text-gray-500 mt-1 flex items-center space-x-1">
+                                <i data-lucide="clock" class="w-3 h-3"></i>
+                                <span>${formattedDate} Pukul ${formattedTime}</span>
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">${log.status}</span>
+                            <a href="https://www.google.com/maps/search/?api=1&query=${log.latitude},${log.longitude}" target="_blank" class="text-xs text-indigo-500 hover:text-indigo-700 mt-1 block">
+                                Lihat Lokasi <i data-lucide="external-link" class="w-3 h-3 inline"></i>
+                            </a>
+                        </div>
+                    `;
+                    container.appendChild(logItem);
+                });
+                lucide.createIcons();
+            } catch (error) {
+                loadingMessage.textContent = 'Gagal memuat data.';
+                showToast(`Gagal memuat log: ${error.message}`, 'error');
+            }
+        }
+
+        // --- 7. Real-time Supabase untuk Log Absensi ---
+
+        /**
+         * Setup real-time listener untuk log absensi.
+         */
+        function setupRealtimeAttendanceListener() {
+            // Unsubscribe channel jika sudah ada (untuk menghindari duplikasi)
+            supabase.removeAllChannels(); 
+
+            // Subscribe ke channel 'attendance'
+            supabase
+                .channel('attendance_changes')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance' }, (payload) => {
+                    console.log('Real-time attendance change:', payload);
+                    // Panggil ulang render untuk memperbarui daftar
+                    renderAllAttendanceLog(document.getElementById('search-student-input')?.value || '');
+                    // Periksa kembali status absensi hari ini (jika student)
+                    if (appState.profile?.role === 'student') checkTodayAttendance();
+                })
+                .subscribe();
+        }
+
+        // --- 8. Fungsi Supabase Storage & Profile Modal ---
+
+        /**
+         * Menampilkan Modal Profil.
+         */
+        function showProfileModal() {
+            const { profile } = appState;
+            const modal = document.getElementById('profile-modal');
+            const imgPreview = document.getElementById('profile-image-preview');
+            const iconEl = document.getElementById('profile-image-icon');
+            const removeBtn = document.getElementById('remove-profile-image');
+            
+            // Isi form dengan data profil saat ini
+            document.getElementById('profile-name').value = profile?.full_name || '';
+            document.getElementById('profile-nis').value = profile?.nis || '';
+
+            // Tampilkan atau sembunyikan gambar
+            if (profile?.avatar_url) {
+                imgPreview.src = profile.avatar_url;
+                imgPreview.classList.remove('hidden');
+                iconEl.classList.add('hidden');
+                removeBtn.classList.remove('hidden');
+            } else {
+                imgPreview.src = '';
+                imgPreview.classList.add('hidden');
+                iconEl.classList.remove('hidden');
+                removeBtn.classList.add('hidden');
+            }
+
+            appState.profileImageFile = null;
+            appState.profileImageToDelete = false;
+
+            // Tampilkan modal
+            modal.classList.remove('hidden', 'opacity-0', 'scale-95');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0', 'scale-95');
+            }, 10);
+        }
+
+        /**
+         * Menyembunyikan Modal Profil.
+         */
+        function closeProfileModal() {
+            const modal = document.getElementById('profile-modal');
+            modal.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
             }, 300);
         }
 
-        // --- Auth Logic ---
-        async function signInWithIdentifier(identifier, password) {
-            if (!identifier) throw new Error('Masukkan NISN/Email.');
-            if (!password) throw new Error('Masukkan password.');
+        /**
+         * Upload gambar profil ke Supabase Storage.
+         * @returns {Promise<string|null>} URL publik gambar.
+         */
+        async function uploadProfileImage(file, userId) {
+            const filePath = `${userId}/${Date.now()}-${file.name}`;
             
-            // 1. Email path
-            if (identifier.includes('@')) {
-                const { data, error } = await supabase.auth.signInWithPassword({ email: identifier, password });
-                if (error) throw error;
-                return data;
-            }
-
-            // 2. NISN path (10 digits)
-            const nisn = identifier.trim();
-            if (!/^\d{10}$/.test(nisn)) throw new Error('NISN harus 10 digit atau gunakan format email yang valid.');
+            const { data, error } = await supabase.storage
+                .from(appState.SUPABASE_STORAGE_BUCKET)
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false // Jangan timpa jika sudah ada (karena menggunakan timestamp)
+                });
             
-            // Lookup email by NISN in 'profiles' table
-            const { data: prof, error: pErr } = await supabase.from('profiles').select('email').eq('nisn', nisn).maybeSingle();
-            
-            if (pErr) console.error("NISN lookup error:", pErr);
-            if (!prof?.email) throw new Error('NISN tidak ditemukan atau tidak terhubung dengan akun.');
-            
-            // Use the found email to sign in
-            const { data, error } = await supabase.auth.signInWithPassword({ email: prof.email, password });
             if (error) throw error;
-            return data;
+
+            // Dapatkan URL publik
+            const { data: publicUrlData } = supabase.storage
+                .from(appState.SUPABASE_STORAGE_BUCKET)
+                .getPublicUrl(filePath);
+
+            return publicUrlData.publicUrl;
         }
+        
+        /**
+         * Hapus gambar profil dari Supabase Storage.
+         * @param {string} url - URL gambar yang akan dihapus.
+         */
+        async function deleteProfileImage(url) {
+             try {
+                // Ekstrak path file dari URL publik Supabase
+                const pathSegments = new URL(url).pathname.split('/');
+                // Path di storage setelah bucket name
+                const filePath = pathSegments.slice(pathSegments.indexOf(appState.SUPABASE_STORAGE_BUCKET) + 1).join('/');
 
-        async function refreshProfile(user_id) {
-            if (!user_id) return null;
-            
-            // Fetch profile data (full_name, role, nisn, etc.)
-            const { data: profile, error } = await supabase.from('profiles')
-                .select('id,full_name,email,avatar_url,nisn,role')
-                .eq('id', user_id)
-                .maybeSingle();
-            
-            if (error) console.warn('Gagal memuat profil', error);
-            currentUserProfile = profile; // Update global state
-            return profile;
-        }
+                const { error } = await supabase.storage
+                    .from(appState.SUPABASE_STORAGE_BUCKET)
+                    .remove([filePath]);
 
-        // --- Rendering & Dashboard Logic ---
-        async function renderDashboard(user) {
-            const profile = await refreshProfile(user.id);
-            if (!profile) {
-                 showMessage('Gagal memuat data profil. Silakan coba login ulang.', 'error');
-                 await supabase.auth.signOut();
-                 return;
-            }
-            
-            UIElements.authView.classList.add('hidden');
-            UIElements.signedInView.classList.remove('hidden');
-            
-            // Update profile info
-            const name = profile.full_name || profile.nisn || (user.email || 'Pengguna');
-            document.getElementById('profile-name').textContent = name;
-            document.getElementById('profile-role').textContent = profile.role === 'admin' ? 'Guru / Admin' : `Siswa (${profile.nisn || '-'})`;
-
-            // Update avatar
-            const avatarEl = document.getElementById('avatar');
-            avatarEl.innerHTML = profile.avatar_url ? '' : getInitials(name);
-            avatarEl.style.backgroundColor = profile.avatar_url ? 'transparent' : '#4f46e5';
-            avatarEl.style.backgroundImage = profile.avatar_url ? `url(${profile.avatar_url})` : 'none';
-            avatarEl.classList.toggle('text-white', !profile.avatar_url);
-            avatarEl.style.backgroundSize = 'cover';
-            avatarEl.style.backgroundPosition = 'center';
-
-            // Check Role and show appropriate dashboard
-            if (profile.role === 'admin') {
-                UIElements.studentDashboard.classList.add('hidden');
-                UIElements.adminDashboard.classList.remove('hidden');
-                
-                // Initialize admin view
-                UIElements.dateFilter.value = todayISO();
-                await renderAllAttendanceLog(UIElements.dateFilter.value);
-            } else {
-                UIElements.adminDashboard.classList.add('hidden');
-                UIElements.studentDashboard.classList.remove('hidden');
-                
-                // Initialize student view
-                await loadTodayAttendance(user.id);
-            }
-            
-            window.lucide.createIcons();
-        }
-
-        // --- Student Attendance Functions ---
-
-        function createAttendanceRow(record, includeName = false) {
-            const typeText = record.type === 'check_in' ? 'Masuk' : 'Pulang';
-            const { class: statusClass, icon: statusIcon } = getStatusClasses(record.status);
-            const timeFormatted = formatTime(record.log_time);
-
-            let profileInfo = '';
-            if (includeName && record.profiles) {
-                const p = record.profiles;
-                const name = p.full_name || p.nisn;
-                profileInfo = `<div class="font-bold text-base text-gray-800">${name}</div><div class="text-xs text-gray-500">NISN: ${p.nisn || '-'}</div>`;
-            } else {
-                profileInfo = `<div class="font-bold text-gray-800">${typeText}</div><div class="text-xs text-gray-500">${timeFormatted}</div>`;
-            }
-
-            return `
-                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white shadow-md hover:shadow-lg transition duration-150">
-                    <div class="flex items-center gap-4">
-                        <div class="p-2 rounded-full ${record.type === 'check_in' ? 'bg-indigo-100 text-indigo-600' : 'bg-pink-100 text-pink-600'}">
-                            <i data-lucide="${record.type === 'check_in' ? 'arrow-down-left' : 'arrow-up-right'}" class="w-5 h-5"></i>
-                        </div>
-                        <div>${profileInfo}</div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-medium px-3 py-1.5 rounded-full ${statusClass} flex items-center gap-1">
-                             <i data-lucide="${statusIcon}" class="w-4 h-4"></i>
-                            ${record.status}
-                        </span>
-                    </div>
-                </div>
-            `;
-        }
-
-
-        async function loadTodayAttendance(user_id) {
-            UIElements.attendanceLog.innerHTML = '';
-            UIElements.checkinBtn.disabled = true;
-            UIElements.checkoutBtn.disabled = true;
-            
-            try {
-                const { data, error } = await supabase.from('attendance_log')
-                    .select('*')
-                    .eq('user_id', user_id)
-                    .eq('log_date', todayISO())
-                    .order('log_time', { ascending: false }); 
-                
-                if (error) { console.error(error); showMessage('Gagal memuat absensi', 'error'); return; }
-
-                if (!data || data.length === 0) {
-                    UIElements.attendanceLog.innerHTML = '<div class="text-sm text-center text-gray-500 p-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl">Absensi Anda hari ini masih kosong. Silakan Absen Masuk.</div>';
-                    // Jika kosong, hanya Absen Masuk yang aktif
-                    UIElements.checkinBtn.disabled = false; 
-
-                } else {
-                    data.forEach(r => { 
-                        UIElements.attendanceLog.innerHTML += createAttendanceRow(r);
-                    });
-                    
-                    window.lucide.createIcons();
-                    
-                    const hasIn = data.some(x => x.type === 'check_in');
-                    const hasOut = data.some(x => x.type === 'check_out');
-                    
-                    // Logic tombol: Check-in nonaktif jika sudah ada IN, Check-out nonaktif jika belum ada IN atau sudah ada OUT
-                    UIElements.checkinBtn.disabled = hasIn;
-                    UIElements.checkoutBtn.disabled = (!hasIn) || hasOut;
-                }
-            } catch (err) {
-                console.error(err);
-                showMessage('Terjadi kesalahan saat memuat absensi', 'error');
-            }
-        }
-
-        async function doAttendance(type) {
-            const btn = type === 'check_in' ? UIElements.checkinBtn : UIElements.checkoutBtn;
-            btn.disabled = true; // Disable tombol saat proses dimulai
-            
-            try {
-                const { data: sessionData } = await supabase.auth.getSession();
-                const user = sessionData?.session?.user;
-                if (!user) { throw new Error('Sesi pengguna hilang. Silakan login ulang.'); }
-
-                const now = new Date();
-                let status = '';
-                
-                // Waktu batas di WIB (UTC+7)
-                const checkinLimitHour = 7;
-                const checkinLimitMinute = 15;
-                const checkoutLimitHour = 15;
-                const checkoutLimitMinute = 0;
-                
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
-
-                if (type === 'check_in') {
-                    if (currentHour > checkinLimitHour || (currentHour === checkinLimitHour && currentMinute > checkinLimitMinute)) {
-                        status = 'Terlambat';
-                    } else {
-                        status = 'Tepat Waktu';
-                    }
-                } else { // check_out
-                    if (currentHour < checkoutLimitHour || (currentHour === checkoutLimitHour && currentMinute < checkoutLimitMinute)) {
-                        status = 'Pulang Lebih Awal';
-                    } else {
-                        status = 'Pulang Tepat Waktu';
-                    }
-                }
-
-                const logTime = now.toLocaleTimeString('en-US', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' }); 
-
-                const record = { user_id: user.id, type, status, log_time: logTime, log_date: todayISO() };
-                
-                const { error } = await supabase.from('attendance_log').insert(record);
-                
                 if (error) throw error;
-                
-                showMessage(`Absen ${type === 'check_in' ? 'Masuk' : 'Pulang'} tercatat: ${status}`, 'success');
-                await loadTodayAttendance(user.id);
-
-            } catch (err) {
-                console.error(err);
-                showMessage(err.message || 'Gagal mencatat absensi', 'error');
-            } finally {
-                // loadTodayAttendance akan mengurus status disabled tombol
-            }
+                console.log('Gambar lama berhasil dihapus dari storage.');
+             } catch (error) {
+                // Logging error penghapusan tapi tidak menghentikan proses save profil
+                console.error('Gagal menghapus gambar lama:', error);
+             }
         }
-        
-        // --- Admin Functions ---
-        async function renderAllAttendanceLog(dateFilter, searchFilter = '') {
-            UIElements.allAttendanceList.innerHTML = '<div class="text-center py-4"><i data-lucide="loader-circle" class="w-6 h-6 animate-spin text-primary mx-auto"></i><p class="text-sm text-gray-500 mt-2">Memuat data...</p></div>';
-            UIElements.summaryStats.innerHTML = '';
-            
-            const dateToFilter = dateFilter || todayISO();
-            
-            // Perbarui tampilan tanggal di header
-            UIElements.logDateDisplay.textContent = new Date(dateToFilter).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
 
-            let query = supabase.from('attendance_log')
-                .select(`*, profiles:user_id(full_name, nisn)`)
-                .eq('log_date', dateToFilter)
-                .order('log_time', { ascending: false });
+
+        /**
+         * Handler untuk menyimpan perubahan profil.
+         */
+        document.getElementById('profile-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('profile-name').value;
+            const currentProfile = appState.profile;
+            const userId = appState.user.id;
+            
+            if (!currentProfile || !userId) return showToast('Error: Sesi penggunahttps://qvunfkabbhulwqfnkren.supabase.co tidak ditemukan.', 'error');
+            
+            let avatarUrl = currentProfile.avatar_url;
+            showToast('Menyimpan profil...', 'info');
 
             try {
-                const { data: records, error } = await query;
+                // --- 1. Kelola Gambar Profil ---
                 
-                if (error) throw error;
-                
-                // In-memory filter for search (simulating complex query)
-                let filteredRecords = records;
-                if (searchFilter) {
-                    const lowerSearch = searchFilter.toLowerCase();
-                    filteredRecords = records.filter(record => {
-                        const profile = record.profiles;
-                        return profile && (
-                            (profile.full_name && profile.full_name.toLowerCase().includes(lowerSearch)) ||
-                            (profile.nisn && profile.nisn.includes(lowerSearch))
-                        );
-                    });
-                }
-                
-                // Grouping and Statistics
-                const summary = calculateSummary(filteredRecords, dateToFilter);
-                renderSummaryStats(summary);
-
-                UIElements.allAttendanceList.innerHTML = '';
-                if (filteredRecords.length === 0) {
-                    UIElements.allAttendanceList.innerHTML = `<div class="text-sm text-center text-gray-500 p-6 bg-gray-50 border border-dashed border-gray-300 rounded-xl">Tidak ada data absensi ditemukan untuk tanggal ini.</div>`;
-                } else {
-                    filteredRecords.forEach(r => {
-                        UIElements.allAttendanceList.innerHTML += createAttendanceRow(r, true);
-                    });
-                }
-                window.lucide.createIcons();
-
-            } catch (err) {
-                console.error('Error loading admin log:', err);
-                UIElements.allAttendanceList.innerHTML = '<div class="text-sm text-center text-red-600 p-6 bg-red-50 border border-dashed border-red-300 rounded-xl">Gagal memuat log absensi. Cek konsol.</div>';
-            }
-        }
-        
-        function calculateSummary(records, date) {
-            const totalCheckIn = records.filter(r => r.type === 'check_in').length;
-            const totalCheckOut = records.filter(r => r.type === 'check_out').length;
-            const totalLate = records.filter(r => r.type === 'check_in' && r.status === 'Terlambat').length;
-            const totalEarlyOut = records.filter(r => r.type === 'check_out' && r.status === 'Pulang Lebih Awal').length;
-            
-            return { totalCheckIn, totalCheckOut, totalLate, totalEarlyOut, date };
-        }
-        
-        function renderSummaryStats(summary) {
-            const stats = [
-                { label: 'Absen Masuk', value: summary.totalCheckIn, icon: 'user-check', color: 'green' },
-                { label: 'Absen Pulang', value: summary.totalCheckOut, icon: 'user-x', color: 'red' },
-                { label: 'Terlambat Masuk', value: summary.totalLate, icon: 'clock', color: 'yellow' },
-                { label: 'Pulang Awal', value: summary.totalEarlyOut, icon: 'log-out', color: 'pink' },
-            ];
-            
-            UIElements.summaryStats.innerHTML = stats.map(stat => `
-                <div class="p-4 rounded-xl bg-${stat.color}-50 border border-${stat.color}-200 flex items-center gap-3 shadow-sm hover:shadow-md transition duration-150">
-                    <i data-lucide="${stat.icon}" class="w-6 h-6 text-${stat.color}-600"></i>
-                    <div>
-                        <div class="text-xl font-extrabold text-gray-800">${stat.value}</div>
-                        <div class="text-xs text-${stat.color}-700 font-medium">${stat.label}</div>
-                    </div>
-                </div>
-            `).join('');
-            
-            window.lucide.createIcons();
-        }
-
-        // --- Event Listeners and Initialization ---
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Clock init
-            updateClock();
-            setInterval(updateClock, 1000);
-
-            // --- Form Submissions ---
-            UIElements.loginForm.addEventListener('submit', async (ev) => {
-                ev.preventDefault();
-                const btn = document.getElementById('login-btn');
-                btn.disabled = true;
-                btn.innerHTML = '<i data-lucide="loader-circle" class="w-5 h-5 inline-block mr-2 animate-spin"></i> Memproses...';
-                window.lucide.createIcons();
-                
-                const id = document.getElementById('login-identifier').value.trim();
-                const pwd = document.getElementById('login-password').value;
-                
-                try {
-                    await signInWithIdentifier(id, pwd);
-                    showMessage('Sukses masuk! Memuat dashboard...', 'success');
-                } catch (err) {
-                    console.error('Login Error:', err);
-                    const errorMessage = err.message.includes('Invalid login credentials') ? 'NISN/Email atau Password salah.' : (err.message || 'Gagal login. Cek kembali data Anda.');
-                    showMessage(errorMessage, 'error');
-                } finally { 
-                    btn.disabled = false;
-                    btn.innerHTML = '<i data-lucide="log-in" class="w-5 h-5 inline-block mr-2"></i> Masuk';
-                    window.lucide.createIcons();
-                }
-            });
-
-            UIElements.signupForm.addEventListener('submit', async (ev) => {
-                ev.preventDefault();
-                const btn = document.getElementById('signup-btn');
-                btn.disabled = true;
-                btn.innerHTML = '<i data-lucide="loader-circle" class="w-5 h-5 inline-block mr-2 animate-spin"></i> Mendaftar...';
-                window.lucide.createIcons();
-                
-                const email = document.getElementById('signup-email').value.trim();
-                const password = document.getElementById('signup-password').value;
-                const nisn = document.getElementById('signup-nisn').value.trim();
-
-                try {
-                    if (!email || !password || !/^\d{10}$/.test(nisn)) throw new Error('Data pendaftaran tidak lengkap/tidak valid.');
-
-                    // 1. Check if NISN is already taken
-                    const { count: nisnCount, error: checkError } = await supabase.from('profiles').select('nisn', { count: 'exact' }).eq('nisn', nisn);
-                    if (checkError) throw checkError;
-                    if (nisnCount > 0) throw new Error('NISN ini sudah terdaftar. Silakan hubungi admin.');
-                    
-                    // 2. Auth signup
-                    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
-                    if (authError) throw authError;
-                    
-                    // 3. Create profile entry (default role: student)
-                    if (authData.user) {
-                       const { error: profileError } = await supabase.from('profiles').insert({ 
-                           id: authData.user.id, 
-                           email, 
-                           full_name: `Siswa ${nisn}`, // Default name
-                           nisn,
-                           role: 'student'
-                       });
-                       if (profileError) throw profileError;
+                // Jika ada file baru yang diupload
+                if (appState.profileImageFile) {
+                    // Hapus gambar lama (jika ada)
+                    if (currentProfile.avatar_url) {
+                        await deleteProfileImage(currentProfile.avatar_url);
                     }
-                    
-                    showAuthView('login');
-                    showMessage('Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi (jika diaktifkan) dan coba login.', 'success');
-                } catch (err) {
-                    console.error('Signup Error:', err);
-                    showMessage(err.message || 'Gagal mendaftar', 'error');
-                } finally { 
-                    btn.disabled = false; 
-                    btn.innerHTML = '<i data-lucide="user-plus" class="w-5 h-5 inline-block mr-2"></i> Daftar & Lanjutkan';
-                    window.lucide.createIcons();
+                    // Upload gambar baru
+                    avatarUrl = await uploadProfileImage(appState.profileImageFile, userId);
+                } 
+                // Jika tombol hapus ditekan
+                else if (appState.profileImageToDelete) {
+                    if (currentProfile.avatar_url) {
+                        await deleteProfileImage(currentProfile.avatar_url);
+                    }
+                    avatarUrl = null;
                 }
-            });
-            
-             UIElements.forgotPasswordForm.addEventListener('submit', async (ev) => {
-                ev.preventDefault();
-                const btn = document.getElementById('forgot-password-btn');
-                btn.disabled = true;
-                btn.innerHTML = '<i data-lucide="loader-circle" class="w-5 h-5 inline-block mr-2 animate-spin"></i> Mengirim...';
-                window.lucide.createIcons();
+
+                // --- 2. Update Data Profil di Tabel 'profiles' ---
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        full_name: fullName,
+                        avatar_url: avatarUrl
+                    })
+                    .eq('id', userId);
+
+                if (error) throw error;
+
+                // Update state lokal
+                appState.profile = { ...currentProfile, full_name: fullName, avatar_url: avatarUrl };
                 
-                const email = document.getElementById('forgot-email').value.trim();
-                try {
-                    if (!email) throw new Error('Masukkan email Anda.');
+                showToast('Profil berhasil diperbarui!', 'success');
+                closeProfileModal();
+                updateUserProfileDisplay(); // Perbarui tampilan dashboard
+            } catch (error) {
+                showToast(`Gagal menyimpan profil: ${error.message}`, 'error');
+            }
+        });
+        
+        // --- 9. Inisialisasi dan Event Listeners Lainnya ---
 
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: window.location.origin,
-                    });
+        window.addEventListener('load', () => {
+            // Inisialisasi Real-time listener Supabase
+            setupRealtimeAttendanceListener(); 
 
-                    if (error) throw error;
+            // Listener untuk upload gambar di modal
+            document.getElementById('profile-image-input')?.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
 
-                    showMessage(`Link reset password telah dikirim ke ${email}. (Periksa folder spam Anda).`, 'info');
-                    
-                } catch (err) {
-                    console.error('Forgot Password Error:', err);
-                    showMessage(err.message || 'Gagal mengirim link reset.', 'error');
-                } finally { 
-                    btn.disabled = false;
-                    btn.innerHTML = '<i data-lucide="send" class="w-5 h-5 inline-block mr-2"></i> Kirim Link Reset';
-                    window.lucide.createIcons();
+                if (file.size > 2 * 1024 * 1024) { // Batasi 2MB
+                    showToast('Ukuran gambar maksimal 2MB.', 'error');
+                    e.target.value = '';
+                    return;
                 }
+
+                const preview = document.getElementById('profile-image-preview');
+                const icon = document.getElementById('profile-image-icon');
+                
+                const img = new Image();
+                img.onload = function() {
+                    preview.src = img.src;
+                    preview.classList.remove('hidden');
+                    icon.classList.add('hidden');
+                    document.getElementById('remove-profile-image').classList.remove('hidden');
+                    
+                    appState.profileImageFile = file;
+                    appState.profileImageToDelete = false;
+                };
+                img.onerror = function() {
+                    showToast('Gagal memuat gambar', 'error');
+                    e.target.value = '';
+                };
+                img.src = URL.createObjectURL(file);
             });
 
+            // Listener untuk menghapus gambar di modal
+            document.getElementById('remove-profile-image')?.addEventListener('click', function() {
+                const preview = document.getElementById('profile-image-preview');
+                const icon = document.getElementById('profile-image-icon');
+                const input = document.getElementById('profile-image-input');
+                
+                preview.src = '';
+                preview.classList.add('hidden');
+                icon?.classList.remove('hidden');
+                this.classList.add('hidden');
+                input.value = '';
+                
+                appState.profileImageFile = null;
+                appState.profileImageToDelete = true;
+            });
 
-            // --- Student Actions ---
-            UIElements.checkinBtn.addEventListener('click', () => doAttendance('check_in'));
-            UIElements.checkoutBtn.addEventListener('click', () => doAttendance('check_out'));
-            
-            document.getElementById('logout-btn')?.addEventListener('click', async () => {
-                await supabase.auth.signOut();
-                showMessage('Anda telah keluar.', 'info');
+            // Tutup modal saat klik di luar modal
+            document.getElementById('profile-modal')?.addEventListener('click', (e) => {
+                if (e.target.id === 'profile-modal') closeProfileModal();
+            });
+
+            // Listener Pencarian (Admin)
+            document.getElementById('search-student-input')?.addEventListener('input', (e) => {
+                renderAllAttendanceLog(e.target.value);
             });
             
-            // --- Admin Actions ---
-            UIElements.dateFilter.addEventListener('change', (e) => {
-                renderAllAttendanceLog(e.target.value, UIElements.searchStudentInput?.value || '');
-            });
+            // Listeners navigasi Auth
+            document.getElementById('show-signup-button')?.addEventListener('click', () => showAuthView('signup'));
+            document.getElementById('show-login-button')?.addEventListener('click', () => showAuthView('login'));
+            document.getElementById('show-forgot-password-button')?.addEventListener('click', () => showAuthView('forgotPassword'));
+            document.getElementById('back-to-login-button')?.addEventListener('click', () => showAuthView('login'));
             
-            UIElements.searchStudentInput?.addEventListener('input', (e) => {
-                renderAllAttendanceLog(UIElements.dateFilter.value, e.target.value); // Pastikan filter tanggal ikut terkirim
-            });
-            
-            // --- UI Navigations ---
-            document.getElementById('show-signup-button')?.addEventListener('click', (e) => { e.preventDefault(); showAuthView('signup'); });
-            document.getElementById('show-forgot-password-button')?.addEventListener('click', (e) => { e.preventDefault(); showAuthView('forgotPassword'); });
-            
-            // Perbaikan untuk memastikan semua tombol kembali ke login berfungsi
-            document.querySelectorAll('.back-to-login-button').forEach(btn => {
-                btn.addEventListener('click', (e) => { e.preventDefault(); showAuthView('login'); });
-            });
-            
-            // --- Password Toggle ---
+            // Listener untuk tombol toggle password
             document.querySelectorAll('.toggle-password').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const input = this.parentElement.querySelector('input');
@@ -889,38 +983,13 @@
                         const isPassword = input.type === 'password';
                         input.type = isPassword ? 'text' : 'password';
                         icon.setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
-                        window.lucide.createIcons();
+                        lucide.createIcons();
                     }
                 });
             });
 
-            // --- Initial Session Check (PENTING) ---
-            supabase.auth.onAuthStateChange(async (event, session) => {
-                if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) { 
-                    // Pengguna masuk/sesi diperbarui
-                    await renderDashboard(session.user); 
-                    hideLoadingOverlay();
-                }
-                else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-                    // Pengguna keluar
-                    showAuthView('login');
-                    hideLoadingOverlay(); 
-                } else if (event === 'INITIAL_SESSION') {
-                    // Sesi awal dimuat
-                    if (!session?.user) {
-                        showAuthView('login');
-                        hideLoadingOverlay();
-                    }
-                    // Jika ada user, SIGNED_IN akan menyusul, jadi tidak perlu render ulang
-                }
-            });
-            
-            // Panggil lucide icons setelah DOM siap
-            window.lucide.createIcons();
-            
-            // NOTE: Kami menghapus fallback session check manual karena onAuthStateChange sudah cukup kuat
-            // dan untuk mencegah race condition.
-
+            // Inisialisasi ikon Lucide
+            lucide.createIcons();
         });
     </script>
 </body>
