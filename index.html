@@ -327,29 +327,24 @@
         </div>
     </div>
     
-    <!-- Firebase Initialization and Script -->
+    <!-- Supabase Initialization and Script -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut,
-            updateProfile, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, doc, onSnapshot, collection, query, setLogLevel, getDocs,
-            deleteDoc, addDoc, updateDoc
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // --- Supabase Imports ---
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-        // Global Firebase and App variables
-        let app, db, auth;
+        // --- GLOBAL SETUP (MANDATORY - Kunci Supabase telah diisi dari input pengguna) ---
+        const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
+        
+        // Asumsi variabel untuk Path Firestore/Realtime, meski tidak digunakan penuh di Supabase
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; 
+
+        // --- Global Supabase Client ---
+        let supabase = null;
         let userId = null;
         let isAuthReady = false;
         let currentAuthUser = null;
-
-        // --- GLOBAL SETUP (MANDATORY) ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        setLogLevel('Debug'); // Enable debug logging for Firestore
+        let currentUserEmail = null; // Diperlukan untuk re-auth Supabase
 
         // --- Utility Functions ---
 
@@ -416,13 +411,15 @@
             }
         };
 
-        // --- Settings View Logic (NEW) ---
+        // --- Settings View Logic (Supabase) ---
 
-        /** Memuat data pengguna ke dalam formulir pengaturan */
+        /** Memuat data pengguna dari Supabase ke dalam formulir pengaturan */
         function loadSettingsData(user) {
-            const displayName = user.displayName || 'Nama Pengguna';
+            // Supabase stores metadata in user_metadata, but the primary fields are direct properties
+            const userMetadata = user.user_metadata || {};
+            const displayName = userMetadata.user_name || user.email || 'Nama Pengguna'; // Asumsi user_name untuk display name
             const email = user.email || 'N/A';
-            const photoURL = user.photoURL || 'https://placehold.co/100x100/A855F7/ffffff?text=U';
+            const photoURL = userMetadata.avatar_url || 'https://placehold.co/100x100/A855F7/ffffff?text=U';
 
             document.getElementById('profile-display-name').textContent = displayName;
             document.getElementById('profile-display-email').textContent = email;
@@ -433,23 +430,34 @@
             document.getElementById('settings-email').value = email === 'N/A' ? '' : email;
         }
 
-        /** Menangani pembaruan Nama dan PFP URL */
+        /** Menangani pembaruan Nama dan PFP URL menggunakan data Supabase user_metadata */
         window.handleUpdateProfile = async () => {
             if (!currentAuthUser) return showModal("Error", "Pengguna tidak terotentikasi.");
 
             const newName = document.getElementById('settings-name').value.trim();
             const newPfp = document.getElementById('settings-pfp').value.trim();
             const photoURL = newPfp || 'https://placehold.co/100x100/A855F7/ffffff?text=U';
-
+            
             try {
-                await updateProfile(currentAuthUser, {
-                    displayName: newName,
-                    photoURL: photoURL
+                // Supabase menggunakan data di properti data atau user_metadata (tergantung konfigurasi)
+                // Kita akan menggunakan `data` untuk update `user_metadata`
+                const { data, error } = await supabase.auth.updateUser({
+                    data: {
+                        user_name: newName, // Contoh field kustom di user_metadata
+                        avatar_url: photoURL
+                    }
                 });
 
-                // Perbarui tampilan UI segera
-                loadSettingsData(currentAuthUser); 
-                showModal("Sukses", "Profil berhasil diperbarui!");
+                if (error) throw error;
+
+                // Perbarui tampilan UI segera dengan data user terbaru dari respons
+                if (data.user) {
+                     // Supabase akan memancarkan perubahan auth secara otomatis, tapi kita bisa update tampilan
+                    loadSettingsData(data.user); 
+                    showModal("Sukses", "Profil berhasil diperbarui!");
+                } else {
+                    showModal("Sukses", "Profil berhasil diperbarui! (Data refresh tertunda)");
+                }
 
             } catch (error) {
                 console.error("Error updating profile:", error);
@@ -459,6 +467,10 @@
 
         /** Meminta Re-authentication sebelum tindakan sensitif */
         window.promptReauth = (actionType) => {
+            if (!currentAuthUser || !currentUserEmail) {
+                return showModal("Error", "Anda harus login dengan email dan kata sandi untuk operasi ini.");
+            }
+            
             const title = actionType === 'email' ? "Konfirmasi Perubahan Email" : "Konfirmasi Perubahan Kata Sandi";
             const content = "Mohon masukkan kata sandi Anda saat ini untuk mengonfirmasi perubahan ini.";
 
@@ -472,41 +484,50 @@
             }, true); // true for isReauth
         };
 
-        /** Re-authentication dan Pembaruan Email */
+        /** Re-authentication (Verifikasi Password) dan Pembaruan Email */
         async function handleReauthAndEmailUpdate(currentPassword) {
             if (!currentAuthUser) return showModal("Error", "Pengguna tidak terotentikasi.");
-
             const newEmail = document.getElementById('settings-email').value.trim();
             if (!newEmail) return showModal("Error", "Email baru tidak boleh kosong.");
-
+            
             try {
-                // 1. Re-authenticate
-                const credential = EmailAuthProvider.credential(currentAuthUser.email, currentPassword);
-                await reauthenticateWithCredential(currentAuthUser, credential);
+                // 1. Re-authenticate/Verify current password by attempting sign in
+                // Ini akan refresh sesi dan memverifikasi kredensial
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                    email: currentUserEmail, 
+                    password: currentPassword
+                });
+
+                if (signInError) {
+                    // Password verification failed
+                    if (signInError.message.includes('Invalid login credentials')) {
+                        return showModal("Error", "Kata sandi saat ini salah.");
+                    } else {
+                        throw signInError; // Lemparkan error lainnya
+                    }
+                }
+
+                // 2. Password verified, proceed with update
+                const { error: updateError } = await supabase.auth.updateUser({ email: newEmail });
                 
-                // 2. Update Email
-                await updateEmail(currentAuthUser, newEmail);
+                if (updateError) throw updateError;
                 
-                showModal("Sukses", "Email berhasil diperbarui! Anda mungkin perlu masuk kembali.");
+                showModal("Sukses", "Email berhasil diperbarui! Anda akan menerima email konfirmasi untuk alamat baru.");
                 
-                // Panggil sign out untuk memastikan user masuk dengan email baru
-                await signOut(auth);
+                // Supabase akan secara otomatis sign out user untuk memverifikasi email
+                await supabase.auth.signOut();
 
             } catch (error) {
                 console.error("Error updating email:", error);
-                let errorMessage = "Gagal memperbarui email.";
-                if (error.code === 'auth/wrong-password') {
-                    errorMessage = "Kata sandi saat ini salah.";
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = "Format email baru tidak valid.";
-                } else if (error.code === 'auth/requires-recent-login') {
-                    errorMessage = "Operasi ini sensitif dan membutuhkan login ulang. Silakan coba lagi.";
-                }
-                showModal("Error Pembaruan Email", `${errorMessage} (${error.message})`);
+                let errorMessage = error.message.includes('A user with this email address already exists') 
+                    ? "Email ini sudah digunakan oleh pengguna lain."
+                    : `Gagal memperbarui email. Error: ${error.message}`;
+
+                showModal("Error Pembaruan Email", errorMessage);
             }
         }
         
-        /** Re-authentication dan Pembaruan Kata Sandi */
+        /** Re-authentication (Verifikasi Password) dan Pembaruan Kata Sandi */
         async function handleReauthAndPasswordUpdate(currentPassword) {
             if (!currentAuthUser) return showModal("Error", "Pengguna tidak terotentikasi.");
 
@@ -521,12 +542,26 @@
             }
 
             try {
-                // 1. Re-authenticate
-                const credential = EmailAuthProvider.credential(currentAuthUser.email, currentPassword);
-                await reauthenticateWithCredential(currentAuthUser, credential);
+                 // 1. Re-authenticate/Verify current password by attempting sign in
+                 // Ini akan refresh sesi dan memverifikasi kredensial
+                const { error: signInError } = await supabase.auth.signInWithPassword({
+                    email: currentUserEmail, 
+                    password: currentPassword
+                });
+
+                if (signInError) {
+                    // Password verification failed
+                    if (signInError.message.includes('Invalid login credentials')) {
+                        return showModal("Error", "Kata sandi saat ini salah.");
+                    } else {
+                        throw signInError; // Lemparkan error lainnya
+                    }
+                }
                 
-                // 2. Update Password
-                await updatePassword(currentAuthUser, newPassword);
+                // 2. Password verified, proceed with update
+                const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+                
+                if (updateError) throw updateError;
                 
                 showModal("Sukses", "Kata sandi berhasil diperbarui!");
                 // Clear the forms
@@ -535,81 +570,87 @@
 
             } catch (error) {
                 console.error("Error updating password:", error);
-                let errorMessage = "Gagal memperbarui kata sandi.";
-                if (error.code === 'auth/wrong-password') {
-                    errorMessage = "Kata sandi saat ini salah.";
-                } else if (error.code === 'auth/requires-recent-login') {
-                    errorMessage = "Operasi ini sensitif dan membutuhkan login ulang. Silakan coba lagi.";
-                }
-                showModal("Error Pembaruan Kata Sandi", `${errorMessage} (${error.message})`);
+                showModal("Error Pembaruan Kata Sandi", `Gagal memperbarui kata sandi. Error: ${error.message}`);
             }
         }
 
-        // --- Core Firebase Initialization and Auth Handling ---
+        // --- Core Supabase Initialization and Auth Handling ---
 
-        function initializeFirebase() {
+        function initializeSupabase() {
             try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+                // Kunci Supabase telah diisi.
+                supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             } catch (e) {
-                console.error("Failed to initialize Firebase:", e);
-                showModal("Error Inisialisasi", "Gagal menghubungkan ke layanan Firebase.");
+                console.error("Failed to initialize Supabase:", e);
+                showModal("Error Inisialisasi", "Gagal menghubungkan ke layanan Supabase.");
             }
         }
 
-        async function authenticateUser() {
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    // Fallback to anonymous sign-in if no token is provided (not recommended for production)
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Authentication failed:", error);
-                showModal("Error Otentikasi", `Gagal melakukan otentikasi. Silakan refresh halaman. Error: ${error.message}`);
-            }
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            currentAuthUser = user;
-            isAuthReady = true;
-
-            if (user) {
-                userId = user.uid;
-                document.getElementById('current-user-id').textContent = userId;
-                console.log("User authenticated:", userId);
-
-                // Initial view load (Dashboard)
-                showView('dashboard-view');
-                
-                // Load settings data on initial auth change (if needed later)
-                loadSettingsData(user);
-            } else {
-                userId = null;
-                document.getElementById('current-user-id').textContent = 'Guest';
-                console.log("User signed out or failed to authenticate.");
-                // showView('login-view'); // Assuming a login view exists
-            }
+        /**
+         * Di Supabase, kita hanya perlu memuat sesi saat ini.
+         * Jika tidak ada sesi, kita asumsikan sebagai tamu/anonim (jika diizinkan oleh kebijakan RLS).
+         */
+        async function loadSession() {
+            // Cek sesi saat ini
+            const { data: { session }, error } = await supabase.auth.getSession();
             
-            // Re-initialize lucide icons after view switch/content load
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
+            if (error) {
+                console.error("Error loading session:", error);
             }
-        });
+
+            if (!session) {
+                // Opsional: Lakukan sign in anonim jika Supabase mendukungnya atau arahkan ke halaman login
+                console.log("No active session found. Running as guest/anonymous.");
+                document.getElementById('current-user-id').textContent = 'Guest';
+            }
+        }
+
+
+        // --- Supabase Auth Listener ---
+        function setupAuthListener() {
+            supabase.auth.onAuthStateChange((event, session) => {
+                isAuthReady = true;
+                const user = session ? session.user : null;
+                currentAuthUser = user;
+
+                if (user) {
+                    userId = user.id;
+                    currentUserEmail = user.email;
+                    document.getElementById('current-user-id').textContent = userId;
+                    console.log(`User authenticated (Event: ${event}):`, userId);
+
+                    // Initial view load (Dashboard)
+                    showView('dashboard-view');
+                    
+                    // Load settings data on initial auth change
+                    loadSettingsData(user);
+                } else {
+                    userId = null;
+                    currentUserEmail = null;
+                    document.getElementById('current-user-id').textContent = 'Guest';
+                    console.log(`User signed out (Event: ${event}).`);
+                    // showView('login-view'); // Uncomment if you have a login view
+                }
+                
+                // Re-initialize lucide icons after view switch/content load
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            });
+        }
 
         // --- Event Listeners and Main Execution ---
 
         window.addEventListener('load', () => {
-            initializeFirebase();
-            authenticateUser();
+            initializeSupabase();
+            setupAuthListener(); // Mulai listener
+            loadSession(); // Muat sesi awal
 
             document.getElementById('logout-button').addEventListener('click', async () => {
                 try {
-                    await signOut(auth);
+                    const { error } = await supabase.auth.signOut();
+                    if (error) throw error;
                     showModal("Keluar", "Anda telah berhasil keluar.");
-                    // After sign out, the onAuthStateChanged listener will handle the view switch (e.g., to login)
                 } catch (error) {
                     console.error("Sign Out Error:", error);
                     showModal("Error Keluar", `Gagal keluar. Error: ${error.message}`);
