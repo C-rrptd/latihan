@@ -340,6 +340,7 @@
                     '23503': 'Tidak dapat menghapus kelas karena masih ada data terkait.',
                     'duplicate key value violates unique constraint "profiles_nisn_key"': 'NISN sudah terdaftar',
                     'duplicate key value violates unique constraint "classes_class_name_key"': 'Nama kelas sudah ada.',
+                    'PGRST200': 'Masalah relasi database (Foreign Key hilang). Cek konsol untuk detail.',
                 };
 
                 if (error.code && friendlyMessages[error.code]) {
@@ -872,7 +873,7 @@
                     .from('attendance_log')
                     .select(`
                         *,
-                        profiles:user_id (
+                        profiles (
                             full_name,
                             email,
                             nisn,
@@ -887,7 +888,9 @@
                 appState.allAttendanceLogs = data || [];
             } catch (error) {
                 console.error("Error fetching all attendance:", error);
-                showToast('Gagal memuat data absensi keseluruhan. Cek konsol.', 'error');
+                // Tampilkan pesan error yang lebih spesifik ke user jika PGRST200
+                const friendlyMsg = ErrorHandler.handle(error, 'mengambil semua absensi');
+                showToast(friendlyMsg, 'error');
                 appState.allAttendanceLogs = []; 
             }
         }
