@@ -1167,12 +1167,24 @@
             const jakartaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
             const logDate = jakartaTime.toISOString().split('T')[0];
             const logTime = jakartaTime.toTimeString().split(' ')[0];
+
+            // --- NEW: Status Calculation Logic ---
+            let status = 'Hadir'; // Default generic status
+            if (type === 'check_in') {
+                // Logic for Check In: Late if after 07:15:00
+                status = logTime <= '07:15:00' ? 'Tepat Waktu' : 'Terlambat';
+            } else if (type === 'check_out') {
+                // Logic for Check Out: Early if before 15:00:00
+                status = logTime >= '15:00:00' ? 'Pulang Normal' : 'Pulang Awal';
+            }
+            // ------------------------------------
             
             const record = { 
                 user_id: appState.currentUser.id, 
                 type: type,
                 log_date: logDate,
-                log_time: logTime
+                log_time: logTime,
+                status: status // Added calculated status to the record
             };
             
             console.log('Inserting attendance record:', record);
