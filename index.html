@@ -413,6 +413,11 @@
             selectedAdminClassId: null,
             classList: [],
         };
+
+        // Helper for consistent Jakarta Date (YYYY-MM-DD)
+        function getJakartaDateStr() {
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+        }
         
         function showLoading(isLoading) { 
             UIElements.loadingScreen?.classList.toggle('hidden', !isLoading); 
@@ -746,7 +751,7 @@
                 .from('attendance_log')
                 .select('*')
                 .eq('user_id', appState.currentUser.id)
-                .eq('log_date', new Date().toISOString().slice(0, 10))
+                .eq('log_date', getJakartaDateStr())
                 .order('log_time', { ascending: false });
                 
             if (error) {
@@ -823,19 +828,31 @@
         }
         
         async function fetchAllTodayAttendance() {
-            const { data, error } = await supabase
-                .from('attendance_log')
-                .select('*, profiles(*, classes(class_name))') 
-                .eq('log_date', new Date().toISOString().slice(0, 10))
-                .order('log_time', { ascending: false });
+            if (appState.profile?.role !== 'admin') return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('attendance_log')
+                    .select(`
+                        *,
+                        profiles:user_id (
+                            full_name,
+                            email,
+                            nisn,
+                            classes:class_id ( class_name )
+                        )
+                    `)
+                    .eq('log_date', getJakartaDateStr())
+                    .order('log_time', { ascending: false });
+                    
+                if (error) throw error;
                 
-            if (error) {
-                showToast('Gagal memuat data absensi keseluruhan.', 'error');
+                appState.allAttendanceLogs = data || [];
+            } catch (error) {
+                console.error("Error fetching all attendance:", error);
+                showToast('Gagal memuat data absensi keseluruhan. Cek konsol.', 'error');
                 appState.allAttendanceLogs = []; 
-                return; 
             }
-            
-            appState.allAttendanceLogs = data || [];
         }
         
         function renderAllAttendanceLog(filter = '') {
@@ -845,20 +862,27 @@
             
             const searchTerm = filter.toLowerCase().trim();
             const filteredLogs = appState.allAttendanceLogs.filter(log => {
-                const nisnMatch = log.profiles?.nisn?.includes(searchTerm);
-                const emailMatch = log.profiles?.email?.toLowerCase().includes(searchTerm);
-                const classNameMatch = log.profiles?.classes?.class_name?.toLowerCase().includes(searchTerm);
-                const fullNameMatch = log.profiles?.full_name?.toLowerCase().includes(searchTerm); 
+                const profile = log.profiles || {};
+                const classNameVal = profile.classes?.class_name || '';
+
+                const nisnMatch = profile.nisn?.includes(searchTerm);
+                const emailMatch = profile.email?.toLowerCase().includes(searchTerm);
+                const classNameMatch = classNameVal.toLowerCase().includes(searchTerm);
+                const fullNameMatch = profile.full_name?.toLowerCase().includes(searchTerm); 
 
                 return nisnMatch || emailMatch || classNameMatch || fullNameMatch;
             });
             
             if (filteredLogs.length === 0) {
+                const message = appState.allAttendanceLogs.length === 0 
+                    ? 'Belum ada data absensi hari ini' 
+                    : `Tidak ada data yang cocok dengan "${filter}"`;
+
                 UIElements.adminAttendanceLogBody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center p-8">
                             <i data-lucide="search-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i>
-                            <p class="text-white-glass">${searchTerm ? `Tidak ada data absensi yang cocok dengan "${filter}"` : 'Belum ada data absensi hari ini'}</p>
+                            <p class="text-white-glass">${message}</p>
                         </td>
                     </tr>
                 `;
@@ -870,10 +894,11 @@
                 const row = document.createElement('tr');
                 row.className = 'border-b border-white/10 hover:bg-white/10 transition-colors';
                 
-                const nisn = log.profiles?.nisn || '-';
-                const email = log.profiles?.email || '-';
-                const className = log.profiles?.classes?.class_name || '-';
-                const fullName = log.profiles?.full_name || email.split('@')[0] || 'Tanpa Nama'; 
+                const profile = log.profiles || {};
+                const nisn = profile.nisn || '-';
+                const email = profile.email || '-';
+                const className = profile.classes?.class_name || '-';
+                const fullName = profile.full_name || email.split('@')[0] || 'Tanpa Nama'; 
                 const type = log.type === 'check_in' ? 'Masuk' : 'Pulang';
                 const time = log.log_time || '...';
                 const status = log.status || '...';
@@ -881,6 +906,7 @@
                 let statusClass = 'status-warning'; 
                 if (status.includes('Tepat')) statusClass = 'status-success';
                 else if (status.includes('Awal')) statusClass = 'status-danger';
+                else if (status.includes('Normal')) statusClass = 'status-success';
 
                 row.innerHTML = `
                     <td class="p-3">
@@ -1163,18 +1189,14 @@
             button.disabled = true; 
             showLoading(true);
             
-            const now = new Date();
-            const jakartaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-            const logDate = jakartaTime.toISOString().split('T')[0];
-            const logTime = jakartaTime.toTimeString().split(' ')[0];
+            const logDate = getJakartaDateStr();
+            const logTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Jakarta', hour12: false });
 
-            // --- NEW: Status Calculation Logic ---
-            let status = 'Hadir'; // Default generic status
+            // --- Status Calculation Logic ---
+            let status = 'Hadir'; 
             if (type === 'check_in') {
-                // Logic for Check In: Late if after 07:15:00
                 status = logTime <= '07:15:00' ? 'Tepat Waktu' : 'Terlambat';
             } else if (type === 'check_out') {
-                // Logic for Check Out: Early if before 15:00:00
                 status = logTime >= '15:00:00' ? 'Pulang Normal' : 'Pulang Awal';
             }
             // ------------------------------------
@@ -1184,10 +1206,8 @@
                 type: type,
                 log_date: logDate,
                 log_time: logTime,
-                status: status // Added calculated status to the record
+                status: status 
             };
-            
-            console.log('Inserting attendance record:', record);
             
             try {
                 const { data, error } = await supabase
@@ -1196,12 +1216,7 @@
                     .select() 
                     .single(); 
 
-                console.log('Attendance insert result:', { data, error });
-
-                if (error) {
-                    console.error('Attendance insert error:', error);
-                    throw error; 
-                }
+                if (error) throw error; 
 
                 showToast(`Absensi ${type === 'check_in' ? 'masuk' : 'pulang'} berhasil!`, 'success');
                 
@@ -1336,16 +1351,19 @@
             
             const headers = ['Nama Lengkap', 'NISN', 'Email', 'Kelas', 'Jenis Absen', 'Waktu', 'Status', 'Tanggal'];
             
-            const rows = appState.allAttendanceLogs.map(log => [
-                log.profiles?.full_name || log.profiles?.email?.split('@')[0] || 'Tanpa Nama', 
-                log.profiles?.nisn || '-', 
-                log.profiles?.email || '-', 
-                log.profiles?.classes?.class_name || '-', 
-                log.type === 'check_in' ? 'Masuk' : 'Pulang', 
-                log.log_time || '-', 
-                log.status || '-', 
-                log.log_date || '-' 
-            ]);
+            const rows = appState.allAttendanceLogs.map(log => {
+                const profile = log.profiles || {};
+                return [
+                    profile.full_name || profile.email?.split('@')[0] || 'Tanpa Nama', 
+                    profile.nisn || '-', 
+                    profile.email || '-', 
+                    profile.classes?.class_name || '-', 
+                    log.type === 'check_in' ? 'Masuk' : 'Pulang', 
+                    log.log_time || '-', 
+                    log.status || '-', 
+                    log.log_date || '-' 
+                ];
+            });
             
             const escapeCsvCell = (cell) => {
                 let escaped = (cell === null || cell === undefined) ? '' : String(cell);
@@ -1364,7 +1382,7 @@
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
-            const today = new Date().toISOString().slice(0, 10); 
+            const today = getJakartaDateStr();
             
             link.setAttribute('href', url);
             link.setAttribute('download', `laporan_absensi_${today}.csv`); 
