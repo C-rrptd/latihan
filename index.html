@@ -398,6 +398,9 @@
             adminClassList: document.getElementById('admin-class-list'),
             addClassForm: document.getElementById('add-class-form'),
             newClassNameInput: document.getElementById('new-class-name'),
+            toggleViewButton: document.getElementById('toggle-view-button'), // New Element
+            toggleViewText: document.getElementById('toggle-view-text'), // New Element
+            toggleViewIcon: document.getElementById('toggle-view-icon'), // New Element
         };
 
         const appState = {
@@ -412,6 +415,7 @@
             profileImageToDelete: false, 
             selectedAdminClassId: null,
             classList: [],
+            isAdminViewActive: true, // New State for Admin toggle
         };
 
         // Helper for consistent Jakarta Date (YYYY-MM-DD)
@@ -459,12 +463,35 @@
                 UIElements.loginPage?.classList.remove('hidden');
             } else if (view === 'app') {
                 UIElements.mainApp?.classList.remove('hidden');
-                const isAdmin = appState.profile?.role === 'admin';
-                UIElements.studentView?.classList.toggle('hidden', isAdmin);
-                UIElements.adminView?.classList.toggle('hidden', !isAdmin);
+                updateMainAppView(); // Centralized view updater
             }
         }
         
+        // New function to handle view toggling for Admin
+        function updateMainAppView() {
+            const isAdmin = appState.profile?.role === 'admin';
+            
+            if (isAdmin) {
+                UIElements.toggleViewButton?.classList.remove('hidden');
+                if (appState.isAdminViewActive) {
+                    UIElements.adminView?.classList.remove('hidden');
+                    UIElements.studentView?.classList.add('hidden');
+                    UIElements.toggleViewText.textContent = 'Mode Siswa';
+                    UIElements.toggleViewIcon.setAttribute('data-lucide', 'user');
+                } else {
+                    UIElements.adminView?.classList.add('hidden');
+                    UIElements.studentView?.classList.remove('hidden');
+                    UIElements.toggleViewText.textContent = 'Mode Admin';
+                    UIElements.toggleViewIcon.setAttribute('data-lucide', 'shield');
+                }
+            } else {
+                UIElements.toggleViewButton?.classList.add('hidden');
+                UIElements.studentView?.classList.remove('hidden');
+                UIElements.adminView?.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
         async function showAuthView(viewName) { 
             const views = { 
                 login: UIElements.loginView, 
@@ -499,7 +526,8 @@
             
             UIElements.date.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
             
-            if (appState.profile?.role === 'student' && now.getSeconds() === 0) {
+            // Always update buttons if student view might be active (including for admins toggled to student view)
+             if (now.getSeconds() === 0) {
                 updateAttendanceButtons();
             }
         }
@@ -585,24 +613,29 @@
                 const displayName = profile.full_name || profile.nisn || profile.email?.split('@')[0] || 'User';
                 UIElements.welcomeMessage.textContent = displayName;
 
+                // Fetch data based on role. Admin fetches EVERYTHING needed for both views.
+                const promises = [];
+                
+                // Always fetch personal attendance for everyone (admin needs it for student view toggle)
+                promises.push(fetchTodayAttendance().then(() => renderAttendanceLog()));
+                
+                // Always fetch schedule if class_id exists (admin might have a class too)
+                 if (profile.class_id) {
+                    promises.push(fetchSchedule().then(() => renderSchedule(UIElements.scheduleTableBody, false)));
+                }
+
                 if (appState.profile.role === 'admin') {
-                    await Promise.allSettled([
-                        fetchAllTodayAttendance().then(() => renderAllAttendanceLog()),
-                        fetchClasses().then(() => { 
-                            populateAdminClassesDropdown(); 
-                            renderClassList(); 
-                        })
-                    ]);
+                     promises.push(fetchAllTodayAttendance().then(() => renderAllAttendanceLog()));
+                     promises.push(fetchClasses().then(() => { 
+                        populateAdminClassesDropdown(); 
+                        renderClassList(); 
+                    }));
                     subscribeToAttendanceChanges(); 
                     subscribeToClassChanges(); 
-                } else {
-                    await Promise.allSettled([
-                        fetchTodayAttendance().then(() => renderAttendanceLog()),
-                        fetchSchedule().then(() => renderSchedule(UIElements.scheduleTableBody, false))
-                    ]);
-                    updateAttendanceButtons();
                 }
-                
+
+                await Promise.allSettled(promises);
+                updateAttendanceButtons(); // Initial button state update
                 navigateTo('app');
 
             } catch (err) {
@@ -616,7 +649,8 @@
         }
 
         async function fetchSchedule() {
-            if (appState.profile?.role !== 'student' || !appState.profile.class_id) {
+             // Modified: Allow fetching if class_id exists, regardless of role, so Admin can see their own schedule if they have one.
+            if (!appState.profile?.class_id) {
                 appState.scheduleData = {}; 
                 return;
             }
@@ -628,7 +662,10 @@
                 .maybeSingle(); 
                 
             if (error && error.code !== 'PGRST116') {
-                showToast('Gagal memuat jadwal pelajaran.', 'error');
+                // Don't show error toast for admin if they just don't have a schedule, might be annoying.
+                if (appState.profile.role !== 'admin') {
+                     showToast('Gagal memuat jadwal pelajaran.', 'error');
+                }
                 appState.scheduleData = {};
                 return; 
             }
@@ -1161,7 +1198,8 @@
                     clockInterval: null,
                     selectedAdminClassId: null,
                     profileImageToDelete: false,
-                    classList: [] 
+                    classList: [],
+                    isAdminViewActive: true // Reset view state on logout
                 });
 
                 navigateTo('login'); 
@@ -1223,6 +1261,12 @@
                 await fetchTodayAttendance();
                 renderAttendanceLog(); 
                 updateAttendanceButtons(); 
+
+                // If Admin is currently viewing admin dashboard, refresh it to show their own new log
+                if (appState.profile.role === 'admin' && appState.isAdminViewActive) {
+                     await fetchAllTodayAttendance();
+                     renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                }
 
             } catch (error) {
                 console.error(`Error during ${type}:`, error);
@@ -1531,9 +1575,15 @@
                     { event: '*', schema: 'public', table: 'attendance_log' }, 
                     async (payload) => {
                         if (appState.profile?.role === 'admin') {
-                            showToast('Data absensi baru masuk...', 'info');
-                            await fetchAllTodayAttendance();
-                            renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                            // Only show toast if admin is actually in admin view
+                            if (appState.isAdminViewActive) {
+                                showToast('Data absensi baru masuk...', 'info');
+                                await fetchAllTodayAttendance();
+                                renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                            } else {
+                                // If in student view, just fetch silently in background to keep data fresh when switching back
+                                await fetchAllTodayAttendance();
+                            }
                         }
                     }
                 )
@@ -1610,6 +1660,12 @@
 
             // Header Buttons
             UIElements.logoutButton?.addEventListener('click', handleLogout);
+            
+            // New Toggle View Button Listener
+            UIElements.toggleViewButton?.addEventListener('click', () => {
+                appState.isAdminViewActive = !appState.isAdminViewActive;
+                updateMainAppView();
+            });
 
             // Student Attendance
             UIElements.checkInButton?.addEventListener('click', () => handleAttendance('check_in'));
@@ -1794,6 +1850,11 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <!-- New Toggle View Button for Admins -->
+                    <button id="toggle-view-button" type="button" class="flex items-center gap-2 px-4 py-2 glass-effect text-white rounded-xl hover:bg-white/20 transition-all shadow-md hidden">
+                        <i id="toggle-view-icon" data-lucide="user" class="w-4 h-4"></i>
+                        <span id="toggle-view-text" class="hidden sm:inline">Mode Siswa</span>
+                    </button>
                     <button id="logout-button" type="button" class="flex items-center gap-2 px-4 py-2 glass-effect text-white rounded-xl hover:bg-white/20 transition-all shadow-md">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">Keluar</span>
