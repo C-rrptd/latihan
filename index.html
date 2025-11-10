@@ -1149,6 +1149,7 @@
         
         async function handleAttendance(type) {
             if (type !== 'check_in' && type !== 'check_out') {
+                console.error("Invalid attendance type:", type);
                 return;
             }
             if (!appState.currentUser) {
@@ -1157,14 +1158,24 @@
                 return;
             }
 
+            console.log(`Handling attendance: ${type} for user ${appState.currentUser.id}`);
             const button = type === 'check_in' ? UIElements.checkInButton : UIElements.checkOutButton;
             button.disabled = true; 
             showLoading(true);
             
+            const now = new Date();
+            const jakartaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+            const logDate = jakartaTime.toISOString().split('T')[0];
+            const logTime = jakartaTime.toTimeString().split(' ')[0];
+            
             const record = { 
                 user_id: appState.currentUser.id, 
-                type: type 
+                type: type,
+                log_date: logDate,
+                log_time: logTime
             };
+            
+            console.log('Inserting attendance record:', record);
             
             try {
                 const { data, error } = await supabase
@@ -1173,7 +1184,12 @@
                     .select() 
                     .single(); 
 
-                if (error) throw error; 
+                console.log('Attendance insert result:', { data, error });
+
+                if (error) {
+                    console.error('Attendance insert error:', error);
+                    throw error; 
+                }
 
                 showToast(`Absensi ${type === 'check_in' ? 'masuk' : 'pulang'} berhasil!`, 'success');
                 
@@ -1182,6 +1198,7 @@
                 updateAttendanceButtons(); 
 
             } catch (error) {
+                console.error(`Error during ${type}:`, error);
                 const specificMessage = error.message.includes('duplicate key value violates unique constraint') 
                     ? `Anda sudah melakukan absen ${type === 'check_in' ? 'masuk' : 'pulang'} hari ini.`
                     : ErrorHandler.handle(error, `absensi ${type}`);
