@@ -307,7 +307,7 @@
 
         // ⚠️ KREDENSIAL SUDAH TERPASANG ⚠️
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
         
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -367,13 +367,19 @@
             forgotError: document.getElementById('forgot-error'),
             welcomeMessage: document.getElementById('welcome-message'),
             logoutButton: document.getElementById('logout-button'),
+            // --- UI PENGATURAN PROFIL DITAMBAHKAN ---
             profileButton: document.getElementById('profile-button'),
             profileModal: document.getElementById('profile-modal'),
             closeProfileModal: document.getElementById('close-profile-modal'),
             profileForm: document.getElementById('profile-form'),
             profileImagePreview: document.getElementById('profile-image-preview'),
             profileImageInput: document.getElementById('profile-image-input'),
-            removeProfileImage: document.getElementById('remove-profile-image'),
+            removeProfileImageButton: document.getElementById('remove-profile-image-button'),
+            profileFullNameInput: document.getElementById('profile-full-name'),
+            profileEmailInput: document.getElementById('profile-email'),
+            profileNewPasswordInput: document.getElementById('profile-new-password'),
+            profileConfirmPasswordInput: document.getElementById('profile-confirm-password'),
+            // --- AKHIR DARI UI PROFIL ---
             studentView: document.getElementById('student-view'),
             adminView: document.getElementById('admin-view'),
             clock: document.getElementById('clock'),
@@ -901,6 +907,8 @@
                 const nisn = log.profiles?.nisn || '-';
                 const email = log.profiles?.email || '-';
                 const className = log.profiles?.classes?.class_name || '-';
+                // --- PERBAIKAN TAMPILAN NAMA ADMIN ---
+                // Logika ini sudah benar, akan menampilkan full_name jika ada.
                 const fullName = log.profiles?.full_name || email.split('@')[0] || 'Tanpa Nama'; 
                 const type = log.type === 'check_in' ? 'Masuk' : 'Pulang';
                 const time = log.log_time || '...';
@@ -1578,6 +1586,189 @@
                 showLoading(false); 
             }
         }
+        
+        // --- FUNGSI PENGATURAN PROFIL BARU ---
+        
+        /** Menampilkan modal profil dan mengisinya dengan data pengguna saat ini */
+        function showProfileModal() {
+            if (!appState.profile || !appState.currentUser) {
+                showToast('Gagal memuat data profil. Coba login ulang.', 'error');
+                return;
+            }
+
+            // Isi form dengan data yang ada
+            UIElements.profileFullNameInput.value = appState.profile.full_name || '';
+            UIElements.profileEmailInput.value = appState.currentUser.email || '';
+            
+            // Atur ulang input password
+            UIElements.profileNewPasswordInput.value = '';
+            UIElements.profileConfirmPasswordInput.value = '';
+            
+            // Atur gambar profil
+            const defaultAvatar = 'https://placehold.co/100x100/FFF/31343C?text=Foto';
+            UIElements.profileImagePreview.src = appState.profile.avatar_url || defaultAvatar;
+            
+            // Atur ulang status hapus gambar dan input file
+            appState.profileImageToDelete = false;
+            UIElements.profileImageInput.value = null; 
+            
+            UIElements.profileModal.classList.remove('hidden');
+            lucide.createIcons(); // Panggil lucide jika ada ikon di modal
+        }
+
+        /** Menyembunyikan modal profil */
+        function hideProfileModal() {
+            UIElements.profileModal.classList.add('hidden');
+        }
+
+        /** Menampilkan preview gambar yang dipilih pengguna */
+        function handleProfileImagePreview(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    UIElements.profileImagePreview.src = e.target.result;
+                    appState.profileImageToDelete = false; // Membatalkan permintaan hapus jika ada
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        /** Menangani submit form update profil */
+        async function handleProfileUpdate(event) {
+            event.preventDefault();
+            showLoading(true);
+
+            const newFullName = UIElements.profileFullNameInput.value.trim();
+            const newEmail = UIElements.profileEmailInput.value.trim();
+            const newPassword = UIElements.profileNewPasswordInput.value.trim();
+            const confirmPassword = UIElements.profileConfirmPasswordInput.value.trim();
+            const newImageFile = UIElements.profileImageInput.files[0];
+            
+            let authUpdates = {};
+            let profileUpdates = {};
+
+            try {
+                // 1. Update Password
+                if (newPassword) {
+                    if (newPassword.length < 8) {
+                        throw new Error('Password baru minimal 8 karakter.');
+                    }
+                    if (newPassword !== confirmPassword) {
+                        throw new Error('Konfirmasi password tidak cocok.');
+                    }
+                    authUpdates.password = newPassword;
+                }
+
+                // 2. Update Email
+                if (newEmail && newEmail !== appState.currentUser.email) {
+                    if (!Validators.email(newEmail)) {
+                        throw new Error('Format email baru tidak valid.');
+                    }
+                    authUpdates.email = newEmail;
+                    profileUpdates.email = newEmail; // Update juga email di tabel profiles
+                }
+                
+                // 3. Eksekusi Perubahan Auth (Email/Password)
+                if (Object.keys(authUpdates).length > 0) {
+                    const { error: authError } = await supabase.auth.updateUser(authUpdates);
+                    if (authError) throw authError;
+                    
+                    if (authUpdates.email) {
+                        showToast('Periksa email baru Anda untuk konfirmasi.', 'info');
+                    }
+                    if (authUpdates.password) {
+                        showToast('Password berhasil diubah.', 'success');
+                    }
+                }
+
+                // 4. Update Nama Lengkap
+                if (newFullName !== (appState.profile.full_name || '')) {
+                    profileUpdates.full_name = newFullName;
+                }
+
+                // 5. Update Foto Profil (Avatar)
+                if (newImageFile) {
+                    // Upload gambar baru
+                    const fileExt = newImageFile.name.split('.').pop();
+                    // Gunakan ID pengguna untuk path agar unik dan mudah dikelola
+                    const fileName = `${appState.currentUser.id}.${fileExt}`;
+                    const filePath = `public/${fileName}`; // Asumsi folder 'public' di dalam bucket
+
+                    // (PENTING: Pastikan Anda punya bucket 'avatars' di Supabase Storage)
+                    const { error: uploadError } = await supabase.storage
+                        .from('avatars') 
+                        .upload(filePath, newImageFile, {
+                            cacheControl: '3600',
+                            upsert: true // Timpa file lama jika namanya sama
+                        });
+                    
+                    if (uploadError) throw uploadError;
+
+                    // Dapatkan URL publik
+                    const { data: urlData } = supabase.storage
+                        .from('avatars')
+                        .getPublicUrl(filePath);
+                        
+                    if (!urlData || !urlData.publicUrl) {
+                        throw new Error('Gagal mendapatkan URL publik untuk avatar.');
+                    }
+                    
+                    // Tambahkan timestamp unik untuk cache-busting
+                    profileUpdates.avatar_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
+                    
+                } else if (appState.profileImageToDelete) {
+                    // Hapus gambar
+                    profileUpdates.avatar_url = null;
+                    
+                    // Hapus file lama dari storage jika ada
+                    if (appState.profile.avatar_url) {
+                        try {
+                            const oldFileName = appState.profile.avatar_url.split('/').pop().split('?')[0];
+                            await supabase.storage.from('avatars').remove([`public/${oldFileName}`]);
+                        } catch (removeError) {
+                            console.warn("Gagal menghapus avatar lama:", removeError.message);
+                        }
+                    }
+                }
+
+                // 6. Eksekusi Perubahan Profil (Nama/Avatar/Email)
+                if (Object.keys(profileUpdates).length > 0) {
+                    const { data: updatedProfile, error: profileError } = await supabase
+                        .from('profiles')
+                        .update(profileUpdates)
+                        .eq('id', appState.currentUser.id)
+                        .select()
+                        .single();
+
+                    if (profileError) throw profileError;
+                    
+                    // Update state lokal segera
+                    appState.profile = { ...appState.profile, ...updatedProfile };
+                }
+
+                showToast('Profil berhasil diperbarui!', 'success');
+                hideProfileModal();
+                
+                // Refresh UI dengan data baru
+                const displayName = appState.profile.full_name || appState.profile.nisn || appState.currentUser.email.split('@')[0];
+                UIElements.welcomeMessage.textContent = displayName;
+                
+                // Refresh data admin jika yang login admin
+                if (appState.profile.role === 'admin') {
+                    renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                }
+
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'update profil'), 'error');
+            } finally {
+                showLoading(false);
+                // Kosongkan input password
+                UIElements.profileNewPasswordInput.value = '';
+                UIElements.profileConfirmPasswordInput.value = '';
+            }
+        }
+        // --- AKHIR FUNGSI PENGATURAN PROFIL ---
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
@@ -1619,6 +1810,18 @@
 
             // Header Buttons
             UIElements.logoutButton?.addEventListener('click', handleLogout);
+            UIElements.profileButton?.addEventListener('click', showProfileModal); // <-- DITAMBAHKAN
+
+            // Profile Modal Listeners (DITAMBAHKAN)
+            UIElements.closeProfileModal?.addEventListener('click', hideProfileModal);
+            UIElements.profileForm?.addEventListener('submit', handleProfileUpdate);
+            UIElements.profileImageInput?.addEventListener('change', handleProfileImagePreview);
+            UIElements.removeProfileImageButton?.addEventListener('click', () => {
+                UIElements.profileImagePreview.src = 'https://placehold.co/100x100/FFF/31343C?text=Foto';
+                appState.profileImageToDelete = true;
+                UIElements.profileImageInput.value = null;
+                showToast('Foto profil akan dihapus saat disimpan.', 'info');
+            });
 
             // Student Attendance
             UIElements.checkInButton?.addEventListener('click', () => handleAttendance('check_in'));
@@ -1809,6 +2012,11 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <!-- TOMBOL PROFIL DITAMBAHKAN DI SINI -->
+                    <button id="profile-button" type="button" class="flex items-center gap-2 px-4 py-2 glass-effect text-white rounded-xl hover:bg-white/20 transition-all shadow-md">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Profil</span>
+                    </button>
                     <button id="logout-button" type="button" class="flex items-center gap-2 px-4 py-2 glass-effect text-white rounded-xl hover:bg-white/20 transition-all shadow-md">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">Keluar</span>
@@ -1975,6 +2183,58 @@
                     <li class="text-white-glass italic px-4 py-2">Memuat daftar kelas...</li>
                 </ul>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL PENGATURAN PROFIL DITAMBAHKAN DI SINI -->
+    <div id="profile-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);">
+        <div class="glass-effect rounded-2xl p-6 sm:p-8 shadow-2xl w-full max-w-lg m-4 relative max-h-[90vh] overflow-y-auto">
+            <button id="close-profile-modal" class="absolute top-4 right-4 text-white/70 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-white mb-6">Pengaturan Profil</h3>
+            
+            <form id="profile-form" class="space-y-4">
+                <!-- Avatar -->
+                <div class="flex items-center gap-4">
+                    <img id="profile-image-preview" src="https://placehold.co/100x100/FFF/31343C?text=Foto" alt="Preview" class="w-24 h-24 rounded-full object-cover border-2 border-white/30 flex-shrink-0">
+                    <div class="flex-grow">
+                        <label for="profile-image-input" class="block btn-primary text-center px-4 py-2 rounded-xl text-sm cursor-pointer mb-2">
+                            Ganti Foto
+                        </label>
+                        <input type="file" id="profile-image-input" class="hidden" accept="image/png, image/jpeg">
+                        <button type="button" id="remove-profile-image-button" class="w-full text-center text-red-300 hover:text-red-200 text-sm">
+                            Hapus Foto
+                        </button>
+                        <p class="text-xs text-white/50 mt-1">Maks. 1MB. (Asumsi bucket 'avatars' publik)</p>
+                    </div>
+                </div>
+                <!-- Full Name -->
+                <div>
+                    <label for="profile-full-name" class="block text-sm font-semibold text-white mb-2">Nama Lengkap</label>
+                    <input id="profile-full-name" type="text" placeholder="Nama lengkap Anda" class="w-full px-4 py-3 rounded-xl text-white placeholder-white/50">
+                </div>
+                <!-- Email -->
+                <div>
+                    <label for="profile-email" class="block text-sm font-semibold text-white mb-2">Email (Login)</label>
+                    <input id="profile-email" type="email" placeholder="email@anda.com" class="w-full px-4 py-3 rounded-xl text-white placeholder-white/50">
+                </div>
+                <hr class="border-white/20 my-4">
+                <!-- Password -->
+                <p class="text-sm text-white/80">Ganti Password (isi jika ingin mengubah)</p>
+                <div>
+                    <label for="profile-new-password" class="block text-sm font-semibold text-white mb-2">Password Baru</label>
+                    <input id="profile-new-password" type="password" class="w-full px-4 py-3 rounded-xl text-white placeholder-white/50" autocomplete="new-password">
+                </div>
+                <div>
+                    <label for="profile-confirm-password" class="block text-sm font-semibold text-white mb-2">Konfirmasi Password Baru</label>
+                    <input id="profile-confirm-password" type="password" class="w-full px-4 py-3 rounded-xl text-white placeholder-white/50" autocomplete="new-password">
+                </div>
+                <!-- Submit -->
+                <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg mt-6">
+                    Simpan Perubahan
+                </button>
+            </form>
         </div>
     </div>
 
