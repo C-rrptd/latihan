@@ -305,14 +305,11 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        // ⚠️ CONFIGURATION REQUIRED FOR GITHUB PAGES ⚠️
-        // Replace these with your actual Supabase credentials
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
         
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Validators
         const Validators = {
             email: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
             nisn: (nisn) => /^\d{10}$/.test(nisn),
@@ -368,13 +365,16 @@
             forgotError: document.getElementById('forgot-error'),
             welcomeMessage: document.getElementById('welcome-message'),
             logoutButton: document.getElementById('logout-button'),
-            profileButton: document.getElementById('profile-button'),
-            profileModal: document.getElementById('profile-modal'),
-            closeProfileModal: document.getElementById('close-profile-modal'),
-            profileForm: document.getElementById('profile-form'),
-            profileImagePreview: document.getElementById('profile-image-preview'),
-            profileImageInput: document.getElementById('profile-image-input'),
-            removeProfileImage: document.getElementById('remove-profile-image'),
+            settingsButton: document.getElementById('settings-button'),
+            settingsModal: document.getElementById('settings-modal'),
+            closeSettingsModal: document.getElementById('close-settings-modal'),
+            settingsForm: document.getElementById('settings-form'),
+            settingsImagePreview: document.getElementById('settings-image-preview'),
+            settingsImageInput: document.getElementById('settings-image-input'),
+            removeSettingsImage: document.getElementById('remove-settings-image'),
+            changeEmailForm: document.getElementById('change-email-form'),
+            changePasswordForm: document.getElementById('change-password-form'),
+            headerAvatar: document.getElementById('header-avatar'),
             studentView: document.getElementById('student-view'),
             adminView: document.getElementById('admin-view'),
             clock: document.getElementById('clock'),
@@ -409,9 +409,10 @@
             toastTimeout: null,
             attendanceSubscription: null,
             clockInterval: null,
-            profileImageToDelete: false, 
+            avatarUrlToDelete: false, 
             selectedAdminClassId: null,
             classList: [],
+            currentAvatarUrl: null,
         };
         
         function showLoading(isLoading) { 
@@ -499,6 +500,20 @@
             }
         }
 
+        function updateHeaderAvatar() {
+            if (!UIElements.headerAvatar) return;
+            
+            const avatarUrl = appState.profile?.avatar_url;
+            const displayName = appState.profile?.full_name || appState.profile?.nisn || appState.profile?.email?.split('@')[0] || 'U';
+            const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            
+            if (avatarUrl) {
+                UIElements.headerAvatar.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">`;
+            } else {
+                UIElements.headerAvatar.innerHTML = `<span class="text-sm font-bold text-white">${initials}</span>`;
+            }
+        }
+
         async function initializeMainApp(user) {
             appState.currentUser = user;
             console.log('Initializing app for user:', user.id);
@@ -579,6 +594,8 @@
                 
                 const displayName = profile.full_name || profile.nisn || profile.email?.split('@')[0] || 'User';
                 UIElements.welcomeMessage.textContent = displayName;
+                
+                updateHeaderAvatar();
 
                 if (appState.profile.role === 'admin') {
                     await Promise.allSettled([
@@ -873,7 +890,7 @@
                 const nisn = log.profiles?.nisn || '-';
                 const email = log.profiles?.email || '-';
                 const className = log.profiles?.classes?.class_name || '-';
-                const fullName = log.profiles?.full_name || email.split('@')[0] || 'Tanpa Nama'; 
+                const fullName = log.profiles?.full_name || log.profiles?.nisn || log.profiles?.email?.split('@')[0] || 'Tanpa Nama'; 
                 const type = log.type === 'check_in' ? 'Masuk' : 'Pulang';
                 const time = log.log_time || '...';
                 const status = log.status || '...';
@@ -1106,6 +1123,182 @@
                 showLoading(false);
             }
         }
+
+        async function handleUpdateProfile(event) {
+            event.preventDefault();
+            if (!appState.currentUser) return;
+            
+            showLoading(true);
+            
+            try {
+                const formData = new FormData(event.target);
+                const fullName = formData.get('full_name')?.trim();
+                
+                let avatarUrl = appState.profile?.avatar_url;
+                
+                if (appState.avatarUrlToDelete && avatarUrl) {
+                    const oldPath = avatarUrl.split('/').pop();
+                    if (oldPath) {
+                        await supabase.storage.from('avatars').remove([oldPath]);
+                    }
+                    avatarUrl = null;
+                }
+                
+                const imageFile = UIElements.settingsImageInput?.files?.[0];
+                if (imageFile) {
+                    if (avatarUrl) {
+                        const oldPath = avatarUrl.split('/').pop();
+                        if (oldPath) {
+                            await supabase.storage.from('avatars').remove([oldPath]);
+                        }
+                    }
+                    
+                    const fileExt = imageFile.name.split('.').pop();
+                    const fileName = `${appState.currentUser.id}_${Date.now()}.${fileExt}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('avatars')
+                        .upload(fileName, imageFile, { upsert: true });
+                    
+                    if (uploadError) throw uploadError;
+                    
+                    const { data: urlData } = supabase.storage
+                        .from('avatars')
+                        .getPublicUrl(fileName);
+                    
+                    avatarUrl = urlData.publicUrl;
+                }
+                
+                const updates = {
+                    full_name: fullName || null,
+                    avatar_url: avatarUrl
+                };
+                
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update(updates)
+                    .eq('id', appState.currentUser.id);
+                
+                if (updateError) throw updateError;
+                
+                appState.profile = { ...appState.profile, ...updates };
+                appState.avatarUrlToDelete = false;
+                
+                const displayName = appState.profile.full_name || appState.profile.nisn || appState.profile.email?.split('@')[0] || 'User';
+                UIElements.welcomeMessage.textContent = displayName;
+                updateHeaderAvatar();
+                
+                showToast('Profil berhasil diperbarui!', 'success');
+                UIElements.settingsModal?.classList.add('hidden');
+                
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'memperbarui profil'), 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function handleChangeEmail(event) {
+            event.preventDefault();
+            if (!appState.currentUser) return;
+            
+            const formData = new FormData(event.target);
+            const newEmail = formData.get('new_email')?.trim();
+            
+            if (!Validators.email(newEmail)) {
+                showToast(ValidationMessages.email, 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const { error } = await supabase.auth.updateUser({ email: newEmail });
+                if (error) throw error;
+                
+                showToast('Email berhasil diubah! Periksa email baru Anda untuk verifikasi.', 'success');
+                event.target.reset();
+                
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'mengubah email'), 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function handleChangePassword(event) {
+            event.preventDefault();
+            if (!appState.currentUser) return;
+            
+            const formData = new FormData(event.target);
+            const newPassword = formData.get('new_password')?.trim();
+            const confirmPassword = formData.get('confirm_password')?.trim();
+            
+            if (!Validators.password(newPassword)) {
+                showToast(ValidationMessages.password, 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showToast('Password dan konfirmasi password tidak cocok', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const { error } = await supabase.auth.updateUser({ password: newPassword });
+                if (error) throw error;
+                
+                showToast('Password berhasil diubah!', 'success');
+                event.target.reset();
+                
+            } catch (error) {
+                showToast(ErrorHandler.handle(error, 'mengubah password'), 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function openSettingsModal() {
+            if (!UIElements.settingsModal || !appState.profile) return;
+            
+            const fullNameInput = document.getElementById('settings-full-name');
+            if (fullNameInput) {
+                fullNameInput.value = appState.profile.full_name || '';
+            }
+            
+            const avatarUrl = appState.profile.avatar_url;
+            if (avatarUrl && UIElements.settingsImagePreview) {
+                UIElements.settingsImagePreview.src = avatarUrl;
+                UIElements.settingsImagePreview.classList.remove('hidden');
+                UIElements.removeSettingsImage?.classList.remove('hidden');
+            } else if (UIElements.settingsImagePreview) {
+                UIElements.settingsImagePreview.src = '';
+                UIElements.settingsImagePreview.classList.add('hidden');
+                UIElements.removeSettingsImage?.classList.add('hidden');
+            }
+            
+            appState.avatarUrlToDelete = false;
+            appState.currentAvatarUrl = avatarUrl;
+            
+            UIElements.settingsModal.classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            if (!UIElements.settingsModal) return;
+            UIElements.settingsModal.classList.add('hidden');
+            
+            UIElements.settingsForm?.reset();
+            UIElements.changeEmailForm?.reset();
+            UIElements.changePasswordForm?.reset();
+            
+            if (UIElements.settingsImageInput) {
+                UIElements.settingsImageInput.value = '';
+            }
+            
+            appState.avatarUrlToDelete = false;
+        }
         
         async function handleLogout() {
             showLoading(true); 
@@ -1134,7 +1327,8 @@
                     attendanceSubscription: null,
                     clockInterval: null,
                     selectedAdminClassId: null,
-                    profileImageToDelete: false,
+                    avatarUrlToDelete: false,
+                    currentAvatarUrl: null,
                     classList: [] 
                 });
 
@@ -1325,7 +1519,7 @@
             const headers = ['Nama Lengkap', 'NISN', 'Email', 'Kelas', 'Jenis Absen', 'Waktu', 'Status', 'Tanggal'];
             
             const rows = appState.allAttendanceLogs.map(log => [
-                log.profiles?.full_name || log.profiles?.email?.split('@')[0] || 'Tanpa Nama', 
+                log.profiles?.full_name || log.profiles?.nisn || log.profiles?.email?.split('@')[0] || 'Tanpa Nama', 
                 log.profiles?.nisn || '-', 
                 log.profiles?.email || '-', 
                 log.profiles?.classes?.class_name || '-', 
@@ -1540,7 +1734,6 @@
             }
         }
 
-        // Event Listeners
         document.addEventListener('DOMContentLoaded', () => {
             checkUserSession(); 
             
@@ -1549,18 +1742,15 @@
                 updateClock(); 
             }
 
-            // Form Auth
             UIElements.loginForm?.addEventListener('submit', handleLogin);
             UIElements.signupForm?.addEventListener('submit', handleSignUp);
             UIElements.forgotPasswordForm?.addEventListener('submit', handlePasswordReset);
             
-            // Auth Navigation
             document.getElementById('show-signup-button')?.addEventListener('click', () => showAuthView('signup'));
             document.getElementById('show-login-button')?.addEventListener('click', () => showAuthView('login'));
             document.getElementById('show-forgot-password-button')?.addEventListener('click', () => showAuthView('forgotPassword'));
             document.getElementById('back-to-login-button')?.addEventListener('click', () => showAuthView('login'));
 
-            // Toggle Password
             document.querySelectorAll('.toggle-password').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const input = this.previousElementSibling; 
@@ -1578,14 +1768,47 @@
                 });
             });
 
-            // Header Buttons
             UIElements.logoutButton?.addEventListener('click', handleLogout);
+            UIElements.settingsButton?.addEventListener('click', openSettingsModal);
+            UIElements.closeSettingsModal?.addEventListener('click', closeSettingsModal);
+            
+            UIElements.settingsForm?.addEventListener('submit', handleUpdateProfile);
+            UIElements.changeEmailForm?.addEventListener('submit', handleChangeEmail);
+            UIElements.changePasswordForm?.addEventListener('submit', handleChangePassword);
+            
+            UIElements.settingsImageInput?.addEventListener('change', function(e) {
+                const file = e.target.files?.[0];
+                if (file && UIElements.settingsImagePreview) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        UIElements.settingsImagePreview.src = event.target.result;
+                        UIElements.settingsImagePreview.classList.remove('hidden');
+                        UIElements.removeSettingsImage?.classList.remove('hidden');
+                        appState.avatarUrlToDelete = false;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            UIElements.removeSettingsImage?.addEventListener('click', function() {
+                if (UIElements.settingsImagePreview && UIElements.settingsImageInput) {
+                    UIElements.settingsImagePreview.src = '';
+                    UIElements.settingsImagePreview.classList.add('hidden');
+                    UIElements.settingsImageInput.value = '';
+                    this.classList.add('hidden');
+                    appState.avatarUrlToDelete = true;
+                }
+            });
+            
+            UIElements.settingsModal?.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeSettingsModal();
+                }
+            });
 
-            // Student Attendance
             UIElements.checkInButton?.addEventListener('click', () => handleAttendance('check_in'));
             UIElements.checkOutButton?.addEventListener('click', () => handleAttendance('check_out'));
 
-            // Admin Attendance
             UIElements.refreshAttendanceButton?.addEventListener('click', async () => {
                 showToast('Memuat ulang data absensi...', 'info');
                 showLoading(true);
@@ -1598,11 +1821,9 @@
                 renderAllAttendanceLog(e.target.value);
             });
 
-            // Admin Schedule
             UIElements.adminClassSelect?.addEventListener('change', handleAdminClassSelect);
             UIElements.saveScheduleButton?.addEventListener('click', handleUpdateSchedule);
 
-            // Admin Class Management
             UIElements.addClassForm?.addEventListener('submit', handleAddClass);
             
             lucide.createIcons(); 
@@ -1618,11 +1839,9 @@
 
     <div id="toast" class="fixed bottom-6 right-6 z-[10000]" style="opacity: 0; transform: translateY(10px);"><span id="toast-message"></span></div>
 
-    <!-- Login Page -->
     <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md login-container">
             
-            <!-- Login View -->
             <div id="login-view">
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center">
@@ -1666,7 +1885,6 @@
                 </div>
             </div>
 
-            <!-- Signup View -->
             <div id="signup-view" class="hidden">
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center">
@@ -1718,7 +1936,6 @@
                 </div>
             </div>
 
-            <!-- Forgot Password View -->
             <div id="forgot-password-view" class="hidden">
                 <div class="text-center mb-8">
                     <div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center">
@@ -1750,7 +1967,6 @@
         </div>
     </div>
 
-    <!-- Main App -->
     <div id="main-app" class="hidden min-h-screen">
         <header class="glass-effect sticky top-0 z-40 border-b border-white/20">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
@@ -1764,15 +1980,21 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button id="settings-button" type="button" class="flex items-center gap-2 px-4 py-2 glass-effect text-white rounded-xl hover:bg-white/20 transition-all shadow-md">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Pengaturan</span>
+                    </button>
                     <button id="logout-button" type="button" class="flex items-center gap-2 px-4 py-2 glass-effect text-white rounded-xl hover:bg-white/20 transition-all shadow-md">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">Keluar</span>
                     </button>
+                    <div id="header-avatar" class="w-10 h-10 rounded-full glass-effect flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-white/50 transition-all shadow-md">
+                        <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Student View -->
         <div id="student-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
             <div class="glass-effect rounded-2xl p-6 sm:p-8 text-center shadow-xl card-hover">
                 <div class="mb-6">
@@ -1826,112 +2048,4 @@
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Admin View -->
-        <div id="admin-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
-            <div class="glass-effect rounded-2xl p-6 shadow-lg">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
-                            <i data-lucide="users" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-white">Data Absensi Hari Ini</h3>
-                    </div>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button id="refresh-attendance-button" type="button" class="flex-1 sm:flex-initial px-4 py-2 glass-effect text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:bg-white/20">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                            Refresh
-                        </button>
-                        <button id="export-csv-button" type="button" class="flex-1 sm:flex-initial px-4 py-2 btn-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            Export CSV
-                        </button>
-                    </div>
-                </div>
-                
-                <input type="text" id="search-student-input" placeholder="🔍 Cari Nama, NISN, Email, atau Kelas..." class="w-full mb-4 px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                
-                <div class="overflow-x-auto -mx-2 max-h-[500px]">
-                    <table class="w-full text-sm min-w-[700px]">
-                        <thead>
-                            <tr class="border-b-2 border-white/20">
-                                <th class="p-3 text-left font-bold text-white">Siswa</th>
-                                <th class="p-3 text-left font-bold text-white">Email</th>
-                                <th class="p-3 text-left font-bold text-white">Kelas</th>
-                                <th class="p-3 text-left font-bold text-white">Jenis</th>
-                                <th class="p-3 text-left font-bold text-white">Waktu</th>
-                                <th class="p-3 text-left font-bold text-white">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-attendance-log-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="glass-effect rounded-2xl p-6 shadow-lg">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
-                        <i data-lucide="calendar-days" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white">Kelola Jadwal Pelajaran</h3>
-                </div>
-                
-                <select id="admin-class-select" class="w-full mb-4 px-4 py-3 rounded-xl transition-all font-semibold appearance-none text-white">
-                    <option value="" disabled selected>Pilih kelas untuk melihat/mengedit jadwal...</option>
-                </select>
-                
-                <div id="admin-schedule-container" class="hidden">
-                    <div class="overflow-x-auto relative -mx-2 mb-4 max-h-[500px]">
-                        <table class="w-full text-xs min-w-[700px]">
-                            <thead>
-                                <tr class="border-b-2 border-white/20">
-                                    <th class="p-3 text-left font-bold text-white sticky left-0 z-20" style="background: rgba(249, 250, 251, 0.15); backdrop-filter: blur(10px);">Waktu</th>
-                                    <th class="p-3 text-center font-bold text-white">Senin</th>
-                                    <th class="p-3 text-center font-bold text-white">Selasa</th>
-                                    <th class="p-3 text-center font-bold text-white">Rabu</th>
-                                    <th class="p-3 text-center font-bold text-white">Kamis</th>
-                                    <th class="p-3 text-center font-bold text-white">Jumat</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-schedule-table-body"></tbody>
-                        </table>
-                    </div>
-                    
-                    <button id="save-schedule-button" type="button" class="w-full px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2">
-                        <i data-lucide="save" class="w-5 h-5"></i>
-                        Simpan Jadwal
-                    </button>
-                    <p class="text-xs text-white-glass mt-3 flex items-center gap-2">
-                        <i data-lucide="info" class="w-4 h-4"></i>
-                        Edit langsung pada tabel (selain istirahat), lalu klik simpan.
-                    </p>
-                </div>
-            </div>
-
-            <div id="admin-class-management" class="glass-effect rounded-2xl p-6 shadow-lg">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
-                        <i data-lucide="landmark" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white">Kelola Kelas</h3>
-                </div>
-
-                <form id="add-class-form" class="flex gap-2 mb-4">
-                    <input id="new-class-name" type="text" placeholder="Masukkan nama kelas baru" required class="flex-grow px-4 py-3 rounded-xl text-white placeholder-white/50">
-                    <button type="submit" class="px-6 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg flex items-center gap-2">
-                        <i data-lucide="plus" class="w-5 h-5"></i> Tambah
-                    </button>
-                </form>
-
-                <h4 class="text-md font-semibold text-white mb-2">Daftar Kelas Tersedia:</h4>
-                <ul id="admin-class-list" class="max-h-60 overflow-y-auto glass-effect rounded-lg divide-y divide-white/10">
-                    <li class="text-white-glass italic px-4 py-2">Memuat daftar kelas...</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-</body>
-</html>
+            </div
