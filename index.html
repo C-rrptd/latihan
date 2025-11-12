@@ -8,6 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
     
+    <!-- Library untuk Crop/Rotate/Resize Gambar -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js" defer></script>
+    
     <style>
         * {
             margin: 0;
@@ -110,6 +114,24 @@
         
         .btn-primary:active {
             transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fee2e2;
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.4);
         }
         
         .spinner {
@@ -300,14 +322,52 @@
             background: #667eea;
             color: white;
         }
+
+        /* Gaya Modal Baru */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            z-index: 5001;
+            max-width: 90%;
+            width: 100%;
+        }
+
+        /* Gaya untuk Cropper.js */
+        #cropper-modal-content {
+            max-width: 600px; /* Batas lebar modal cropper */
+        }
+        
+        #cropper-container {
+            height: 400px; /* Tinggi spesifik untuk area crop */
+            background-color: #111;
+        }
+        
+        #cropper-container img {
+            max-width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
     </style>
     
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        // ⚠️ KREDENSIAL SUDAH TERPASANG ⚠️
+        // ⚠️ CONFIGURATION REQUIRED FOR GITHUB PAGES ⚠️
+        // Replace these with your actual Supabase credentials
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
+        
+        // ⚠️ HARAP BUAT BUCKET 'avatars' (PUBLIC) DI SUPABASE STORAGE ANDA ⚠️
+        const AVATAR_BUCKET = 'avatars';
         
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -339,10 +399,18 @@
                     '23503': 'Tidak dapat menghapus kelas karena masih ada data terkait.',
                     'duplicate key value violates unique constraint "profiles_nisn_key"': 'NISN sudah terdaftar',
                     'duplicate key value violates unique constraint "classes_class_name_key"': 'Nama kelas sudah ada.',
+                    'Invalid file type': 'Jenis file tidak valid. Harap unggah PNG atau JPEG.',
+                    'File too large': 'Ukuran file terlalu besar.',
+                    'Storage object not found': 'Gagal memuat foto profil.',
+                    'Bucket not found': `Bucket Supabase '${AVATAR_BUCKET}' tidak ditemukan. Harap periksa konfigurasi.`,
                 };
 
                 if (error.code && friendlyMessages[error.code]) {
                     return friendlyMessages[error.code];
+                }
+                
+                if (error.message?.includes('Bucket not found')) {
+                    return friendlyMessages['Bucket not found'];
                 }
 
                 for (const [key, message] of Object.entries(friendlyMessages)) {
@@ -366,20 +434,28 @@
             signupError: document.getElementById('signup-error'),
             forgotError: document.getElementById('forgot-error'),
             welcomeMessage: document.getElementById('welcome-message'),
-            logoutButton: document.getElementById('logout-button'),
-            // --- UI PENGATURAN PROFIL DITAMBAHKAN ---
+            headerPfp: document.getElementById('header-pfp'),
             profileButton: document.getElementById('profile-button'),
+            profileDropdown: document.getElementById('profile-dropdown'),
+            profileModalOpenBtn: document.getElementById('profile-modal-open-btn'),
+            logoutButton: document.getElementById('logout-button'),
             profileModal: document.getElementById('profile-modal'),
             closeProfileModal: document.getElementById('close-profile-modal'),
             profileForm: document.getElementById('profile-form'),
+            profileFullName: document.getElementById('profile-full-name'),
+            profileEmail: document.getElementById('profile-email'),
+            profileNisn: document.getElementById('profile-nisn'),
             profileImagePreview: document.getElementById('profile-image-preview'),
             profileImageInput: document.getElementById('profile-image-input'),
-            removeProfileImageButton: document.getElementById('remove-profile-image-button'),
-            profileFullNameInput: document.getElementById('profile-full-name'),
-            profileEmailInput: document.getElementById('profile-email'),
-            profileNewPasswordInput: document.getElementById('profile-new-password'),
-            profileConfirmPasswordInput: document.getElementById('profile-confirm-password'),
-            // --- AKHIR DARI UI PROFIL ---
+            profileImageUploadBtn: document.getElementById('profile-image-upload-btn'),
+            removeProfileImageBtn: document.getElementById('remove-profile-image-btn'),
+            profileSaveBtn: document.getElementById('profile-save-btn'),
+            cropperModal: document.getElementById('cropper-modal'),
+            cropperImage: document.getElementById('cropper-image'),
+            cropperApplyBtn: document.getElementById('cropper-apply-btn'),
+            cropperCancelBtn: document.getElementById('cropper-cancel-btn'),
+            cropperRotateLeftBtn: document.getElementById('cropper-rotate-left-btn'),
+            cropperRotateRightBtn: document.getElementById('cropper-rotate-right-btn'),
             studentView: document.getElementById('student-view'),
             adminView: document.getElementById('admin-view'),
             clock: document.getElementById('clock'),
@@ -414,9 +490,11 @@
             toastTimeout: null,
             attendanceSubscription: null,
             clockInterval: null,
+            profileImageFile: null, // Untuk menyimpan file Blob hasil crop
             profileImageToDelete: false, 
             selectedAdminClassId: null,
             classList: [],
+            cropperInstance: null,
         };
         
         function showLoading(isLoading) { 
@@ -437,7 +515,7 @@
                 error: 'bg-red-500', 
                 info: 'bg-blue-500' 
             };
-            UIElements.toast.className = `fixed bottom-6 right-6 ${colors[type]} text-white py-4 px-6 rounded-xl shadow-2xl z-50 flex items-center gap-3 min-w-[300px] transition-all duration-300`;
+            UIElements.toast.className = `fixed bottom-6 right-6 ${colors[type]} text-white py-4 px-6 rounded-xl shadow-2xl z-[6000] flex items-center gap-3 min-w-[300px] transition-all duration-300`;
             UIElements.toast.innerHTML = `${icons[type]}<span>${message}</span>`;
             UIElements.toast.style.opacity = 1;
             UIElements.toast.style.transform = 'translateY(0)';
@@ -450,33 +528,6 @@
                 }
             }, 3500);
         }
-        
-        // *** FUNGSI BARU UNTUK MEMPERBAIKI ERROR 'STATUS NOT NULL' ***
-        /**
-         * Menghitung status absensi berdasarkan tipe (masuk/pulang) dan waktu.
-         * @param {string} type - 'check_in' atau 'check_out'
-         * @param {string} logTime - Waktu dalam format "HH:MM:SS"
-         * @returns {string} Status absensi (cth: "Masuk Tepat Waktu", "Masuk Terlambat")
-         */
-        function calculateAttendanceStatus(type, logTime) {
-            // Definisikan jam aturan (Anda bisa mengubah ini)
-            const CHECK_IN_DEADLINE = '07:00:00';  // Batas absen masuk
-            const CHECK_OUT_MINIMUM = '15:00:00'; // Minimal jam pulang
-
-            try {
-                if (type === 'check_in') {
-                    return logTime <= CHECK_IN_DEADLINE ? 'Masuk Tepat Waktu' : 'Masuk Terlambat';
-                } else if (type === 'check_out') {
-                    return logTime < CHECK_OUT_MINIMUM ? 'Pulang Awal' : 'Pulang Tepat Waktu';
-                }
-                return 'Status Tidak Dikenali'; // Fallback
-            } catch (e) {
-                console.error("Error calculating status:", e);
-                return 'Error Status';
-            }
-        }
-        // *** AKHIR DARI FUNGSI BARU ***
-
 
         function navigateTo(view) {
             UIElements.loginPage?.classList.add('hidden');
@@ -531,6 +582,50 @@
             }
         }
 
+        function getInitials(name) {
+            if (!name) return 'U';
+            const names = name.split(' ');
+            if (names.length === 1) return names[0].charAt(0).toUpperCase();
+            return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+        }
+
+        function generatePfpPlaceholder(name) {
+            const initials = getInitials(name);
+            const bgColor = 'FFFFFF'; // White background
+            const textColor = '764ba2'; // Purple text
+            return `https://placehold.co/100x100/${bgColor}/${textColor}?text=${initials}&font=inter`;
+        }
+
+        async function loadProfilePicture() {
+            const name = appState.profile.full_name || appState.profile.email.split('@')[0];
+            const placeholder = generatePfpPlaceholder(name);
+
+            if (UIElements.headerPfp) {
+                UIElements.headerPfp.src = placeholder; // Default
+                UIElements.headerPfp.onerror = () => { UIElements.headerPfp.src = placeholder; };
+            }
+            if (UIElements.profileImagePreview) {
+                UIElements.profileImagePreview.src = placeholder; // Default
+                UIElements.profileImagePreview.onerror = () => { UIElements.profileImagePreview.src = placeholder; };
+            }
+
+            if (appState.profile.avatar_url) {
+                try {
+                    // Cek apakah URL valid
+                    new URL(appState.profile.avatar_url);
+                    // Tambahkan cache buster untuk memastikan gambar baru dimuat
+                    const cacheBustedUrl = `${appState.profile.avatar_url}?t=${new Date().getTime()}`;
+                    
+                    if (UIElements.headerPfp) UIElements.headerPfp.src = cacheBustedUrl;
+                    if (UIElements.profileImagePreview) UIElements.profileImagePreview.src = cacheBustedUrl;
+                    
+                } catch (e) {
+                    console.warn("Invalid avatar_url:", appState.profile.avatar_url, e);
+                    showToast('Gagal memuat URL foto profil yang tidak valid.', 'error');
+                }
+            }
+        }
+
         async function initializeMainApp(user) {
             appState.currentUser = user;
             console.log('Initializing app for user:', user.id);
@@ -552,6 +647,7 @@
                     const classId = user.user_metadata?.class_id || localStorage.getItem(`pending_class_id_${user.id}`) || null; 
                     const role = user.user_metadata?.role || 'student';
                     const email = user.email;
+                    const fullName = user.user_metadata?.full_name || email.split('@')[0]; // Default full_name
 
                     if (!email) {
                         throw new Error("Email pengguna tidak ditemukan untuk membuat profil.");
@@ -564,7 +660,8 @@
                             email: email,
                             nisn: nisn,
                             role: role,
-                            class_id: classId 
+                            class_id: classId,
+                            full_name: fullName // Simpan full_name saat pendaftaran
                         })
                         .select()
                         .maybeSingle();
@@ -611,6 +708,8 @@
                 
                 const displayName = profile.full_name || profile.nisn || profile.email?.split('@')[0] || 'User';
                 UIElements.welcomeMessage.textContent = displayName;
+                await loadProfilePicture();
+                populateProfileModal();
 
                 if (appState.profile.role === 'admin') {
                     await Promise.allSettled([
@@ -640,6 +739,18 @@
             } finally {
                 showLoading(false);
             }
+        }
+
+        function populateProfileModal() {
+            if (!appState.profile) return;
+            UIElements.profileFullName.value = appState.profile.full_name || '';
+            UIElements.profileEmail.value = appState.profile.email || '';
+            UIElements.profileNisn.value = appState.profile.nisn || '';
+            loadProfilePicture(); // Memastikan PFP di modal juga ter-update
+            
+            // Reset state modal
+            appState.profileImageFile = null;
+            appState.profileImageToDelete = false;
         }
 
         async function fetchSchedule() {
@@ -811,12 +922,10 @@
                 div.className = 'flex items-center justify-between p-4 rounded-lg glass-effect hover:bg-white/10 transition-colors animate-slide-in';
                 div.style.animationDelay = `${index * 0.1}s`;
                 
-                // *** PERBAIKAN RENDER STATUS ***
                 let statusClass = 'status-warning'; 
                 if (log.status) {
-                    if (log.status.includes('Tepat Waktu')) statusClass = 'status-success';
-                    else if (log.status.includes('Terlambat')) statusClass = 'status-warning';
-                    else if (log.status.includes('Pulang Awal')) statusClass = 'status-danger'; 
+                    if (log.status.includes('Tepat')) statusClass = 'status-success';
+                    else if (log.status.includes('Awal')) statusClass = 'status-danger'; 
                 }
                 
                 const icon = log.type === 'check_in' ? 'log-in' : 'log-out';
@@ -879,10 +988,11 @@
             
             const searchTerm = filter.toLowerCase().trim();
             const filteredLogs = appState.allAttendanceLogs.filter(log => {
-                const nisnMatch = log.profiles?.nisn?.includes(searchTerm);
-                const emailMatch = log.profiles?.email?.toLowerCase().includes(searchTerm);
-                const classNameMatch = log.profiles?.classes?.class_name?.toLowerCase().includes(searchTerm);
-                const fullNameMatch = log.profiles?.full_name?.toLowerCase().includes(searchTerm); 
+                if (!log.profiles) return false; // Tambahkan penjaga
+                const nisnMatch = log.profiles.nisn?.includes(searchTerm);
+                const emailMatch = log.profiles.email?.toLowerCase().includes(searchTerm);
+                const classNameMatch = log.profiles.classes?.class_name?.toLowerCase().includes(searchTerm);
+                const fullNameMatch = log.profiles.full_name?.toLowerCase().includes(searchTerm); 
 
                 return nisnMatch || emailMatch || classNameMatch || fullNameMatch;
             });
@@ -907,18 +1017,14 @@
                 const nisn = log.profiles?.nisn || '-';
                 const email = log.profiles?.email || '-';
                 const className = log.profiles?.classes?.class_name || '-';
-                // --- PERBAIKAN TAMPILAN NAMA ADMIN ---
-                // Logika ini sudah benar, akan menampilkan full_name jika ada.
                 const fullName = log.profiles?.full_name || email.split('@')[0] || 'Tanpa Nama'; 
                 const type = log.type === 'check_in' ? 'Masuk' : 'Pulang';
                 const time = log.log_time || '...';
                 const status = log.status || '...';
 
-                // *** PERBAIKAN RENDER STATUS ADMIN ***
                 let statusClass = 'status-warning'; 
-                if (status.includes('Tepat Waktu')) statusClass = 'status-success';
-                else if (status.includes('Terlambat')) statusClass = 'status-warning';
-                else if (status.includes('Pulang Awal')) statusClass = 'status-danger'; 
+                if (status.includes('Tepat')) statusClass = 'status-success';
+                else if (status.includes('Awal')) statusClass = 'status-danger';
 
                 row.innerHTML = `
                     <td class="p-3">
@@ -1014,14 +1120,16 @@
             const password = formData.get('password');
             const nisn = formData.get('nisn')?.trim();
             const classId = formData.get('class_id'); 
+            const fullName = formData.get('full_name')?.trim(); // Ambil full_name
 
             const validationRules = { 
                 email: ['notEmpty', 'email'], 
                 password: ['notEmpty', 'password'], 
                 nisn: ['notEmpty', 'nisn'],
-                class_id: ['notEmpty'] 
+                class_id: ['notEmpty'],
+                full_name: ['notEmpty'] // Tambahkan validasi full_name
             };
-            const values = { email, password, nisn, class_id: classId };
+            const values = { email, password, nisn, class_id: classId, full_name: fullName };
             
             const errors = [];
             for (const [field, rules] of Object.entries(validationRules)) {
@@ -1030,6 +1138,10 @@
                     if (field === 'class_id' && rule === 'notEmpty' && !Validators[rule](value)) {
                         errors.push('Silakan pilih kelas Anda.');
                         break; 
+                    }
+                    if (field === 'full_name' && rule === 'notEmpty' && !Validators[rule](value)) {
+                        errors.push('Nama Lengkap wajib diisi.');
+                        break;
                     }
                     if (!Validators[rule](value)) {
                         errors.push(ValidationMessages[rule] || `Input ${field.replace('_',' ')} tidak valid.`);
@@ -1070,6 +1182,7 @@
                             nisn: nisn,
                             role: 'student', 
                             class_id: classId, 
+                            full_name: fullName // Kirim full_name ke metadata
                         },
                         emailRedirectTo: `${window.location.origin}${window.location.pathname}`
                     }
@@ -1153,6 +1266,7 @@
                 }
                 if (appState.clockInterval) {
                     clearInterval(appState.clockInterval);
+                    appState.clockInterval = null; // Reset interval
                 }
 
                 const { error: signOutError } = await supabase.auth.signOut();
@@ -1172,8 +1286,10 @@
                     attendanceSubscription: null,
                     clockInterval: null,
                     selectedAdminClassId: null,
+                    profileImageFile: null,
                     profileImageToDelete: false,
-                    classList: [] 
+                    classList: [],
+                    cropperInstance: null,
                 });
 
                 navigateTo('login'); 
@@ -1206,15 +1322,11 @@
             const logDate = jakartaTime.toISOString().split('T')[0];
             const logTime = jakartaTime.toTimeString().split(' ')[0];
             
-            // *** PERBAIKAN: Hitung status SEBELUM insert ***
-            const status = calculateAttendanceStatus(type, logTime);
-            
             const record = { 
                 user_id: appState.currentUser.id, 
                 type: type,
                 log_date: logDate,
-                log_time: logTime,
-                status: status // <-- Menambahkan status ke record
+                log_time: logTime
             };
             
             console.log('Inserting attendance record:', record);
@@ -1459,13 +1571,12 @@
         }
 
         async function handleDeleteClass(classId, className) {
-            // Menggunakan UI kustom, bukan confirm()
-            showToast(`Menghapus kelas "${className}"...`, 'info');
-            
-            // Hapus penundaan konfirmasi, langsung hapus
-            // if (!confirm(`Anda yakin ingin menghapus kelas "${className}"?`)) {
-            //     return;
-            // }
+            // Ganti window.confirm dengan modal kustom jika diperlukan,
+            // untuk saat ini, kita tetap gunakan confirm()
+            const userConfirmed = confirm(`Anda yakin ingin menghapus kelas "${className}"? Ini tidak dapat dibatalkan.`);
+            if (!userConfirmed) {
+                return;
+            }
             
             showLoading(true);
 
@@ -1516,7 +1627,6 @@
                 `;
                 li.querySelector('.delete-class-btn').addEventListener('click', (e) => {
                     const button = e.currentTarget;
-                    // Modifikasi: Langsung hapus tanpa konfirmasi popup
                     handleDeleteClass(button.dataset.id, button.dataset.name);
                 });
 
@@ -1586,191 +1696,206 @@
                 showLoading(false); 
             }
         }
-        
-        // --- FUNGSI PENGATURAN PROFIL BARU ---
-        
-        /** Menampilkan modal profil dan mengisinya dengan data pengguna saat ini */
-        function showProfileModal() {
-            if (!appState.profile || !appState.currentUser) {
-                showToast('Gagal memuat data profil. Coba login ulang.', 'error');
+
+        // --- LOGIKA MODAL PROFIL & CROPPER ---
+
+        function openProfileModal() {
+            populateProfileModal();
+            UIElements.profileModal.classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            UIElements.profileModal.classList.add('hidden');
+            // Hapus file yang mungkin dipilih jika modal ditutup
+            appState.profileImageFile = null;
+            appState.profileImageToDelete = false;
+        }
+
+        function openCropperModal(file) {
+            if (!file) return;
+            if (appState.cropperInstance) {
+                appState.cropperInstance.destroy();
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                UIElements.cropperImage.src = e.target.result;
+                UIElements.cropperModal.classList.remove('hidden');
+                appState.cropperInstance = new Cropper(UIElements.cropperImage, {
+                    aspectRatio: 1, // Persegi
+                    viewMode: 1, // Batasi area crop ke dalam canvas
+                    background: false,
+                    autoCropArea: 0.8,
+                    responsive: true,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function closeCropperModal() {
+            UIElements.cropperModal.classList.add('hidden');
+            if (appState.cropperInstance) {
+                appState.cropperInstance.destroy();
+                appState.cropperInstance = null;
+            }
+            // Reset input file agar bisa memilih file yang sama lagi
+            UIElements.profileImageInput.value = '';
+        }
+
+        function handleImageFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validasi tipe file
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+            if (!allowedTypes.includes(file.type)) {
+                showToast('Tipe file tidak valid. Harap pilih PNG atau JPEG.', 'error');
+                event.target.value = ''; // Reset input
                 return;
             }
 
-            // Isi form dengan data yang ada
-            UIElements.profileFullNameInput.value = appState.profile.full_name || '';
-            UIElements.profileEmailInput.value = appState.currentUser.email || '';
-            
-            // Atur ulang input password
-            UIElements.profileNewPasswordInput.value = '';
-            UIElements.profileConfirmPasswordInput.value = '';
-            
-            // Atur gambar profil
-            const defaultAvatar = 'https://placehold.co/100x100/FFF/31343C?text=Foto';
-            UIElements.profileImagePreview.src = appState.profile.avatar_url || defaultAvatar;
-            
-            // Atur ulang status hapus gambar dan input file
-            appState.profileImageToDelete = false;
-            UIElements.profileImageInput.value = null; 
-            
-            UIElements.profileModal.classList.remove('hidden');
-            lucide.createIcons(); // Panggil lucide jika ada ikon di modal
-        }
-
-        /** Menyembunyikan modal profil */
-        function hideProfileModal() {
-            UIElements.profileModal.classList.add('hidden');
-        }
-
-        /** Menampilkan preview gambar yang dipilih pengguna */
-        function handleProfileImagePreview(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    UIElements.profileImagePreview.src = e.target.result;
-                    appState.profileImageToDelete = false; // Membatalkan permintaan hapus jika ada
-                };
-                reader.readAsDataURL(file);
+            // Validasi ukuran file (misal: 10MB)
+            const maxSizeInMB = 10;
+            if (file.size > maxSizeInMB * 1024 * 1024) {
+                showToast(`Ukuran file terlalu besar. Maksimal ${maxSizeInMB}MB.`, 'error');
+                event.target.value = ''; // Reset input
+                return;
             }
-        }
-        
-        /** Menangani submit form update profil */
-        async function handleProfileUpdate(event) {
-            event.preventDefault();
-            showLoading(true);
 
-            const newFullName = UIElements.profileFullNameInput.value.trim();
-            const newEmail = UIElements.profileEmailInput.value.trim();
-            const newPassword = UIElements.profileNewPasswordInput.value.trim();
-            const confirmPassword = UIElements.profileConfirmPasswordInput.value.trim();
-            const newImageFile = UIElements.profileImageInput.files[0];
+            openCropperModal(file);
+        }
+
+        function applyCrop() {
+            if (!appState.cropperInstance) return;
+
+            // Dapatkan canvas yang di-crop
+            // Kita set ukuran width dan height untuk "resize"
+            const canvas = appState.cropperInstance.getCroppedCanvas({
+                width: 512,  // Resolusi PFP
+                height: 512,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            // Tampilkan preview di modal profil
+            const croppedUrl = canvas.toDataURL('image/png');
+            UIElements.profileImagePreview.src = croppedUrl;
             
-            let authUpdates = {};
-            let profileUpdates = {};
+            // Konversi canvas ke Blob untuk diunggah
+            canvas.toBlob((blob) => {
+                appState.profileImageFile = blob;
+                appState.profileImageToDelete = false; // Jika user crop, berarti dia tidak ingin menghapus
+            }, 'image/png', 0.95); // Kualitas 95%
+
+            closeCropperModal();
+        }
+
+        function handleRemoveProfileImage() {
+            appState.profileImageFile = null;
+            appState.profileImageToDelete = true;
+            UIElements.profileImagePreview.src = generatePfpPlaceholder(appState.profile.full_name);
+            showToast('Foto profil akan dihapus saat disimpan.', 'info');
+        }
+
+        async function handleUpdateProfile(event) {
+            event.preventDefault();
+            
+            const newFullName = UIElements.profileFullName.value.trim();
+            if (!Validators.notEmpty(newFullName)) {
+                showToast('Nama Lengkap tidak boleh kosong.', 'error');
+                return;
+            }
+
+            showLoading(true);
+            UIElements.profileSaveBtn.disabled = true;
 
             try {
-                // 1. Update Password
-                if (newPassword) {
-                    if (newPassword.length < 8) {
-                        throw new Error('Password baru minimal 8 karakter.');
-                    }
-                    if (newPassword !== confirmPassword) {
-                        throw new Error('Konfirmasi password tidak cocok.');
-                    }
-                    authUpdates.password = newPassword;
-                }
+                const profileUpdates = {
+                    full_name: newFullName,
+                };
 
-                // 2. Update Email
-                if (newEmail && newEmail !== appState.currentUser.email) {
-                    if (!Validators.email(newEmail)) {
-                        throw new Error('Format email baru tidak valid.');
-                    }
-                    authUpdates.email = newEmail;
-                    profileUpdates.email = newEmail; // Update juga email di tabel profiles
-                }
-                
-                // 3. Eksekusi Perubahan Auth (Email/Password)
-                if (Object.keys(authUpdates).length > 0) {
-                    const { error: authError } = await supabase.auth.updateUser(authUpdates);
-                    if (authError) throw authError;
+                // 1. Jika ada file baru untuk diunggah
+                if (appState.profileImageFile) {
+                    const file = appState.profileImageFile;
+                    const fileExt = file.type.split('/')[1]; // 'png' atau 'jpeg'
+                    const filePath = `public/${appState.currentUser.id}/avatar-${Date.now()}.${fileExt}`;
                     
-                    if (authUpdates.email) {
-                        showToast('Periksa email baru Anda untuk konfirmasi.', 'info');
-                    }
-                    if (authUpdates.password) {
-                        showToast('Password berhasil diubah.', 'success');
-                    }
-                }
-
-                // 4. Update Nama Lengkap
-                if (newFullName !== (appState.profile.full_name || '')) {
-                    profileUpdates.full_name = newFullName;
-                }
-
-                // 5. Update Foto Profil (Avatar)
-                if (newImageFile) {
-                    // Upload gambar baru
-                    const fileExt = newImageFile.name.split('.').pop();
-                    // Gunakan ID pengguna untuk path agar unik dan mudah dikelola
-                    const fileName = `${appState.currentUser.id}.${fileExt}`;
-                    const filePath = `public/${fileName}`; // Asumsi folder 'public' di dalam bucket
-
-                    // (PENTING: Pastikan Anda punya bucket 'avatars' di Supabase Storage)
-                    const { error: uploadError } = await supabase.storage
-                        .from('avatars') 
-                        .upload(filePath, newImageFile, {
+                    // Upload ke Supabase Storage
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from(AVATAR_BUCKET)
+                        .upload(filePath, file, {
                             cacheControl: '3600',
-                            upsert: true // Timpa file lama jika namanya sama
+                            upsert: true, // Timpa file lama jika ada (meskipun path unik)
                         });
-                    
-                    if (uploadError) throw uploadError;
 
-                    // Dapatkan URL publik
-                    const { data: urlData } = supabase.storage
-                        .from('avatars')
-                        .getPublicUrl(filePath);
-                        
-                    if (!urlData || !urlData.publicUrl) {
-                        throw new Error('Gagal mendapatkan URL publik untuk avatar.');
+                    if (uploadError) {
+                        throw new Error(`Gagal mengunggah foto: ${uploadError.message}`);
                     }
                     
-                    // Tambahkan timestamp unik untuk cache-busting
-                    profileUpdates.avatar_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
+                    // Dapatkan URL publik dari file yang baru diunggah
+                    const { data: urlData } = supabase.storage
+                        .from(AVATAR_BUCKET)
+                        .getPublicUrl(uploadData.path);
                     
-                } else if (appState.profileImageToDelete) {
-                    // Hapus gambar
-                    profileUpdates.avatar_url = null;
-                    
-                    // Hapus file lama dari storage jika ada
+                    profileUpdates.avatar_url = urlData.publicUrl;
+
+                    // Hapus foto lama jika ada (opsional, tapi praktik terbaik)
                     if (appState.profile.avatar_url) {
                         try {
-                            const oldFileName = appState.profile.avatar_url.split('/').pop().split('?')[0];
-                            await supabase.storage.from('avatars').remove([`public/${oldFileName}`]);
-                        } catch (removeError) {
-                            console.warn("Gagal menghapus avatar lama:", removeError.message);
+                            const oldPath = new URL(appState.profile.avatar_url).pathname.split(`/${AVATAR_BUCKET}/`)[1];
+                            if (oldPath !== filePath) { // Jangan hapus jika path-nya sama
+                                await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
+                            }
+                        } catch (e) {
+                            console.warn("Gagal menghapus foto lama:", e);
+                        }
+                    }
+
+                // 2. Jika user menekan tombol "Hapus Foto"
+                } else if (appState.profileImageToDelete) {
+                    profileUpdates.avatar_url = null;
+
+                    // Hapus foto lama dari storage
+                    if (appState.profile.avatar_url) {
+                         try {
+                            const oldPath = new URL(appState.profile.avatar_url).pathname.split(`/${AVATAR_BUCKET}/`)[1];
+                            await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
+                        } catch (e) {
+                            console.warn("Gagal menghapus foto lama:", e);
                         }
                     }
                 }
+                // 3. Jika tidak ada perubahan foto, tidak ada yang perlu dilakukan soal `avatar_url`
 
-                // 6. Eksekusi Perubahan Profil (Nama/Avatar/Email)
-                if (Object.keys(profileUpdates).length > 0) {
-                    const { data: updatedProfile, error: profileError } = await supabase
-                        .from('profiles')
-                        .update(profileUpdates)
-                        .eq('id', appState.currentUser.id)
-                        .select()
-                        .single();
+                // Update data di tabel 'profiles'
+                const { data: updatedProfile, error: updateError } = await supabase
+                    .from('profiles')
+                    .update(profileUpdates)
+                    .eq('id', appState.currentUser.id)
+                    .select()
+                    .single();
 
-                    if (profileError) throw profileError;
-                    
-                    // Update state lokal segera
-                    appState.profile = { ...appState.profile, ...updatedProfile };
+                if (updateError) {
+                    throw new Error(`Gagal memperbarui profil: ${updateError.message}`);
                 }
 
+                // Sukses! Perbarui state lokal dan UI
+                appState.profile = updatedProfile;
+                UIElements.welcomeMessage.textContent = updatedProfile.full_name;
+                await loadProfilePicture(); // Muat PFP baru di header dan modal
+                
                 showToast('Profil berhasil diperbarui!', 'success');
-                hideProfileModal();
-                
-                // Refresh UI dengan data baru
-                const displayName = appState.profile.full_name || appState.profile.nisn || appState.currentUser.email.split('@')[0];
-                UIElements.welcomeMessage.textContent = displayName;
-                
-                // Refresh data admin jika yang login admin
-                if (appState.profile.role === 'admin') {
-                    renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
-                }
+                closeProfileModal();
 
             } catch (error) {
                 showToast(ErrorHandler.handle(error, 'update profil'), 'error');
             } finally {
                 showLoading(false);
-                // Kosongkan input password
-                UIElements.profileNewPasswordInput.value = '';
-                UIElements.profileConfirmPasswordInput.value = '';
+                UIElements.profileSaveBtn.disabled = false;
             }
         }
-        // --- AKHIR FUNGSI PENGATURAN PROFIL ---
-
-        // Event Listeners
+        
+        // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
             checkUserSession(); 
             
@@ -1810,18 +1935,35 @@
 
             // Header Buttons
             UIElements.logoutButton?.addEventListener('click', handleLogout);
-            UIElements.profileButton?.addEventListener('click', showProfileModal); // <-- DITAMBAHKAN
-
-            // Profile Modal Listeners (DITAMBAHKAN)
-            UIElements.closeProfileModal?.addEventListener('click', hideProfileModal);
-            UIElements.profileForm?.addEventListener('submit', handleProfileUpdate);
-            UIElements.profileImageInput?.addEventListener('change', handleProfileImagePreview);
-            UIElements.removeProfileImageButton?.addEventListener('click', () => {
-                UIElements.profileImagePreview.src = 'https://placehold.co/100x100/FFF/31343C?text=Foto';
-                appState.profileImageToDelete = true;
-                UIElements.profileImageInput.value = null;
-                showToast('Foto profil akan dihapus saat disimpan.', 'info');
+            UIElements.profileButton?.addEventListener('click', () => {
+                UIElements.profileDropdown.classList.toggle('hidden');
             });
+            // Tutup dropdown jika klik di luar
+            document.addEventListener('click', (e) => {
+                if (!UIElements.profileButton?.contains(e.target) && !UIElements.profileDropdown?.contains(e.target)) {
+                    UIElements.profileDropdown?.classList.add('hidden');
+                }
+            });
+
+            // Profile Modal
+            UIElements.profileModalOpenBtn?.addEventListener('click', () => {
+                openProfileModal();
+                UIElements.profileDropdown.classList.add('hidden');
+            });
+            UIElements.closeProfileModal?.addEventListener('click', closeProfileModal);
+            UIElements.profileForm?.addEventListener('submit', handleUpdateProfile);
+            UIElements.profileImageUploadBtn?.addEventListener('click', () => {
+                UIElements.profileImageInput.click();
+            });
+            UIElements.profileImageInput?.addEventListener('change', handleImageFileSelect);
+            UIElements.removeProfileImageBtn?.addEventListener('click', handleRemoveProfileImage);
+
+            // Cropper Modal
+            UIElements.cropperApplyBtn?.addEventListener('click', applyCrop);
+            UIElements.cropperCancelBtn?.addEventListener('click', closeCropperModal);
+            UIElements.cropperRotateLeftBtn?.addEventListener('click', () => appState.cropperInstance?.rotate(-90));
+            UIElements.cropperRotateRightBtn?.addEventListener('click', () => appState.cropperInstance?.rotate(90));
+
 
             // Student Attendance
             UIElements.checkInButton?.addEventListener('click', () => handleAttendance('check_in'));
@@ -1840,7 +1982,6 @@
                 renderAllAttendanceLog(e.target.value);
             });
 
-        
             // Admin Schedule
             UIElements.adminClassSelect?.addEventListener('change', handleAdminClassSelect);
             UIElements.saveScheduleButton?.addEventListener('click', handleUpdateSchedule);
@@ -1848,11 +1989,6 @@
             // Admin Class Management
             UIElements.addClassForm?.addEventListener('submit', handleAddClass);
             
-            // Modifikasi: Hapus event listener di sini karena sudah ditangani di renderClassList
-            // UIElements.adminClassList?.addEventListener('click', (e) => {
-            //     ...
-            // });
-
             lucide.createIcons(); 
         });
     </script>
@@ -1928,6 +2064,10 @@
                 
                 <form id="signup-form" class="space-y-5 glass-effect p-8 rounded-2xl">
                     <div>
+                        <label for="signup-full-name" class="block text-sm font-semibold text-white mb-2">Nama Lengkap</label>
+                        <input id="signup-full-name" type="text" name="full_name" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
+                    </div>
+                    <div>
                         <label for="signup-email" class="block text-sm font-semibold text-white mb-2">Email</label>
                         <input id="signup-email" type="email" name="email" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
                     </div>
@@ -1980,7 +2120,7 @@
                 
                 <form id="forgot-password-form" class="space-y-5 glass-effect p-8 rounded-2xl">
                     <div>
-                        <label for="forgot-email" class="block text-sm font-semibold text-white mb-2">Email</label>
+                        <label for="forgot-email" class="block text-sm font-semibold text-white mb-2">Email</LabeL>
                         <input id="forgot-email" type="email" name="email" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
                     </div>
                     <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">
@@ -2008,25 +2148,33 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-white">Sistem Absensi</h1>
-                        <p class="text-sm text-purple-100">Selamat datang, <span id="welcome-message" class="font-semibold">User</span></p>
+                        <p class="text-sm text-purple-100">Kelola absensi dan jadwal</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <!-- TOMBOL PROFIL DITAMBAHKAN DI SINI -->
-                    <button id="profile-button" type="button" class="flex items-center gap-2 px-4 py-2 glass-effect text-white rounded-xl hover:bg-white/20 transition-all shadow-md">
-                        <i data-lucide="user" class="w-4 h-4"></i>
-                        <span class="hidden sm:inline">Profil</span>
+                <div class="relative">
+                    <button id="profile-button" class="flex items-center gap-2 text-white font-semibold glass-effect px-3 py-1.5 rounded-full hover:bg-white/20 transition-all shadow-md">
+                        <img id="header-pfp" src="httpsa://placehold.co/40x40/FFFFFF/764ba2?text=U" alt="PFP" class="w-8 h-8 rounded-full border-2 border-white/50 object-cover bg-white/20">
+                        <span id="welcome-message" class="hidden sm:inline font-semibold">User</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-70"></i>
                     </button>
-                    <button id="logout-button" type="button" class="flex items-center gap-2 px-4 py-2 glass-effect text-white rounded-xl hover:bg-white/20 transition-all shadow-md">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                        <span class="hidden sm:inline">Keluar</span>
-                    </button>
+                    <!-- Dropdown Profil -->
+                    <div id="profile-dropdown" class="hidden absolute top-full mt-2 right-0 glass-effect rounded-xl shadow-2xl p-2 z-50 min-w-[180px] border border-white/20">
+                        <button id="profile-modal-open-btn" class="flex w-full items-center gap-2 px-3 py-2 text-white hover:bg-white/10 rounded-lg text-sm transition-colors">
+                            <i data-lucide="user-cog" class="w-4 h-4"></i>
+                            Edit Profil
+                        </button>
+                        <button id="logout-button" class="flex w-full items-center gap-2 px-3 py-2 text-red-300 hover:bg-red-500/20 rounded-lg text-sm transition-colors">
+                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                            Keluar
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
 
         <!-- Student View -->
         <div id="student-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
+            <!-- Konten Siswa (tidak berubah) -->
             <div class="glass-effect rounded-2xl p-6 sm:p-8 text-center shadow-xl card-hover">
                 <div class="mb-6">
                     <h2 id="clock" class="clock-display gradient-text mb-2">00:00:00</h2>
@@ -2084,6 +2232,7 @@
 
         <!-- Admin View -->
         <div id="admin-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
+            <!-- Konten Admin (tidak berubah) -->
             <div class="glass-effect rounded-2xl p-6 shadow-lg">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div class="flex items-center gap-3">
@@ -2186,59 +2335,78 @@
         </div>
     </div>
 
-    <!-- MODAL PENGATURAN PROFIL DITAMBAHKAN DI SINI -->
-    <div id="profile-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);">
-        <div class="glass-effect rounded-2xl p-6 sm:p-8 shadow-2xl w-full max-w-lg m-4 relative max-h-[90vh] overflow-y-auto">
-            <button id="close-profile-modal" class="absolute top-4 right-4 text-white/70 hover:text-white transition-colors">
-                <i data-lucide="x" class="w-6 h-6"></i>
-            </button>
-            <h3 class="text-2xl font-bold text-white mb-6">Pengaturan Profil</h3>
+    <!-- Modal Edit Profil -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-effect rounded-2xl shadow-2xl p-6 sm:p-8 max-w-lg">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Edit Profil</h3>
+                <button id="close-profile-modal" class="text-white/70 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
             
-            <form id="profile-form" class="space-y-4">
-                <!-- Avatar -->
-                <div class="flex items-center gap-4">
-                    <img id="profile-image-preview" src="https://placehold.co/100x100/FFF/31343C?text=Foto" alt="Preview" class="w-24 h-24 rounded-full object-cover border-2 border-white/30 flex-shrink-0">
-                    <div class="flex-grow">
-                        <label for="profile-image-input" class="block btn-primary text-center px-4 py-2 rounded-xl text-sm cursor-pointer mb-2">
-                            Ganti Foto
-                        </label>
+            <form id="profile-form" class="space-y-5">
+                <!-- Preview PFP -->
+                <div class="flex flex-col items-center gap-4">
+                    <img id="profile-image-preview" src="https://placehold.co/150x150/FFFFFF/764ba2?text=U" alt="Profile Picture" class="w-32 h-32 rounded-full object-cover border-4 border-white/30 shadow-lg bg-white/20">
+                    <div class="flex gap-2">
                         <input type="file" id="profile-image-input" class="hidden" accept="image/png, image/jpeg">
-                        <button type="button" id="remove-profile-image-button" class="w-full text-center text-red-300 hover:text-red-200 text-sm">
-                            Hapus Foto
+                        <button id="profile-image-upload-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl text-sm font-semibold flex items-center gap-2">
+                            <i data-lucide="upload" class="w-4 h-4"></i> Ganti Foto
                         </button>
-                        <p class="text-xs text-white/50 mt-1">Maks. 1MB. (Asumsi bucket 'avatars' publik)</p>
+                        <button id="remove-profile-image-btn" type="button" class="px-4 py-2 btn-danger text-white rounded-xl text-sm font-semibold flex items-center gap-2">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
+                        </button>
                     </div>
                 </div>
-                <!-- Full Name -->
+
                 <div>
                     <label for="profile-full-name" class="block text-sm font-semibold text-white mb-2">Nama Lengkap</label>
-                    <input id="profile-full-name" type="text" placeholder="Nama lengkap Anda" class="w-full px-4 py-3 rounded-xl text-white placeholder-white/50">
-                </div>
-                <!-- Email -->
-                <div>
-                    <label for="profile-email" class="block text-sm font-semibold text-white mb-2">Email (Login)</label>
-                    <input id="profile-email" type="email" placeholder="email@anda.com" class="w-full px-4 py-3 rounded-xl text-white placeholder-white/50">
-                </div>
-                <hr class="border-white/20 my-4">
-                <!-- Password -->
-                <p class="text-sm text-white/80">Ganti Password (isi jika ingin mengubah)</p>
-                <div>
-                    <label for="profile-new-password" class="block text-sm font-semibold text-white mb-2">Password Baru</label>
-                    <input id="profile-new-password" type="password" class="w-full px-4 py-3 rounded-xl text-white placeholder-white/50" autocomplete="new-password">
+                    <input id="profile-full-name" type="text" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
                 </div>
                 <div>
-                    <label for="profile-confirm-password" class="block text-sm font-semibold text-white mb-2">Konfirmasi Password Baru</label>
-                    <input id="profile-confirm-password" type="password" class="w-full px-4 py-3 rounded-xl text-white placeholder-white/50" autocomplete="new-password">
+                    <label for="profile-email" class="block text-sm font-semibold text-white mb-2">Email</label>
+                    <input id="profile-email" type="email" readonly disabled class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50 opacity-70 cursor-not-allowed">
                 </div>
-                <!-- Submit -->
-                <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg mt-6">
+                <div>
+                    <label for="profile-nisn" class="block text-sm font-semibold text-white mb-2">NISN</label>
+                    <input id="profile-nisn" type="text" readonly disabled class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50 opacity-70 cursor-not-allowed">
+                </div>
+                
+                <button id="profile-save-btn" type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-5 h-5"></i>
                     Simpan Perubahan
                 </button>
             </form>
         </div>
     </div>
 
+    <!-- Modal Cropper Gambar -->
+    <div id="cropper-modal" class="modal-overlay hidden">
+        <div id="cropper-modal-content" class="modal-content glass-effect rounded-2xl shadow-2xl p-6 sm:p-8">
+            <h3 class="text-2xl font-bold text-white mb-4">Potong & Sesuaikan Gambar</h3>
+            <div id="cropper-container" class="mb-4 bg-black rounded-lg overflow-hidden">
+                <img id="cropper-image" src="" alt="Image to crop">
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 mb-6">
+                <button id="cropper-rotate-left-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl font-semibold flex items-center gap-2" title="Putar Kiri">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                </button>
+                <button id="cropper-rotate-right-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl font-semibold flex items-center gap-2" title="Putar Kanan">
+                    <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex gap-4">
+                <button id="cropper-cancel-btn" type="button" class="flex-1 w-full btn-secondary text-white py-3 rounded-xl font-bold shadow-lg">
+                    Batal
+                </button>
+                <button id="cropper-apply-btn" type="button" class="flex-1 w-full btn-primary text-white py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="check" class="w-5 h-5"></i>
+                    Terapkan
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
-
-
