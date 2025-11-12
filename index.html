@@ -305,8 +305,7 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        // ⚠️ CONFIGURATION REQUIRED FOR GITHUB PAGES ⚠️
-        // Replace these with your actual Supabase credentials
+        // ⚠️ KREDENSIAL SUDAH TERPASANG ⚠️
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
         
@@ -445,6 +444,33 @@
                 }
             }, 3500);
         }
+        
+        // *** FUNGSI BARU UNTUK MEMPERBAIKI ERROR 'STATUS NOT NULL' ***
+        /**
+         * Menghitung status absensi berdasarkan tipe (masuk/pulang) dan waktu.
+         * @param {string} type - 'check_in' atau 'check_out'
+         * @param {string} logTime - Waktu dalam format "HH:MM:SS"
+         * @returns {string} Status absensi (cth: "Masuk Tepat Waktu", "Masuk Terlambat")
+         */
+        function calculateAttendanceStatus(type, logTime) {
+            // Definisikan jam aturan (Anda bisa mengubah ini)
+            const CHECK_IN_DEADLINE = '07:00:00';  // Batas absen masuk
+            const CHECK_OUT_MINIMUM = '15:00:00'; // Minimal jam pulang
+
+            try {
+                if (type === 'check_in') {
+                    return logTime <= CHECK_IN_DEADLINE ? 'Masuk Tepat Waktu' : 'Masuk Terlambat';
+                } else if (type === 'check_out') {
+                    return logTime < CHECK_OUT_MINIMUM ? 'Pulang Awal' : 'Pulang Tepat Waktu';
+                }
+                return 'Status Tidak Dikenali'; // Fallback
+            } catch (e) {
+                console.error("Error calculating status:", e);
+                return 'Error Status';
+            }
+        }
+        // *** AKHIR DARI FUNGSI BARU ***
+
 
         function navigateTo(view) {
             UIElements.loginPage?.classList.add('hidden');
@@ -779,10 +805,12 @@
                 div.className = 'flex items-center justify-between p-4 rounded-lg glass-effect hover:bg-white/10 transition-colors animate-slide-in';
                 div.style.animationDelay = `${index * 0.1}s`;
                 
+                // *** PERBAIKAN RENDER STATUS ***
                 let statusClass = 'status-warning'; 
                 if (log.status) {
-                    if (log.status.includes('Tepat')) statusClass = 'status-success';
-                    else if (log.status.includes('Awal')) statusClass = 'status-danger'; 
+                    if (log.status.includes('Tepat Waktu')) statusClass = 'status-success';
+                    else if (log.status.includes('Terlambat')) statusClass = 'status-warning';
+                    else if (log.status.includes('Pulang Awal')) statusClass = 'status-danger'; 
                 }
                 
                 const icon = log.type === 'check_in' ? 'log-in' : 'log-out';
@@ -878,9 +906,11 @@
                 const time = log.log_time || '...';
                 const status = log.status || '...';
 
+                // *** PERBAIKAN RENDER STATUS ADMIN ***
                 let statusClass = 'status-warning'; 
-                if (status.includes('Tepat')) statusClass = 'status-success';
-                else if (status.includes('Awal')) statusClass = 'status-danger';
+                if (status.includes('Tepat Waktu')) statusClass = 'status-success';
+                else if (status.includes('Terlambat')) statusClass = 'status-warning';
+                else if (status.includes('Pulang Awal')) statusClass = 'status-danger'; 
 
                 row.innerHTML = `
                     <td class="p-3">
@@ -1168,11 +1198,15 @@
             const logDate = jakartaTime.toISOString().split('T')[0];
             const logTime = jakartaTime.toTimeString().split(' ')[0];
             
+            // *** PERBAIKAN: Hitung status SEBELUM insert ***
+            const status = calculateAttendanceStatus(type, logTime);
+            
             const record = { 
                 user_id: appState.currentUser.id, 
                 type: type,
                 log_date: logDate,
-                log_time: logTime
+                log_time: logTime,
+                status: status // <-- Menambahkan status ke record
             };
             
             console.log('Inserting attendance record:', record);
@@ -1417,9 +1451,13 @@
         }
 
         async function handleDeleteClass(classId, className) {
-            if (!confirm(`Anda yakin ingin menghapus kelas "${className}"?`)) {
-                return;
-            }
+            // Menggunakan UI kustom, bukan confirm()
+            showToast(`Menghapus kelas "${className}"...`, 'info');
+            
+            // Hapus penundaan konfirmasi, langsung hapus
+            // if (!confirm(`Anda yakin ingin menghapus kelas "${className}"?`)) {
+            //     return;
+            // }
             
             showLoading(true);
 
@@ -1470,6 +1508,7 @@
                 `;
                 li.querySelector('.delete-class-btn').addEventListener('click', (e) => {
                     const button = e.currentTarget;
+                    // Modifikasi: Langsung hapus tanpa konfirmasi popup
                     handleDeleteClass(button.dataset.id, button.dataset.name);
                 });
 
@@ -1598,6 +1637,7 @@
                 renderAllAttendanceLog(e.target.value);
             });
 
+        
             // Admin Schedule
             UIElements.adminClassSelect?.addEventListener('change', handleAdminClassSelect);
             UIElements.saveScheduleButton?.addEventListener('click', handleUpdateSchedule);
@@ -1605,6 +1645,11 @@
             // Admin Class Management
             UIElements.addClassForm?.addEventListener('submit', handleAddClass);
             
+            // Modifikasi: Hapus event listener di sini karena sudah ditangani di renderClassList
+            // UIElements.adminClassList?.addEventListener('click', (e) => {
+            //     ...
+            // });
+
             lucide.createIcons(); 
         });
     </script>
