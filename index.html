@@ -361,12 +361,12 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        // ⚠️ CONFIGURATION REQUIRED FOR GITHUB PAGES ⚠️
+        // ?? CONFIGURATION REQUIRED FOR GITHUB PAGES ??
         // Replace these with your actual Supabase credentials
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
         
-        // ⚠️ HARAP BUAT BUCKET 'avatars' (PUBLIC) DI SUPABASE STORAGE ANDA ⚠️
+        // ?? HARAP BUAT BUCKET 'avatars' (PUBLIC) DI SUPABASE STORAGE ANDA ??
         const AVATAR_BUCKET = 'avatars';
         
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1193,11 +1193,11 @@
                 }
                 
                 if (!data.user && !data.session) {
-                    showToast('📧 Periksa email Anda untuk link verifikasi pendaftaran.', 'info');
+                    showToast('?? Periksa email Anda untuk link verifikasi pendaftaran.', 'info');
                 } else if (data.user && !data.user.email_confirmed_at) {
-                    showToast('📧 Pendaftaran berhasil! Cek email untuk verifikasi, lalu login.', 'info');
+                    showToast('?? Pendaftaran berhasil! Cek email untuk verifikasi, lalu login.', 'info');
                 } else if (data.user && data.user.email_confirmed_at) {
-                    showToast('✅ Pendaftaran berhasil! Silakan login.', 'success');
+                    showToast('? Pendaftaran berhasil! Silakan login.', 'success');
                 } else {
                     showToast('Pendaftaran dalam proses. Cek email Anda.', 'info');
                 }
@@ -1326,7 +1326,8 @@
                 user_id: appState.currentUser.id, 
                 type: type,
                 log_date: logDate,
-                log_time: logTime
+                log_time: logTime,
+                status: 'Pending' // <-- FIX: Ditambahkan untuk memenuhi NOT NULL constraint
             };
             
             console.log('Inserting attendance record:', record);
@@ -2253,7 +2254,7 @@
                     </div>
                 </div>
                 
-                <input type="text" id="search-student-input" placeholder="🔍 Cari Nama, NISN, Email, atau Kelas..." class="w-full mb-4 px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
+                <input type="text" id="search-student-input" placeholder="?? Cari Nama, NISN, Email, atau Kelas..." class="w-full mb-4 px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
                 
                 <div class="overflow-x-auto -mx-2 max-h-[500px]">
                     <table class="w-full text-sm min-w-[700px]">
