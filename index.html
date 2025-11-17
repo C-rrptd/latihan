@@ -1258,9 +1258,9 @@
                 }
                 
                 if (!data.user && !data.session) {
-                    showToast('?? Periksa email Anda untuk link verifikasi pendaftaran.', 'info');
+                    showToast('Periksa email Anda untuk link verifikasi pendaftaran.', 'info');
                 } else if (data.user && !data.user.email_confirmed_at) {
-                    showToast('?? Pendaftaran berhasil! Cek email untuk verifikasi, lalu login.', 'info');
+                    showToast('Pendaftaran berhasil! Cek email untuk verifikasi, lalu login.', 'info');
                 } else if (data.user && data.user.email_confirmed_at) {
                     showToast('? Pendaftaran berhasil! Silakan login.', 'success');
                 } else {
@@ -2518,7 +2518,7 @@
                     </div>
                 </div>
                 
-                <input type="text" id="search-student-input" placeholder="?? Cari Nama, NISN, Email, atau Kelas..." class="w-full mb-4 px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
+                <input type="text" id="search-student-input" placeholder="Cari Nama, NISN, Email, atau Kelas..." class="w-full mb-4 px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
                 
                 <div class="overflow-x-auto -mx-2 max-h-[500px]">
                     <table class="w-full text-sm min-w-[700px]">
@@ -2675,3 +2675,4 @@
 
 </body>
 </html>
+
