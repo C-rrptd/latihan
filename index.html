@@ -1387,24 +1387,32 @@
             const logDate = jakartaTime.toISOString().split('T')[0];
             const logTime = jakartaTime.toTimeString().split(' ')[0];
             
-            // TODO: Implement logic to determine 'Tepat' or 'Telat'
-            // For now, we set 'Pending' and assume a trigger/function will update it.
-            // Or, you would compare 'logTime' to a schedule (e.g., '07:00:00')
-            let status = 'Pending';
+            // --- FIX: Logika Status Ditambahkan ---
+            let status = 'Pending'; // Default
+            
             if (type === 'check_in') {
-                // Example: if (logTime > "07:00:00") status = "Telat Masuk";
-                // else status = "Tepat Masuk";
-                status = "Pending"; // Keeping simple as per original code
-            } else {
-                status = "Pending";
+                const checkInDeadline = "07:00:00"; // Batas masuk
+                if (logTime > checkInDeadline) {
+                    status = "Telat Masuk";
+                } else {
+                    status = "Tepat Masuk";
+                }
+            } else if (type === 'check_out') {
+                const checkOutMinTime = "15:00:00"; // Batas pulang
+                if (logTime < checkOutMinTime) {
+                    status = "Pulang Awal";
+                } else {
+                    status = "Tepat Pulang";
+                }
             }
+            // --- END FIX ---
 
             const record = { 
                 user_id: appState.currentUser.id, 
                 type: type,
                 log_date: logDate,
                 log_time: logTime,
-                status: status // Status will be 'Pending'
+                status: status // <-- Menggunakan status yang sudah ditentukan
             };
             
             console.log('Inserting attendance record:', record);
