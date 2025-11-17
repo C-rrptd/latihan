@@ -133,6 +133,28 @@
         .btn-danger:hover {
             background: rgba(239, 68, 68, 0.4);
         }
+
+        /* Tombol Izin/Sakit Baru */
+        .btn-warning-custom {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fef3c7;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-warning-custom:hover {
+            background: rgba(245, 158, 11, 0.4);
+        }
+        .btn-info-custom {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #dbeafe;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-info-custom:hover {
+            background: rgba(59, 130, 246, 0.4);
+        }
         
         .spinner {
             width: 50px;
@@ -218,6 +240,12 @@
             background: rgba(239, 68, 68, 0.2);
             color: #fee2e2;
             box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .status-info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #dbeafe;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
         }
         
         .clock-display {
@@ -356,6 +384,26 @@
             height: 100%;
             object-fit: contain;
         }
+
+        /* --- Toast Progress Bar --- */
+        #toast {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.4);
+            animation: toastCountdown 5s linear forwards;
+        }
+
+        @keyframes toastCountdown {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        /* --- End Toast Progress Bar --- */
     </style>
     
     <script type="module">
@@ -386,6 +434,10 @@
             required: 'Kolom ini wajib diisi'
         };
         
+        // FIX: Declare variables with 'let' so they can be initialized later
+        let UIElements = {};
+        let appState = {};
+
         class ErrorHandler {
             static handle(error, context = '') {
                 console.error(`Error in ${context}:`, error);
@@ -420,89 +472,12 @@
             }
         }
         
-        const UIElements = {
-            loadingScreen: document.getElementById('loading-screen'),
-            loginPage: document.getElementById('login-page'),
-            mainApp: document.getElementById('main-app'),
-            loginView: document.getElementById('login-view'),
-            signupView: document.getElementById('signup-view'),
-            forgotPasswordView: document.getElementById('forgot-password-view'),
-            loginForm: document.getElementById('login-form'),
-            signupForm: document.getElementById('signup-form'),
-            forgotPasswordForm: document.getElementById('forgot-password-form'),
-            loginError: document.getElementById('login-error'),
-            signupError: document.getElementById('signup-error'),
-            forgotError: document.getElementById('forgot-error'),
-            welcomeMessage: document.getElementById('welcome-message'),
-            headerPfp: document.getElementById('header-pfp'),
-            profileButton: document.getElementById('profile-button'),
-            profileDropdown: document.getElementById('profile-dropdown'),
-            profileModalOpenBtn: document.getElementById('profile-modal-open-btn'),
-            logoutButton: document.getElementById('logout-button'),
-            profileModal: document.getElementById('profile-modal'),
-            closeProfileModal: document.getElementById('close-profile-modal'),
-            profileForm: document.getElementById('profile-form'),
-            profileFullName: document.getElementById('profile-full-name'),
-            profileEmail: document.getElementById('profile-email'),
-            profileNisn: document.getElementById('profile-nisn'),
-            profileImagePreview: document.getElementById('profile-image-preview'),
-            profileImageInput: document.getElementById('profile-image-input'),
-            profileImageUploadBtn: document.getElementById('profile-image-upload-btn'),
-            removeProfileImageBtn: document.getElementById('remove-profile-image-btn'),
-            profileSaveBtn: document.getElementById('profile-save-btn'),
-            cropperModal: document.getElementById('cropper-modal'),
-            cropperImage: document.getElementById('cropper-image'),
-            cropperApplyBtn: document.getElementById('cropper-apply-btn'),
-            cropperCancelBtn: document.getElementById('cropper-cancel-btn'),
-            cropperRotateLeftBtn: document.getElementById('cropper-rotate-left-btn'),
-            cropperRotateRightBtn: document.getElementById('cropper-rotate-right-btn'),
-            studentView: document.getElementById('student-view'),
-            adminView: document.getElementById('admin-view'),
-            clock: document.getElementById('clock'),
-            date: document.getElementById('date'),
-            scheduleTableBody: document.getElementById('schedule-table-body'),
-            adminScheduleTableBody: document.getElementById('admin-schedule-table-body'),
-            attendanceLogList: document.getElementById('attendance-log-list'),
-            checkInButton: document.getElementById('check-in-button'),
-            checkOutButton: document.getElementById('check-out-button'),
-            saveScheduleButton: document.getElementById('save-schedule-button'),
-            toast: document.getElementById('toast'),
-            toastMessage: document.getElementById('toast-message'),
-            adminAttendanceLogBody: document.getElementById('admin-attendance-log-body'),
-            refreshAttendanceButton: document.getElementById('refresh-attendance-button'),
-            searchStudentInput: document.getElementById('search-student-input'),
-            adminClassSelect: document.getElementById('admin-class-select'),
-            adminScheduleContainer: document.getElementById('admin-schedule-container'),
-            exportCsvButton: document.getElementById('export-csv-button'),
-            signupClassSelect: document.getElementById('signup-class-select'),
-            adminClassManagementSection: document.getElementById('admin-class-management'),
-            adminClassList: document.getElementById('admin-class-list'),
-            addClassForm: document.getElementById('add-class-form'),
-            newClassNameInput: document.getElementById('new-class-name'),
-        };
-
-        const appState = {
-            currentUser: null,
-            profile: null,
-            scheduleData: {},
-            attendanceLogs: [],
-            allAttendanceLogs: [],
-            toastTimeout: null,
-            attendanceSubscription: null,
-            clockInterval: null,
-            profileImageFile: null, // Untuk menyimpan file Blob hasil crop
-            profileImageToDelete: false, 
-            selectedAdminClassId: null,
-            classList: [],
-            cropperInstance: null,
-        };
-        
         function showLoading(isLoading) { 
             UIElements.loadingScreen?.classList.toggle('hidden', !isLoading); 
         }
 
         function showToast(message, type = 'success') {
-            if (!UIElements.toast || !UIElements.toastMessage) return;
+            if (!UIElements.toast) return; // Removed UIElements.toastMessage check
             clearTimeout(appState.toastTimeout);
             
             const icons = {
@@ -515,18 +490,28 @@
                 error: 'bg-red-500', 
                 info: 'bg-blue-500' 
             };
-            UIElements.toast.className = `fixed bottom-6 right-6 ${colors[type]} text-white py-4 px-6 rounded-xl shadow-2xl z-[6000] flex items-center gap-3 min-w-[300px] transition-all duration-300`;
-            UIElements.toast.innerHTML = `${icons[type]}<span>${message}</span>`;
+            // Modified: Removed padding, flex, etc. Added overflow-hidden.
+            UIElements.toast.className = `fixed bottom-6 right-6 ${colors[type]} text-white rounded-xl shadow-2xl z-[6000] transition-all duration-300 overflow-hidden`;
+            
+            // Modified: New inner structure with progress bar
+            UIElements.toast.innerHTML = `
+                <div class="flex items-center gap-3 py-4 px-6 min-w-[300px]">
+                    ${icons[type]}<span>${message}</span>
+                </div>
+                <div class="toast-progress"></div>
+            `;
+            
             UIElements.toast.style.opacity = 1;
             UIElements.toast.style.transform = 'translateY(0)';
             lucide.createIcons();
             
+            // Modified: Changed to 5000ms
             appState.toastTimeout = setTimeout(() => {
                 if (UIElements.toast) {
                     UIElements.toast.style.opacity = 0;
                     UIElements.toast.style.transform = 'translateY(10px)';
                 }
-            }, 3500);
+            }, 5000);
         }
 
         function navigateTo(view) {
@@ -923,12 +908,45 @@
                 div.style.animationDelay = `${index * 0.1}s`;
                 
                 let statusClass = 'status-warning'; 
-                if (log.status) {
-                    if (log.status.includes('Tepat')) statusClass = 'status-success';
-                    else if (log.status.includes('Awal')) statusClass = 'status-danger'; 
+                let statusText = log.status || 'Pending';
+                let logTitle = 'Log Absensi';
+                let icon = 'help-circle';
+
+                if (log.type === 'check_in') {
+                    logTitle = 'Absen Masuk';
+                    icon = 'log-in';
+                    if (statusText.includes('Tepat')) statusClass = 'status-success';
+                    else if (statusText.includes('Telat')) statusClass = 'status-danger';
+                } else if (log.type === 'check_out') {
+                    logTitle = 'Absen Pulang';
+                    icon = 'log-out';
+                    if (statusText.includes('Tepat')) statusClass = 'status-success';
+                    else if (statusText.includes('Awal')) statusClass = 'status-danger';
+                } else if (log.type === 'absence') {
+                    if (statusText === 'Sakit') {
+                        logTitle = 'Keterangan Sakit';
+                        icon = 'thermometer';
+                        statusClass = 'status-warning';
+                    } else if (statusText === 'Izin') {
+                        logTitle = 'Keterangan Izin';
+                        icon = 'file-text';
+                        statusClass = 'status-info'; 
+                    } else {
+                        logTitle = 'Keterangan Lain';
+                        icon = 'alert-circle';
+                    }
+                } else {
+                    // Fallback for existing data that might just have status
+                    if (statusText === 'Sakit') {
+                        logTitle = 'Keterangan Sakit';
+                        icon = 'thermometer';
+                        statusClass = 'status-warning';
+                    } else if (statusText === 'Izin') {
+                        logTitle = 'Keterangan Izin';
+                        icon = 'file-text';
+                        statusClass = 'status-info';
+                    }
                 }
-                
-                const icon = log.type === 'check_in' ? 'log-in' : 'log-out';
                 
                 div.innerHTML = `
                     <div class="flex items-center gap-3">
@@ -936,11 +954,11 @@
                             <i data-lucide="${icon}" class="w-5 h-5 text-white"></i>
                         </div>
                         <div>
-                            <p class="font-semibold text-white">${log.type === 'check_in' ? 'Absen Masuk' : 'Absen Pulang'}</p>
+                            <p class="font-semibold text-white">${logTitle}</p>
                             <p class="text-sm text-white-glass">${log.log_time || 'Waktu Belum Tercatat'}</p>
                         </div>
                     </div>
-                    <span class="status-badge ${statusClass}">${log.status || 'Status Belum Ada'}</span>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
                 `;
                 
                 UIElements.attendanceLogList.appendChild(div);
@@ -950,16 +968,28 @@
         }
         
         function updateAttendanceButtons() {
-            if (!UIElements.checkInButton || !UIElements.checkOutButton) return;
+            if (!UIElements.checkInButton || !UIElements.checkOutButton || !UIElements.sakitButton || !UIElements.izinButton) return;
             
             const hasCheckedIn = appState.attendanceLogs.some(log => log.type === 'check_in');
             const hasCheckedOut = appState.attendanceLogs.some(log => log.type === 'check_out');
+            // Check for absence log OR older logs that might just have the status
+            const hasAbsenceLog = appState.attendanceLogs.some(log => log.type === 'absence' || log.status === 'Sakit' || log.status === 'Izin');
             
-            UIElements.checkInButton.disabled = hasCheckedIn;
-            UIElements.checkOutButton.disabled = !hasCheckedIn || hasCheckedOut;
+            const hasDayLog = hasCheckedIn || hasAbsenceLog;
+
+            UIElements.checkInButton.disabled = hasDayLog;
+            UIElements.sakitButton.disabled = hasDayLog;
+            UIElements.izinButton.disabled = hasDayLog;
             
-            UIElements.checkInButton.classList.toggle('opacity-50', hasCheckedIn);
-            UIElements.checkInButton.classList.toggle('cursor-not-allowed', hasCheckedIn);
+            // Can only check out if you have checked in AND not checked out yet.
+            UIElements.checkOutButton.disabled = !hasCheckedIn || hasCheckedOut; 
+            
+            UIElements.checkInButton.classList.toggle('opacity-50', hasDayLog);
+            UIElements.checkInButton.classList.toggle('cursor-not-allowed', hasDayLog);
+            UIElements.sakitButton.classList.toggle('opacity-50', hasDayLog);
+            UIElements.sakitButton.classList.toggle('cursor-not-allowed', hasDayLog);
+            UIElements.izinButton.classList.toggle('opacity-50', hasDayLog);
+            UIElements.izinButton.classList.toggle('cursor-not-allowed', hasDayLog);
             
             UIElements.checkOutButton.classList.toggle('opacity-50', !hasCheckedIn || hasCheckedOut);
             UIElements.checkOutButton.classList.toggle('cursor-not-allowed', !hasCheckedIn || hasCheckedOut);
@@ -983,6 +1013,32 @@
         
         function renderAllAttendanceLog(filter = '') {
             if (!UIElements.adminAttendanceLogBody) return;
+
+            // --- NEW: Calculate Stats ---
+            let countTepat = 0;
+            let countTelat = 0;
+            let countIzin = 0;
+            let countSakit = 0;
+
+            appState.allAttendanceLogs.forEach(log => {
+                const status = log.status || '';
+                if (status === 'Sakit') {
+                    countSakit++;
+                } else if (status === 'Izin') {
+                    countIzin++;
+                } else if (status.includes('Tepat')) { // Catches 'Tepat Waktu', 'Tepat Masuk'
+                    countTepat++;
+                } else if (status.includes('Telat')) { // Catches 'Telat', 'Telat Masuk'
+                    countTelat++;
+                }
+            });
+
+            // Update UI
+            if (UIElements.countTepat) UIElements.countTepat.textContent = countTepat;
+            if (UIElements.countTelat) UIElements.countTelat.textContent = countTelat;
+            if (UIElements.countIzin) UIElements.countIzin.textContent = countIzin;
+            if (UIElements.countSakit) UIElements.countSakit.textContent = countSakit;
+            // --- END: Calculate Stats ---
             
             UIElements.adminAttendanceLogBody.innerHTML = '';
             
@@ -1018,13 +1074,22 @@
                 const email = log.profiles?.email || '-';
                 const className = log.profiles?.classes?.class_name || '-';
                 const fullName = log.profiles?.full_name || email.split('@')[0] || 'Tanpa Nama'; 
-                const type = log.type === 'check_in' ? 'Masuk' : 'Pulang';
+                
+                let type = log.type || '';
+                if (type === 'check_in') type = 'Masuk';
+                else if (type === 'check_out') type = 'Pulang';
+                else if (type === 'absence') type = 'Absen';
+                else type = log.type; // Fallback
+
                 const time = log.log_time || '...';
                 const status = log.status || '...';
 
                 let statusClass = 'status-warning'; 
                 if (status.includes('Tepat')) statusClass = 'status-success';
                 else if (status.includes('Awal')) statusClass = 'status-danger';
+                else if (status.includes('Telat')) statusClass = 'status-danger';
+                else if (status === 'Izin') statusClass = 'status-info';
+                else if (status === 'Sakit') statusClass = 'status-warning';
 
                 row.innerHTML = `
                     <td class="p-3">
@@ -1322,12 +1387,24 @@
             const logDate = jakartaTime.toISOString().split('T')[0];
             const logTime = jakartaTime.toTimeString().split(' ')[0];
             
+            // TODO: Implement logic to determine 'Tepat' or 'Telat'
+            // For now, we set 'Pending' and assume a trigger/function will update it.
+            // Or, you would compare 'logTime' to a schedule (e.g., '07:00:00')
+            let status = 'Pending';
+            if (type === 'check_in') {
+                // Example: if (logTime > "07:00:00") status = "Telat Masuk";
+                // else status = "Tepat Masuk";
+                status = "Pending"; // Keeping simple as per original code
+            } else {
+                status = "Pending";
+            }
+
             const record = { 
                 user_id: appState.currentUser.id, 
                 type: type,
                 log_date: logDate,
                 log_time: logTime,
-                status: 'Pending' // <-- FIX: Ditambahkan untuk memenuhi NOT NULL constraint
+                status: status // Status will be 'Pending'
             };
             
             console.log('Inserting attendance record:', record);
@@ -1358,10 +1435,66 @@
                     ? `Anda sudah melakukan absen ${type === 'check_in' ? 'masuk' : 'pulang'} hari ini.`
                     : ErrorHandler.handle(error, `absensi ${type}`);
                 showToast(specificMessage, 'error');
-                button.disabled = false; 
+                // button.disabled = false; // Don't re-enable, let updateAttendanceButtons handle it
             } finally {
                 showLoading(false);
                 updateAttendanceButtons(); 
+            }
+        }
+
+        async function handleAbsenceRequest(status) {
+            if (status !== 'Sakit' && status !== 'Izin') {
+                console.error("Invalid absence type:", status);
+                return;
+            }
+            if (!appState.currentUser) {
+                showToast('Sesi tidak valid, silakan login ulang.', 'error');
+                handleLogout(); 
+                return;
+            }
+
+            const button = status === 'Sakit' ? UIElements.sakitButton : UIElements.izinButton;
+            button.disabled = true; 
+            showLoading(true);
+            
+            const now = new Date();
+            const jakartaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+            const logDate = jakartaTime.toISOString().split('T')[0];
+            const logTime = jakartaTime.toTimeString().split(' ')[0];
+            
+            const record = { 
+                user_id: appState.currentUser.id, 
+                type: 'absence', // New type
+                log_date: logDate,
+                log_time: logTime,
+                status: status // 'Sakit' or 'Izin'
+            };
+            
+            try {
+                const { data, error } = await supabase
+                    .from('attendance_log')
+                    .insert(record)
+                    .select() 
+                    .single(); 
+
+                if (error) throw error; 
+
+                showToast(`Keterangan '${status}' berhasil direkam!`, 'success');
+                
+                await fetchTodayAttendance();
+                renderAttendanceLog(); 
+                updateAttendanceButtons(); 
+
+            } catch (error) {
+                console.error(`Error during ${status} request:`, error);
+                const specificMessage = error.message.includes('duplicate key value violates unique constraint') 
+                    ? `Anda sudah merekam absensi hari ini.`
+                    : ErrorHandler.handle(error, `pengajuan ${status}`);
+                showToast(specificMessage, 'error');
+                // button.disabled = false; // Let updateAttendanceButtons handle state
+            } finally {
+                showLoading(false);
+                updateAttendanceButtons(); // Ensure all buttons are in correct state
             }
         }
 
@@ -1484,7 +1617,7 @@
                 log.profiles?.nisn || '-', 
                 log.profiles?.email || '-', 
                 log.profiles?.classes?.class_name || '-', 
-                log.type === 'check_in' ? 'Masuk' : 'Pulang', 
+                log.type === 'check_in' ? 'Masuk' : (log.type === 'check_out' ? 'Pulang' : 'Absen'), 
                 log.log_time || '-', 
                 log.status || '-', 
                 log.log_date || '-' 
@@ -1898,6 +2031,92 @@
         
         // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
+            // FIX: Initialize UIElements now that DOM is ready
+            UIElements = {
+                loadingScreen: document.getElementById('loading-screen'),
+                loginPage: document.getElementById('login-page'),
+                mainApp: document.getElementById('main-app'),
+                loginView: document.getElementById('login-view'),
+                signupView: document.getElementById('signup-view'),
+                forgotPasswordView: document.getElementById('forgot-password-view'),
+                loginForm: document.getElementById('login-form'),
+                signupForm: document.getElementById('signup-form'),
+                forgotPasswordForm: document.getElementById('forgot-password-form'),
+                loginError: document.getElementById('login-error'),
+                signupError: document.getElementById('signup-error'),
+                forgotError: document.getElementById('forgot-error'),
+                welcomeMessage: document.getElementById('welcome-message'),
+                headerPfp: document.getElementById('header-pfp'),
+                profileButton: document.getElementById('profile-button'),
+                profileDropdown: document.getElementById('profile-dropdown'),
+                profileModalOpenBtn: document.getElementById('profile-modal-open-btn'),
+                logoutButton: document.getElementById('logout-button'),
+                profileModal: document.getElementById('profile-modal'),
+                closeProfileModal: document.getElementById('close-profile-modal'),
+                profileForm: document.getElementById('profile-form'),
+                profileFullName: document.getElementById('profile-full-name'),
+                profileEmail: document.getElementById('profile-email'),
+                profileNisn: document.getElementById('profile-nisn'),
+                profileImagePreview: document.getElementById('profile-image-preview'),
+                profileImageInput: document.getElementById('profile-image-input'),
+                profileImageUploadBtn: document.getElementById('profile-image-upload-btn'),
+                removeProfileImageBtn: document.getElementById('remove-profile-image-btn'),
+                profileSaveBtn: document.getElementById('profile-save-btn'),
+                cropperModal: document.getElementById('cropper-modal'),
+                cropperImage: document.getElementById('cropper-image'),
+                cropperApplyBtn: document.getElementById('cropper-apply-btn'),
+                cropperCancelBtn: document.getElementById('cropper-cancel-btn'),
+                cropperRotateLeftBtn: document.getElementById('cropper-rotate-left-btn'),
+                cropperRotateRightBtn: document.getElementById('cropper-rotate-right-btn'),
+                studentView: document.getElementById('student-view'),
+                adminView: document.getElementById('admin-view'),
+                clock: document.getElementById('clock'),
+                date: document.getElementById('date'),
+                scheduleTableBody: document.getElementById('schedule-table-body'),
+                adminScheduleTableBody: document.getElementById('admin-schedule-table-body'),
+                attendanceLogList: document.getElementById('attendance-log-list'),
+                checkInButton: document.getElementById('check-in-button'),
+                checkOutButton: document.getElementById('check-out-button'),
+                sakitButton: document.getElementById('sakit-button'), // NEW
+                izinButton: document.getElementById('izin-button'), // NEW
+                saveScheduleButton: document.getElementById('save-schedule-button'),
+                toast: document.getElementById('toast'),
+                toastMessage: document.getElementById('toast-message'), // Kept for safety, though showToast doesn't use it
+                adminAttendanceLogBody: document.getElementById('admin-attendance-log-body'),
+                refreshAttendanceButton: document.getElementById('refresh-attendance-button'),
+                searchStudentInput: document.getElementById('search-student-input'),
+                adminClassSelect: document.getElementById('admin-class-select'),
+                adminScheduleContainer: document.getElementById('admin-schedule-container'),
+                exportCsvButton: document.getElementById('export-csv-button'),
+                signupClassSelect: document.getElementById('signup-class-select'),
+                adminClassManagementSection: document.getElementById('admin-class-management'),
+                adminClassList: document.getElementById('admin-class-list'),
+                addClassForm: document.getElementById('add-class-form'),
+                newClassNameInput: document.getElementById('new-class-name'),
+                countTepat: document.getElementById('count-tepat'), // NEW
+                countTelat: document.getElementById('count-telat'), // NEW
+                countIzin: document.getElementById('count-izin'), // NEW
+                countSakit: document.getElementById('count-sakit'), // NEW
+            };
+
+            // FIX: Initialize appState
+            appState = {
+                currentUser: null,
+                profile: null,
+                scheduleData: {},
+                attendanceLogs: [],
+                allAttendanceLogs: [],
+                toastTimeout: null,
+                attendanceSubscription: null,
+                clockInterval: null,
+                profileImageFile: null, // Untuk menyimpan file Blob hasil crop
+                profileImageToDelete: false, 
+                selectedAdminClassId: null,
+                classList: [],
+                cropperInstance: null,
+            };
+
+            // Now it's safe to call checkUserSession
             checkUserSession(); 
             
             if (!appState.clockInterval) { 
@@ -1969,6 +2188,8 @@
             // Student Attendance
             UIElements.checkInButton?.addEventListener('click', () => handleAttendance('check_in'));
             UIElements.checkOutButton?.addEventListener('click', () => handleAttendance('check_out'));
+            UIElements.sakitButton?.addEventListener('click', () => handleAbsenceRequest('Sakit')); // NEW
+            UIElements.izinButton?.addEventListener('click', () => handleAbsenceRequest('Izin')); // NEW
 
             // Admin Attendance
             UIElements.refreshAttendanceButton?.addEventListener('click', async () => {
@@ -2001,7 +2222,9 @@
         <p class="mt-6 text-white text-lg font-semibold">Memuat...</p>
     </div>
 
-    <div id="toast" class="fixed bottom-6 right-6 z-[10000]" style="opacity: 0; transform: translateY(10px);"><span id="toast-message"></span></div>
+    <div id="toast" class="fixed bottom-6 right-6 z-[10000] overflow-hidden rounded-xl" style="opacity: 0; transform: translateY(10px);">
+        <!-- Content will be injected by showToast -->
+    </div>
 
     <!-- Login Page -->
     <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
@@ -2175,21 +2398,29 @@
 
         <!-- Student View -->
         <div id="student-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
-            <!-- Konten Siswa (tidak berubah) -->
+            <!-- Konten Siswa -->
             <div class="glass-effect rounded-2xl p-6 sm:p-8 text-center shadow-xl card-hover">
                 <div class="mb-6">
                     <h2 id="clock" class="clock-display gradient-text mb-2">00:00:00</h2>
                     <p id="date" class="text-white-glass text-lg">-</p>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button id="check-in-button" type="button" class="flex-1 sm:flex-initial px-8 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 justify-center">
+                    <button id="check-in-button" type="button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
                         <i data-lucide="log-in" class="w-5 h-5"></i>
                         Absen Masuk
                     </button>
-                    <button id="check-out-button" type="button" class="flex-1 sm:flex-initial px-8 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
+                    <button id="check-out-button" type="button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
                         <i data-lucide="log-out" class="w-5 h-5"></i>
                         Absen Pulang
+                    </button>
+                    <button id="izin-button" type="button" class="px-6 py-4 btn-info-custom text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                        Izin
+                    </button>
+                    <button id="sakit-button" type="button" class="px-6 py-4 btn-warning-custom text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="thermometer" class="w-5 h-5"></i>
+                        Sakit
                     </button>
                 </div>
             </div>
@@ -2233,7 +2464,32 @@
 
         <!-- Admin View -->
         <div id="admin-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
-            <!-- Konten Admin (tidak berubah) -->
+            
+            <!-- NEW: Admin Summary -->
+            <div class="glass-effect rounded-2xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-white mb-6">Ringkasan Absensi Hari Ini</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-emerald-400">
+                        <p class="text-sm text-emerald-200 font-semibold">Tepat Masuk</p>
+                        <span id="count-tepat" class="text-4xl font-bold text-white">0</span>
+                    </div>
+                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-yellow-400">
+                        <p class="text-sm text-yellow-200 font-semibold">Telat Masuk</p>
+                        <span id="count-telat" class="text-4xl font-bold text-white">0</span>
+                    </div>
+                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-blue-400">
+                        <p class="text-sm text-blue-200 font-semibold">Izin</p>
+                        <span id="count-izin" class="text-4xl font-bold text-white">0</span>
+                    </div>
+                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-orange-400">
+                        <p class="text-sm text-orange-200 font-semibold">Sakit</p>
+                        <span id="count-sakit" class="text-4xl font-bold text-white">0</span>
+                    </div>
+                </div>
+            </div>
+            <!-- END: Admin Summary -->
+
+            <!-- Konten Admin -->
             <div class="glass-effect rounded-2xl p-6 shadow-lg">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div class="flex items-center gap-3">
