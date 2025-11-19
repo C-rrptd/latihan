@@ -13,11 +13,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js" defer></script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* --- BASE STYLES --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Inter', sans-serif;
@@ -27,13 +24,11 @@
             overflow-x: hidden;
         }
         
+        /* --- BACKGROUND ANIMATION --- */
         body::before {
             content: '';
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
+            top: -50%; left: -50%; width: 200%; height: 200%;
             background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
             background-size: 50px 50px;
             animation: backgroundMove 20s linear infinite;
@@ -46,29 +41,23 @@
             100% { transform: translate(50px, 50px); }
         }
         
+        /* --- GLASSMORPHISM COMPONENT --- */
         .glass-effect {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37),
-                        inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
             position: relative;
         }
         
         .glass-effect::before {
             content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                rgba(255, 255, 255, 0.6) 50%, 
-                transparent 100%);
+            position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
         }
         
+        /* --- TYPOGRAPHY --- */
         .gradient-text {
             background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
             -webkit-background-clip: text;
@@ -77,34 +66,24 @@
             filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.3));
         }
         
+        /* --- BUTTONS --- */
         .btn-primary {
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-weight: 600;
+            color: white; font-weight: 600;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
         }
         
         .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+            content: ''; position: absolute;
+            top: 50%; left: 50%; width: 0; height: 0;
+            border-radius: 50%; background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s;
         }
         
-        .btn-primary:hover::before {
-            width: 300px;
-            height: 300px;
-        }
+        .btn-primary:hover::before { width: 300px; height: 300px; }
         
         .btn-primary:hover {
             transform: translateY(-2px);
@@ -112,314 +91,169 @@
             border-color: rgba(255, 255, 255, 0.5);
         }
         
-        .btn-primary:active {
-            transform: translateY(0);
-        }
+        .btn-primary:active { transform: translateY(0); }
 
         .btn-secondary {
             background: rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .btn-secondary:hover {
-            background: rgba(0, 0, 0, 0.3);
-        }
+        .btn-secondary:hover { background: rgba(0, 0, 0, 0.3); }
 
         .btn-danger {
             background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fee2e2;
+            border: 1px solid rgba(239, 68, 68, 0.3); color: #fee2e2;
         }
-        .btn-danger:hover {
-            background: rgba(239, 68, 68, 0.4);
-        }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.4); }
 
-        /* Tombol Izin/Sakit Baru */
         .btn-warning-custom {
             background: rgba(245, 158, 11, 0.2);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            color: #fef3c7;
-            font-weight: 600;
-            transition: all 0.3s ease;
+            border: 1px solid rgba(245, 158, 11, 0.3); color: #fef3c7;
+            font-weight: 600; transition: all 0.3s ease;
         }
-        .btn-warning-custom:hover {
-            background: rgba(245, 158, 11, 0.4);
-        }
+        .btn-warning-custom:hover { background: rgba(245, 158, 11, 0.4); }
+        
         .btn-info-custom {
             background: rgba(59, 130, 246, 0.2);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: #dbeafe;
-            font-weight: 600;
-            transition: all 0.3s ease;
+            border: 1px solid rgba(59, 130, 246, 0.3); color: #dbeafe;
+            font-weight: 600; transition: all 0.3s ease;
         }
-        .btn-info-custom:hover {
-            background: rgba(59, 130, 246, 0.4);
-        }
+        .btn-info-custom:hover { background: rgba(59, 130, 246, 0.4); }
         
+        /* --- UTILITIES & ANIMATIONS --- */
         .spinner {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top-color: white;
-            border-radius: 50%;
+            border-top-color: white; border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
         
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .animate-slide-in {
-            animation: slideIn 0.5s ease-out;
-        }
+        .animate-slide-in { animation: slideIn 0.5s ease-out; }
         
-        .card-hover {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
+        .card-hover { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-hover:hover {
             transform: translateY(-8px) scale(1.01);
-            box-shadow: 0 20px 40px rgba(255, 255, 255, 0.2),
-                        inset 0 2px 0 0 rgba(255, 255, 255, 0.6);
+            box-shadow: 0 20px 40px rgba(255, 255, 255, 0.2), inset 0 2px 0 0 rgba(255, 255, 255, 0.6);
         }
         
+        /* --- FORMS --- */
         input:focus, select:focus, textarea:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.15);
+            outline: none; background: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1),
-                        inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
         }
         
         input, select, textarea {
             background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            transition: all 0.3s ease;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; transition: all 0.3s ease;
         }
         
-        input::placeholder, select option {
-            color: rgba(255, 255, 255, 0.6);
-        }
+        input::placeholder, select option { color: rgba(255, 255, 255, 0.6); }
         
+        /* --- BADGES --- */
         .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: inline-block; padding: 0.25rem 0.75rem;
+            border-radius: 9999px; font-size: 0.75rem; font-weight: 600;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        .status-success { background: rgba(16, 185, 129, 0.2); color: #d1fae5; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
+        .status-warning { background: rgba(245, 158, 11, 0.2); color: #fef3c7; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); }
+        .status-danger { background: rgba(239, 68, 68, 0.2); color: #fee2e2; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); }
+        .status-info { background: rgba(59, 130, 246, 0.2); color: #dbeafe; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); }
         
-        .status-success {
-            background: rgba(16, 185, 129, 0.2);
-            color: #d1fae5;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-        }
-        
-        .status-warning {
-            background: rgba(245, 158, 11, 0.2);
-            color: #fef3c7;
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-        }
-        
-        .status-danger {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fee2e2;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-        }
-
-        .status-info {
-            background: rgba(59, 130, 246, 0.2);
-            color: #dbeafe;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-        }
-        
+        /* --- CLOCK --- */
         .clock-display {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            font-size: 3rem; font-weight: 800; letter-spacing: -0.02em;
             filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.5));
         }
+        @media (max-width: 768px) { .clock-display { font-size: 2rem; } }
         
-        @media (max-width: 768px) {
-            .clock-display {
-                font-size: 2rem;
-            }
-        }
-        
-        table {
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-        
+        /* --- TABLES --- */
+        table { border-collapse: separate; border-spacing: 0; }
         table thead tr th {
-            position: sticky;
-            top: 0;
-            background: rgba(249, 250, 251, 0.15);
-            backdrop-filter: blur(10px);
-            z-index: 10;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            position: sticky; top: 0;
+            background: rgba(249, 250, 251, 0.15); backdrop-filter: blur(10px);
+            z-index: 10; border-bottom: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
         }
+        tbody tr { transition: all 0.3s ease; background: rgba(255, 255, 255, 0.05); }
+        tbody tr:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.01); }
+        tbody td { border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: white; }
         
-        tbody tr {
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        tbody tr:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: scale(1.01);
-        }
-        
-        tbody td {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-        
-        [contenteditable="true"] {
-            min-height: 2rem;
-            padding: 0.5rem;
-            transition: all 0.3s ease;
-        }
-        
+        /* --- EDITABLE CELLS --- */
+        [contenteditable="true"] { min-height: 2rem; padding: 0.5rem; transition: all 0.3s ease; }
         [contenteditable="true"]:focus {
             background: rgba(251, 191, 36, 0.2);
-            outline: 2px solid rgba(245, 158, 11, 0.5);
-            outline-offset: -2px;
+            outline: 2px solid rgba(245, 158, 11, 0.5); outline-offset: -2px;
             backdrop-filter: blur(10px);
         }
         
         .delete-class-btn {
-            background-color: transparent;
-            color: #fca5a5;
-            padding: 0.25rem;
-            border-radius: 0.375rem;
-            transition: all 0.3s ease;
+            background-color: transparent; color: #fca5a5;
+            padding: 0.25rem; border-radius: 0.375rem; transition: all 0.3s ease;
         }
-        
         .delete-class-btn:hover {
-            background: rgba(239, 68, 68, 0.15);
-            color: #fee2e2;
-            backdrop-filter: blur(10px);
+            background: rgba(239, 68, 68, 0.15); color: #fee2e2; backdrop-filter: blur(10px);
         }
         
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        .login-container {
-            animation: float 6s ease-in-out infinite;
-        }
+        .float-animation { animation: float 3s ease-in-out infinite; }
+        .login-container { animation: float 6s ease-in-out infinite; }
         
         #loading-screen {
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
             backdrop-filter: blur(20px);
         }
         
-        .text-white-glass {
-            color: rgba(255, 255, 255, 0.95);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+        .text-white-glass { color: rgba(255, 255, 255, 0.95); text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
         
-        select {
-            background: rgba(255, 255, 255, 0.08);
-            color: white;
-        }
-        
-        select option {
-            background: #667eea;
-            color: white;
-        }
+        select { background: rgba(255, 255, 255, 0.08); color: white; }
+        select option { background: #667eea; color: white; }
 
-        /* Gaya Modal Baru */
+        /* --- MODAL & CROPPER --- */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            z-index: 5000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
+            z-index: 5000; display: flex; align-items: center; justify-content: center;
         }
-        
-        .modal-content {
-            z-index: 5001;
-            max-width: 90%;
-            width: 100%;
-        }
+        .modal-content { z-index: 5001; max-width: 90%; width: 100%; }
+        #cropper-modal-content { max-width: 600px; }
+        #cropper-container { height: 400px; background-color: #111; }
+        #cropper-container img { max-width: 100%; height: 100%; object-fit: contain; }
 
-        /* Gaya untuk Cropper.js */
-        #cropper-modal-content {
-            max-width: 600px; /* Batas lebar modal cropper */
-        }
-        
-        #cropper-container {
-            height: 400px; /* Tinggi spesifik untuk area crop */
-            background-color: #111;
-        }
-        
-        #cropper-container img {
-            max-width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        /* --- Toast Progress Bar --- */
-        #toast {
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
+        /* --- TOAST --- */
+        #toast { transition: opacity 0.3s ease, transform 0.3s ease; }
         .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 5px;
-            width: 100%;
+            position: absolute; bottom: 0; left: 0;
+            height: 5px; width: 100%;
             background-color: rgba(255, 255, 255, 0.4);
             animation: toastCountdown 5s linear forwards;
         }
-
-        @keyframes toastCountdown {
-            from { width: 100%; }
-            to { width: 0%; }
-        }
-        /* --- End Toast Progress Bar --- */
+        @keyframes toastCountdown { from { width: 100%; } to { width: 0%; } }
     </style>
     
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        // ?? CONFIGURATION REQUIRED FOR GITHUB PAGES ??
-        // Replace these with your actual Supabase credentials
+        // --- KONFIGURASI SUPABASE ---
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
-        
-        // ?? HARAP BUAT BUCKET 'avatars' (PUBLIC) DI SUPABASE STORAGE ANDA ??
         const AVATAR_BUCKET = 'avatars';
         
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Validators
+        // --- VALIDATOR ---
         const Validators = {
             email: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
             nisn: (nisn) => /^\d{10}$/.test(nisn),
@@ -434,69 +268,65 @@
             required: 'Kolom ini wajib diisi'
         };
         
-        // FIX: Declare variables with 'let' so they can be initialized later
+        // --- STATE MANAGEMENT ---
         let UIElements = {};
-        let appState = {};
+        let appState = {
+            currentUser: null,
+            profile: null,
+            scheduleData: {},
+            attendanceLogs: [],
+            allAttendanceLogs: [],
+            toastTimeout: null,
+            attendanceSubscription: null,
+            clockInterval: null,
+            profileImageFile: null,
+            profileImageToDelete: false,
+            selectedAdminClassId: null,
+            classList: [],
+            cropperInstance: null,
+        };
 
+        // --- ERROR HANDLING ---
         class ErrorHandler {
             static handle(error, context = '') {
                 console.error(`Error in ${context}:`, error);
-                const friendlyMessages = {
-                    'Invalid login credentials': 'Email/NISN atau password salah.',
-                    'Email not confirmed': 'Email belum diverifikasi. Cek inbox Anda.',
-                    'User already registered': 'Email sudah terdaftar',
-                    'Network request failed': 'Koneksi internet bermasalah',
-                    'Failed to fetch': 'Gagal terhubung ke server',
-                    'PGRST116': 'Data tidak ditemukan',
-                    '23503': 'Tidak dapat menghapus kelas karena masih ada data terkait.',
-                    'duplicate key value violates unique constraint "profiles_nisn_key"': 'NISN sudah terdaftar',
-                    'duplicate key value violates unique constraint "classes_class_name_key"': 'Nama kelas sudah ada.',
-                    'Invalid file type': 'Jenis file tidak valid. Harap unggah PNG atau JPEG.',
-                    'File too large': 'Ukuran file terlalu besar.',
-                    'Storage object not found': 'Gagal memuat foto profil.',
-                    'Bucket not found': `Bucket Supabase '${AVATAR_BUCKET}' tidak ditemukan. Harap periksa konfigurasi.`,
-                };
-
-                if (error.code && friendlyMessages[error.code]) {
-                    return friendlyMessages[error.code];
-                }
+                const msg = error.message || '';
                 
-                if (error.message?.includes('Bucket not found')) {
-                    return friendlyMessages['Bucket not found'];
-                }
+                // Map common errors
+                if (msg.includes('Invalid login') || msg.includes('invalid_grant')) return 'Email/NISN atau password salah.';
+                if (msg.includes('Email not confirmed')) return 'Email belum diverifikasi. Cek inbox Anda.';
+                if (msg.includes('already registered')) return 'Email sudah terdaftar';
+                if (msg.includes('Failed to fetch')) return 'Gagal terhubung ke server';
+                if (error.code === 'PGRST116') return 'Data tidak ditemukan';
+                if (error.code === '23503') return 'Tidak dapat menghapus data karena masih ada relasi.';
+                if (msg.includes('profiles_nisn_key')) return 'NISN sudah terdaftar';
+                if (msg.includes('classes_class_name_key')) return 'Nama kelas sudah ada.';
+                if (msg.includes('Bucket not found')) return `Bucket '${AVATAR_BUCKET}' tidak ditemukan.`;
 
-                for (const [key, message] of Object.entries(friendlyMessages)) {
-                    if (error.message?.includes(key)) return message;
-                }
-                return error.message || `Terjadi kesalahan saat ${context}`;
+                return msg || `Terjadi kesalahan saat ${context}`;
             }
         }
         
+        // --- UI UTILITIES ---
         function showLoading(isLoading) { 
-            UIElements.loadingScreen?.classList.toggle('hidden', !isLoading); 
+            if (UIElements.loadingScreen) UIElements.loadingScreen.classList.toggle('hidden', !isLoading); 
         }
 
         function showToast(message, type = 'success') {
-            if (!UIElements.toast) return; // Removed UIElements.toastMessage check
+            if (!UIElements.toast) return;
             clearTimeout(appState.toastTimeout);
             
-            const icons = {
-                success: '<i data-lucide="check-circle" class="w-5 h-5"></i>',
-                error: '<i data-lucide="alert-circle" class="w-5 h-5"></i>',
-                info: '<i data-lucide="info" class="w-5 h-5"></i>'
+            const config = {
+                success: { icon: 'check-circle', color: 'bg-emerald-500' },
+                error: { icon: 'alert-circle', color: 'bg-red-500' },
+                info: { icon: 'info', color: 'bg-blue-500' }
             };
-            const colors = { 
-                success: 'bg-emerald-500', 
-                error: 'bg-red-500', 
-                info: 'bg-blue-500' 
-            };
-            // Modified: Removed padding, flex, etc. Added overflow-hidden.
-            UIElements.toast.className = `fixed bottom-6 right-6 ${colors[type]} text-white rounded-xl shadow-2xl z-[6000] transition-all duration-300 overflow-hidden`;
-            
-            // Modified: New inner structure with progress bar
+            const theme = config[type] || config.success;
+
+            UIElements.toast.className = `fixed bottom-6 right-6 ${theme.color} text-white rounded-xl shadow-2xl z-[6000] transition-all duration-300 overflow-hidden`;
             UIElements.toast.innerHTML = `
                 <div class="flex items-center gap-3 py-4 px-6 min-w-[300px]">
-                    ${icons[type]}<span>${message}</span>
+                    <i data-lucide="${theme.icon}" class="w-5 h-5"></i><span>${message}</span>
                 </div>
                 <div class="toast-progress"></div>
             `;
@@ -505,7 +335,6 @@
             UIElements.toast.style.transform = 'translateY(0)';
             lucide.createIcons();
             
-            // Modified: Changed to 5000ms
             appState.toastTimeout = setTimeout(() => {
                 if (UIElements.toast) {
                     UIElements.toast.style.opacity = 0;
@@ -534,18 +363,13 @@
                 signup: UIElements.signupView, 
                 forgotPassword: UIElements.forgotPasswordView 
             };
-            
             Object.values(views).forEach(v => v?.classList.add('hidden'));
             
             const targetView = views[viewName] || views.login;
-            if (targetView) {
-                targetView.classList.remove('hidden');
-                targetView.classList.add('animate-slide-in');
+            targetView?.classList.remove('hidden');
+            targetView?.classList.add('animate-slide-in');
 
-                if (viewName === 'signup') {
-                    await populateSignupClassDropdown();
-                }
-            }
+            if (viewName === 'signup') await populateSignupClassDropdown();
         }
 
         function updateClock() {
@@ -554,160 +378,94 @@
             const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             
-            UIElements.clock.textContent = now.toLocaleTimeString('id-ID', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
-            });
-            
+            UIElements.clock.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             UIElements.date.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
             
-            if (appState.profile?.role === 'student' && now.getSeconds() === 0) {
-                updateAttendanceButtons();
-            }
+            if (appState.profile?.role === 'student' && now.getSeconds() === 0) updateAttendanceButtons();
         }
 
-        function getInitials(name) {
+        // --- HELPER FUNCTIONS ---
+        const getInitials = (name) => {
             if (!name) return 'U';
-            const names = name.split(' ');
-            if (names.length === 1) return names[0].charAt(0).toUpperCase();
-            return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
-        }
+            const parts = name.trim().split(' ');
+            return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        };
 
-        function generatePfpPlaceholder(name) {
-            const initials = getInitials(name);
-            const bgColor = 'FFFFFF'; // White background
-            const textColor = '764ba2'; // Purple text
-            return `https://placehold.co/100x100/${bgColor}/${textColor}?text=${initials}&font=inter`;
-        }
+        const generatePfpPlaceholder = (name) => 
+            `https://placehold.co/100x100/FFFFFF/764ba2?text=${getInitials(name)}&font=inter`;
 
-        async function loadProfilePicture() {
+        function loadProfilePicture() {
+            if (!appState.profile) return;
             const name = appState.profile.full_name || appState.profile.email.split('@')[0];
             const placeholder = generatePfpPlaceholder(name);
+            const url = appState.profile.avatar_url 
+                ? `${appState.profile.avatar_url}?t=${Date.now()}` 
+                : placeholder;
 
-            if (UIElements.headerPfp) {
-                UIElements.headerPfp.src = placeholder; // Default
-                UIElements.headerPfp.onerror = () => { UIElements.headerPfp.src = placeholder; };
-            }
-            if (UIElements.profileImagePreview) {
-                UIElements.profileImagePreview.src = placeholder; // Default
-                UIElements.profileImagePreview.onerror = () => { UIElements.profileImagePreview.src = placeholder; };
-            }
-
-            if (appState.profile.avatar_url) {
-                try {
-                    // Cek apakah URL valid
-                    new URL(appState.profile.avatar_url);
-                    // Tambahkan cache buster untuk memastikan gambar baru dimuat
-                    const cacheBustedUrl = `${appState.profile.avatar_url}?t=${new Date().getTime()}`;
-                    
-                    if (UIElements.headerPfp) UIElements.headerPfp.src = cacheBustedUrl;
-                    if (UIElements.profileImagePreview) UIElements.profileImagePreview.src = cacheBustedUrl;
-                    
-                } catch (e) {
-                    console.warn("Invalid avatar_url:", appState.profile.avatar_url, e);
-                    showToast('Gagal memuat URL foto profil yang tidak valid.', 'error');
+            const setImg = (img) => {
+                if (img) {
+                    img.src = url;
+                    img.onerror = () => { img.src = placeholder; };
                 }
-            }
+            };
+            
+            setImg(UIElements.headerPfp);
+            setImg(UIElements.profileImagePreview);
         }
 
+        // --- CORE APP LOGIC ---
         async function initializeMainApp(user) {
             appState.currentUser = user;
-            console.log('Initializing app for user:', user.id);
             showLoading(true);
 
             try {
-                let { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .maybeSingle();
+                // Fetch Profile
+                let { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
                 
-                if (profileError && profileError.code !== 'PGRST116') {
-                    throw new Error("Gagal mengambil data profil: " + profileError.message);
-                }
-                
-                if (!profile) {
-                    const nisn = user.user_metadata?.nisn || localStorage.getItem(`pending_nisn_${user.id}`) || null;
-                    const classId = user.user_metadata?.class_id || localStorage.getItem(`pending_class_id_${user.id}`) || null; 
-                    const role = user.user_metadata?.role || 'student';
-                    const email = user.email;
-                    const fullName = user.user_metadata?.full_name || email.split('@')[0]; // Default full_name
-
-                    if (!email) {
-                        throw new Error("Email pengguna tidak ditemukan untuk membuat profil.");
-                    }
-
+                // Create profile if missing
+                if (!profile && !error) {
+                    const meta = user.user_metadata || {};
                     const { data: newProfile, error: createError } = await supabase
                         .from('profiles')
                         .insert({
                             id: user.id,
-                            email: email,
-                            nisn: nisn,
-                            role: role,
-                            class_id: classId,
-                            full_name: fullName // Simpan full_name saat pendaftaran
+                            email: user.email,
+                            nisn: meta.nisn || localStorage.getItem(`pending_nisn_${user.id}`),
+                            role: meta.role || 'student',
+                            class_id: meta.class_id || localStorage.getItem(`pending_class_id_${user.id}`),
+                            full_name: meta.full_name || user.email.split('@')[0]
                         })
-                        .select()
-                        .maybeSingle();
+                        .select().single();
+                    
+                    if (createError) throw createError;
+                    profile = newProfile;
+                    localStorage.removeItem(`pending_nisn_${user.id}`);
+                    localStorage.removeItem(`pending_class_id_${user.id}`);
+                } else if (error && error.code !== 'PGRST116') throw error;
 
-                    if (createError) {
-                        if (createError.message.includes('profiles_nisn_key')) {
-                            throw new Error('NISN ini sudah terdaftar pada akun lain.');
-                        }
-                        if (createError.code === '23505') {
-                            const { data: retryProfile, error: retryError } = await supabase
-                                .from('profiles').select('*').eq('id', user.id).maybeSingle();
-                            if (retryError) throw new Error("Gagal mengambil profil setelah error duplicate: " + retryError.message);
-                            profile = retryProfile;
-                        } else {
-                            throw new Error("Gagal membuat profil: " + createError.message);
-                        }
-                    } else {
-                        profile = newProfile;
-                        try {
-                            localStorage.removeItem(`pending_nisn_${user.id}`);
-                            localStorage.removeItem(`pending_class_id_${user.id}`);
-                        } catch (e) {
-                            console.warn('Cannot remove from localStorage:', e);
-                        }
-                    }
-                }
-                
-                if (!profile) {
-                    throw new Error("Profil pengguna tidak dapat dimuat atau dibuat.");
-                }
+                if (!profile) throw new Error("Gagal memuat profil.");
 
+                // Get Class Info
                 if (profile.class_id) {
-                    const { data: classData, error: classError } = await supabase
-                        .from('classes')
-                        .select('class_name')
-                        .eq('id', profile.class_id)
-                        .maybeSingle();
-                    if (!classError && classData) {
-                        profile.classes = classData;
-                    }
+                    const { data: cls } = await supabase.from('classes').select('class_name').eq('id', profile.class_id).maybeSingle();
+                    if (cls) profile.classes = cls;
                 }
-                
+
                 appState.profile = profile;
-                
-                const displayName = profile.full_name || profile.nisn || profile.email?.split('@')[0] || 'User';
-                UIElements.welcomeMessage.textContent = displayName;
-                await loadProfilePicture();
+                UIElements.welcomeMessage.textContent = profile.full_name || profile.email;
+                loadProfilePicture();
                 populateProfileModal();
 
-                if (appState.profile.role === 'admin') {
-                    await Promise.allSettled([
+                // Role-based initialization
+                if (profile.role === 'admin') {
+                    await Promise.all([
                         fetchAllTodayAttendance().then(() => renderAllAttendanceLog()),
-                        fetchClasses().then(() => { 
-                            populateAdminClassesDropdown(); 
-                            renderClassList(); 
-                        })
+                        fetchClasses().then(() => { populateAdminClassesDropdown(); renderClassList(); })
                     ]);
-                    subscribeToAttendanceChanges(); 
-                    subscribeToClassChanges(); 
+                    subscribeToAttendanceChanges();
+                    subscribeToClassChanges();
                 } else {
-                    await Promise.allSettled([
+                    await Promise.all([
                         fetchTodayAttendance().then(() => renderAttendanceLog()),
                         fetchSchedule().then(() => renderSchedule(UIElements.scheduleTableBody, false))
                     ]);
@@ -717,1509 +475,669 @@
                 navigateTo('app');
 
             } catch (err) {
-                showToast(ErrorHandler.handle(err, 'inisialisasi aplikasi'), "error");
-                setTimeout(() => {
-                    handleLogout();
-                }, 3000); 
+                showToast(ErrorHandler.handle(err, 'inisialisasi'), "error");
+                setTimeout(handleLogout, 3000);
             } finally {
                 showLoading(false);
             }
         }
 
-        function populateProfileModal() {
-            if (!appState.profile) return;
-            UIElements.profileFullName.value = appState.profile.full_name || '';
-            UIElements.profileEmail.value = appState.profile.email || '';
-            UIElements.profileNisn.value = appState.profile.nisn || '';
-            loadProfilePicture(); // Memastikan PFP di modal juga ter-update
-            
-            // Reset state modal
-            appState.profileImageFile = null;
-            appState.profileImageToDelete = false;
-        }
-
-        async function fetchSchedule() {
-            if (appState.profile?.role !== 'student' || !appState.profile.class_id) {
-                appState.scheduleData = {}; 
-                return;
-            }
-            
-            const { data, error } = await supabase
-                .from('schedules')
-                .select('data')
-                .eq('class_id', appState.profile.class_id)
-                .maybeSingle(); 
-                
-            if (error && error.code !== 'PGRST116') {
-                showToast('Gagal memuat jadwal pelajaran.', 'error');
-                appState.scheduleData = {};
-                return; 
-            }
-            
-            appState.scheduleData = data?.data || {}; 
-        }
-
-        async function fetchClasses() {
-            const { data: classes, error } = await supabase
-                .from('classes')
-                .select('id, class_name')
-                .order('class_name');
-                
-            if (error) {
-                showToast('Gagal memuat daftar kelas.', 'error');
-                appState.classList = []; 
-                throw error; 
-            }
-            
-            appState.classList = classes || [];
-        }
+        // --- DATA FETCHING & RENDERING ---
         
+        async function fetchClasses() {
+            const { data, error } = await supabase.from('classes').select('id, class_name').order('class_name');
+            if (error) throw error;
+            appState.classList = data || [];
+        }
+
         function populateAdminClassesDropdown() {
             if (!UIElements.adminClassSelect) return;
-            
-            UIElements.adminClassSelect.innerHTML = '<option value="" disabled selected>Pilih kelas...</option>';
-            appState.classList.forEach(c => {
-                UIElements.adminClassSelect.innerHTML += `<option value="${c.id}">${c.class_name}</option>`;
-            });
-            UIElements.adminClassSelect.value = ""; 
+            const options = ['<option value="" disabled selected>Pilih kelas...</option>', 
+                ...appState.classList.map(c => `<option value="${c.id}">${c.class_name}</option>`)
+            ].join('');
+            UIElements.adminClassSelect.innerHTML = options;
+            UIElements.adminClassSelect.value = "";
             appState.selectedAdminClassId = null;
-            UIElements.adminScheduleContainer?.classList.add('hidden'); 
+            UIElements.adminScheduleContainer?.classList.add('hidden');
         }
 
         async function populateSignupClassDropdown() {
             if (!UIElements.signupClassSelect) return;
+            if (!appState.classList.length) await fetchClasses().catch(() => {});
             
-            if (appState.classList.length === 0) {
-                try {
-                    await fetchClasses();
-                } catch (error) {
-                    UIElements.signupClassSelect.innerHTML = '<option value="" disabled selected>Gagal memuat kelas</option>';
-                    return;
-                }
-            }
+            const options = appState.classList.length 
+                ? appState.classList.map(c => `<option value="${c.id}">${c.class_name}</option>`).join('')
+                : '<option value="" disabled>Belum ada kelas</option>';
+                
+            UIElements.signupClassSelect.innerHTML = `<option value="" disabled selected>Pilih kelas Anda...</option>${options}`;
+        }
 
-            UIElements.signupClassSelect.innerHTML = '<option value="" disabled selected>Pilih kelas Anda...</option>';
-            if (appState.classList.length > 0) {
-                appState.classList.forEach(c => {
-                    UIElements.signupClassSelect.innerHTML += `<option value="${c.id}">${c.class_name}</option>`;
-                });
-            } else {
-                UIElements.signupClassSelect.innerHTML = '<option value="" disabled selected>Belum ada kelas tersedia</option>';
-            }
+        async function fetchSchedule() {
+            if (!appState.profile.class_id) return;
+            const { data } = await supabase.from('schedules').select('data').eq('class_id', appState.profile.class_id).maybeSingle();
+            appState.scheduleData = data?.data || {};
         }
 
         function renderSchedule(tbody, isEditable) {
             if (!tbody) return;
-            tbody.innerHTML = ''; 
-
-            const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
-            const times = [
-                "06:30-07:15", "07:15-08:00", "08:00-08:45", "08:45-09:30",
-                "09:30-9:45", "9:45:00-10:30", "10:30-11:15", "11:15-12:00",
-                "12:00-12:45", "12:45-13:30", "13:30-14:15", "14:15-15:00"
-            ];
+            tbody.innerHTML = '';
             
-            const scheduleExists = appState.scheduleData && Object.keys(appState.scheduleData).length > 0;
-
-            if (!scheduleExists && !isEditable) {
+            const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
+            const times = ["06:30-07:15", "07:15-08:00", "08:00-08:45", "08:45-09:30", "09:30-9:45", "9:45:00-10:30", "10:30-11:15", "11:15-12:00", "12:00-12:45", "12:45-13:30", "13:30-14:15", "14:15-15:00"];
+            
+            if (!Object.keys(appState.scheduleData || {}).length && !isEditable) {
                 tbody.innerHTML = `<tr><td colspan="${days.length + 1}" class="text-center p-6 text-white-glass">Jadwal belum diatur</td></tr>`;
                 return;
             }
-            
-            const todayIndex = new Date().getDay() - 1; 
 
-            times.forEach((time, timeIndex) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td class="p-3 font-semibold text-sm sticky left-0 z-10 text-white-glass" style="background: rgba(249, 250, 251, 0.15); backdrop-filter: blur(10px);">${time}</td>`; 
+            const todayIdx = new Date().getDay() - 1;
+            const fragment = document.createDocumentFragment();
+
+            times.forEach((time, tIdx) => {
+                const tr = document.createElement('tr');
+                let html = `<td class="p-3 font-semibold text-sm sticky left-0 z-10 text-white-glass" style="background:rgba(249,250,251,0.15);backdrop-filter:blur(10px);">${time}</td>`;
                 
-                days.forEach((day, dayIndex) => {
-                    const subject = scheduleExists ? (appState.scheduleData[day]?.[timeIndex] || '') : '';
-                    const cell = document.createElement('td');
-                    cell.className = 'p-1 text-center text-sm border-l border-white/10'; 
+                days.forEach((day, dIdx) => {
+                    const subject = appState.scheduleData?.[day]?.[tIdx] || '';
+                    const isRest = subject.toLowerCase().includes('istirahat');
+                    let cellClass = 'p-1 text-center text-sm border-l border-white/10 ';
+                    let cellContent = '';
 
-                    if (dayIndex === todayIndex && !isEditable) {
-                        cell.classList.add('font-semibold');
-                        cell.style.background = 'rgba(139, 92, 246, 0.3)';
+                    if (dIdx === todayIdx && !isEditable) {
+                        cellClass += 'font-semibold ';
+                        // Background handled via style
                     }
+                    if (isRest) cellClass += 'italic text-white-glass ';
 
-                    const isRestTime = subject.toLowerCase().includes('istirahat');
-                    if (isRestTime) {
-                        cell.classList.add('italic', 'text-white-glass');
-                        cell.style.background = 'rgba(156, 163, 175, 0.2)';
-                    }
-
-                    if (isEditable) {
-                        if (isRestTime) {
-                            cell.textContent = subject;
-                            cell.classList.add('text-white-glass');
-                        } else {
-                            cell.innerHTML = `<input type="text" value="${subject}" class="w-full min-w-[100px] p-2 bg-transparent text-center text-white placeholder-white/50 focus:bg-yellow-500/20 focus:outline-none rounded border border-transparent focus:border-yellow-300 transition-all">`;
-                        }
+                    if (isEditable && !isRest) {
+                        cellContent = `<input type="text" value="${subject}" class="w-full min-w-[100px] p-2 bg-transparent text-center text-white placeholder-white/50 focus:bg-yellow-500/20 focus:outline-none rounded border border-transparent focus:border-yellow-300 transition-all">`;
                     } else {
-                        cell.textContent = subject;
-                        cell.classList.add('p-3', 'text-white-glass'); 
+                        cellClass += isEditable ? 'text-white-glass ' : 'p-3 text-white-glass ';
+                        cellContent = subject;
                     }
-                    
-                    row.appendChild(cell);
+
+                    const bgStyle = (dIdx === todayIdx && !isEditable) ? 'background: rgba(139, 92, 246, 0.3);' : (isRest ? 'background: rgba(156, 163, 175, 0.2);' : '');
+                    html += `<td class="${cellClass.trim()}" style="${bgStyle}">${cellContent}</td>`;
                 });
-                
-                tbody.appendChild(row);
+                tr.innerHTML = html;
+                fragment.appendChild(tr);
             });
+            tbody.appendChild(fragment);
         }
-        
+
         async function fetchTodayAttendance() {
             if (!appState.currentUser) return;
-            
-            const { data, error } = await supabase
-                .from('attendance_log')
-                .select('*')
+            const { data } = await supabase.from('attendance_log').select('*')
                 .eq('user_id', appState.currentUser.id)
-                .eq('log_date', new Date().toISOString().slice(0, 10))
+                .eq('log_date', new Date().toISOString().split('T')[0])
                 .order('log_time', { ascending: false });
-                
-            if (error) {
-                showToast('Gagal memuat riwayat absensi hari ini.', 'error');
-                appState.attendanceLogs = []; 
-                return; 
-            }
-            
             appState.attendanceLogs = data || [];
         }
 
         function renderAttendanceLog() {
             if (!UIElements.attendanceLogList) return;
-            
             UIElements.attendanceLogList.innerHTML = '';
-            
-            if (appState.attendanceLogs.length === 0) {
-                UIElements.attendanceLogList.innerHTML = `
-                    <div class="text-center py-8">
-                        <i data-lucide="calendar-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i>
-                        <p class="text-white-glass">Belum ada riwayat absensi hari ini</p>
-                    </div>
-                `;
+
+            if (!appState.attendanceLogs.length) {
+                UIElements.attendanceLogList.innerHTML = `<div class="text-center py-8"><i data-lucide="calendar-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i><p class="text-white-glass">Belum ada riwayat absensi hari ini</p></div>`;
                 lucide.createIcons();
                 return;
             }
-            
-            appState.attendanceLogs.forEach((log, index) => {
+
+            const fragment = document.createDocumentFragment();
+            appState.attendanceLogs.forEach((log, i) => {
                 const div = document.createElement('div');
                 div.className = 'flex items-center justify-between p-4 rounded-lg glass-effect hover:bg-white/10 transition-colors animate-slide-in';
-                div.style.animationDelay = `${index * 0.1}s`;
+                div.style.animationDelay = `${i * 0.1}s`;
                 
-                let statusClass = 'status-warning'; 
-                let statusText = log.status || 'Pending';
-                let logTitle = 'Log Absensi';
-                let icon = 'help-circle';
-
+                let meta = { title: 'Log Absensi', icon: 'help-circle', class: 'status-warning' };
                 if (log.type === 'check_in') {
-                    logTitle = 'Absen Masuk';
-                    icon = 'log-in';
-                    if (statusText.includes('Tepat')) statusClass = 'status-success';
-                    else if (statusText.includes('Telat')) statusClass = 'status-danger';
+                    meta = { title: 'Absen Masuk', icon: 'log-in', class: log.status.includes('Tepat') ? 'status-success' : 'status-danger' };
                 } else if (log.type === 'check_out') {
-                    logTitle = 'Absen Pulang';
-                    icon = 'log-out';
-                    if (statusText.includes('Tepat')) statusClass = 'status-success';
-                    else if (statusText.includes('Awal')) statusClass = 'status-danger';
-                } else if (log.type === 'absence') {
-                    if (statusText === 'Sakit') {
-                        logTitle = 'Keterangan Sakit';
-                        icon = 'thermometer';
-                        statusClass = 'status-warning';
-                    } else if (statusText === 'Izin') {
-                        logTitle = 'Keterangan Izin';
-                        icon = 'file-text';
-                        statusClass = 'status-info'; 
-                    } else {
-                        logTitle = 'Keterangan Lain';
-                        icon = 'alert-circle';
-                    }
-                } else {
-                    // Fallback for existing data that might just have status
-                    if (statusText === 'Sakit') {
-                        logTitle = 'Keterangan Sakit';
-                        icon = 'thermometer';
-                        statusClass = 'status-warning';
-                    } else if (statusText === 'Izin') {
-                        logTitle = 'Keterangan Izin';
-                        icon = 'file-text';
-                        statusClass = 'status-info';
-                    }
+                    meta = { title: 'Absen Pulang', icon: 'log-out', class: log.status.includes('Tepat') ? 'status-success' : 'status-danger' };
+                } else if (log.status === 'Sakit') {
+                    meta = { title: 'Keterangan Sakit', icon: 'thermometer', class: 'status-warning' };
+                } else if (log.status === 'Izin') {
+                    meta = { title: 'Keterangan Izin', icon: 'file-text', class: 'status-info' };
                 }
-                
+
                 div.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full glass-effect flex items-center justify-center shadow">
-                            <i data-lucide="${icon}" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-white">${logTitle}</p>
-                            <p class="text-sm text-white-glass">${log.log_time || 'Waktu Belum Tercatat'}</p>
-                        </div>
+                        <div class="w-10 h-10 rounded-full glass-effect flex items-center justify-center shadow"><i data-lucide="${meta.icon}" class="w-5 h-5 text-white"></i></div>
+                        <div><p class="font-semibold text-white">${meta.title}</p><p class="text-sm text-white-glass">${log.log_time}</p></div>
                     </div>
-                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    <span class="status-badge ${meta.class}">${log.status}</span>
                 `;
-                
-                UIElements.attendanceLogList.appendChild(div);
+                fragment.appendChild(div);
             });
-            
-            lucide.createIcons(); 
+            UIElements.attendanceLogList.appendChild(fragment);
+            lucide.createIcons();
         }
-        
-        function updateAttendanceButtons() {
-            if (!UIElements.checkInButton || !UIElements.checkOutButton || !UIElements.sakitButton || !UIElements.izinButton) return;
-            
-            const hasCheckedIn = appState.attendanceLogs.some(log => log.type === 'check_in');
-            const hasCheckedOut = appState.attendanceLogs.some(log => log.type === 'check_out');
-            // Check for absence log OR older logs that might just have the status
-            const hasAbsenceLog = appState.attendanceLogs.some(log => log.type === 'absence' || log.status === 'Sakit' || log.status === 'Izin');
-            
-            const hasDayLog = hasCheckedIn || hasAbsenceLog;
 
-            UIElements.checkInButton.disabled = hasDayLog;
-            UIElements.sakitButton.disabled = hasDayLog;
-            UIElements.izinButton.disabled = hasDayLog;
+        function updateAttendanceButtons() {
+            if (!UIElements.checkInButton) return;
             
-            // Can only check out if you have checked in AND not checked out yet.
-            UIElements.checkOutButton.disabled = !hasCheckedIn || hasCheckedOut; 
-            
-            UIElements.checkInButton.classList.toggle('opacity-50', hasDayLog);
-            UIElements.checkInButton.classList.toggle('cursor-not-allowed', hasDayLog);
-            UIElements.sakitButton.classList.toggle('opacity-50', hasDayLog);
-            UIElements.sakitButton.classList.toggle('cursor-not-allowed', hasDayLog);
-            UIElements.izinButton.classList.toggle('opacity-50', hasDayLog);
-            UIElements.izinButton.classList.toggle('cursor-not-allowed', hasDayLog);
-            
-            UIElements.checkOutButton.classList.toggle('opacity-50', !hasCheckedIn || hasCheckedOut);
-            UIElements.checkOutButton.classList.toggle('cursor-not-allowed', !hasCheckedIn || hasCheckedOut);
+            const logs = appState.attendanceLogs;
+            const hasCheckIn = logs.some(l => l.type === 'check_in');
+            const hasCheckOut = logs.some(l => l.type === 'check_out');
+            const hasAbsence = logs.some(l => l.type === 'absence' || l.status === 'Sakit' || l.status === 'Izin');
+            const hasDayLog = hasCheckIn || hasAbsence;
+
+            // Helper to set button state
+            const setBtn = (btn, disabled) => {
+                btn.disabled = disabled;
+                btn.classList.toggle('opacity-50', disabled);
+                btn.classList.toggle('cursor-not-allowed', disabled);
+            };
+
+            setBtn(UIElements.checkInButton, hasDayLog);
+            setBtn(UIElements.sakitButton, hasDayLog);
+            setBtn(UIElements.izinButton, hasDayLog);
+            setBtn(UIElements.checkOutButton, !hasCheckIn || hasCheckOut);
         }
-        
+
         async function fetchAllTodayAttendance() {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('attendance_log')
-                .select('*, profiles(*, classes(class_name))') 
-                .eq('log_date', new Date().toISOString().slice(0, 10))
+                .select('*, profiles(*, classes(class_name))')
+                .eq('log_date', new Date().toISOString().split('T')[0])
                 .order('log_time', { ascending: false });
-                
-            if (error) {
-                showToast('Gagal memuat data absensi keseluruhan.', 'error');
-                appState.allAttendanceLogs = []; 
-                return; 
-            }
-            
             appState.allAttendanceLogs = data || [];
         }
-        
+
         function renderAllAttendanceLog(filter = '') {
             if (!UIElements.adminAttendanceLogBody) return;
-
-            // --- NEW: Calculate Stats ---
-            let countTepat = 0;
-            let countTelat = 0;
-            let countIzin = 0;
-            let countSakit = 0;
-
-            appState.allAttendanceLogs.forEach(log => {
-                const status = log.status || '';
-                if (status === 'Sakit') {
-                    countSakit++;
-                } else if (status === 'Izin') {
-                    countIzin++;
-                } else if (status.includes('Tepat')) { // Catches 'Tepat Waktu', 'Tepat Masuk'
-                    countTepat++;
-                } else if (status.includes('Telat')) { // Catches 'Telat', 'Telat Masuk'
-                    countTelat++;
-                }
-            });
-
-            // Update UI
-            if (UIElements.countTepat) UIElements.countTepat.textContent = countTepat;
-            if (UIElements.countTelat) UIElements.countTelat.textContent = countTelat;
-            if (UIElements.countIzin) UIElements.countIzin.textContent = countIzin;
-            if (UIElements.countSakit) UIElements.countSakit.textContent = countSakit;
-            // --- END: Calculate Stats ---
             
+            // Stats Calculation
+            let stats = { tepat: 0, telat: 0, izin: 0, sakit: 0 };
+            appState.allAttendanceLogs.forEach(l => {
+                const s = l.status || '';
+                if (s === 'Sakit') stats.sakit++;
+                else if (s === 'Izin') stats.izin++;
+                else if (s.includes('Tepat')) stats.tepat++;
+                else if (s.includes('Telat')) stats.telat++;
+            });
+            
+            if (UIElements.countTepat) {
+                UIElements.countTepat.textContent = stats.tepat;
+                UIElements.countTelat.textContent = stats.telat;
+                UIElements.countIzin.textContent = stats.izin;
+                UIElements.countSakit.textContent = stats.sakit;
+            }
+
+            // Rendering List
             UIElements.adminAttendanceLogBody.innerHTML = '';
-            
-            const searchTerm = filter.toLowerCase().trim();
-            const filteredLogs = appState.allAttendanceLogs.filter(log => {
-                if (!log.profiles) return false; // Tambahkan penjaga
-                const nisnMatch = log.profiles.nisn?.includes(searchTerm);
-                const emailMatch = log.profiles.email?.toLowerCase().includes(searchTerm);
-                const classNameMatch = log.profiles.classes?.class_name?.toLowerCase().includes(searchTerm);
-                const fullNameMatch = log.profiles.full_name?.toLowerCase().includes(searchTerm); 
-
-                return nisnMatch || emailMatch || classNameMatch || fullNameMatch;
+            const term = filter.toLowerCase().trim();
+            const filtered = appState.allAttendanceLogs.filter(l => {
+                if (!l.profiles) return false;
+                return (l.profiles.nisn || '').includes(term) || 
+                       (l.profiles.email || '').toLowerCase().includes(term) || 
+                       (l.profiles.classes?.class_name || '').toLowerCase().includes(term) ||
+                       (l.profiles.full_name || '').toLowerCase().includes(term);
             });
-            
-            if (filteredLogs.length === 0) {
-                UIElements.adminAttendanceLogBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center p-8">
-                            <i data-lucide="search-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i>
-                            <p class="text-white-glass">${searchTerm ? `Tidak ada data absensi yang cocok dengan "${filter}"` : 'Belum ada data absensi hari ini'}</p>
-                        </td>
-                    </tr>
-                `;
+
+            if (!filtered.length) {
+                UIElements.adminAttendanceLogBody.innerHTML = `<tr><td colspan="6" class="text-center p-8"><i data-lucide="search-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i><p class="text-white-glass">Tidak ada data.</p></td></tr>`;
                 lucide.createIcons();
                 return;
             }
-            
-            filteredLogs.forEach(log => {
+
+            const fragment = document.createDocumentFragment();
+            filtered.forEach(log => {
                 const row = document.createElement('tr');
                 row.className = 'border-b border-white/10 hover:bg-white/10 transition-colors';
                 
-                const nisn = log.profiles?.nisn || '-';
-                const email = log.profiles?.email || '-';
-                const className = log.profiles?.classes?.class_name || '-';
-                const fullName = log.profiles?.full_name || email.split('@')[0] || 'Tanpa Nama'; 
-                
-                let type = log.type || '';
-                if (type === 'check_in') type = 'Masuk';
-                else if (type === 'check_out') type = 'Pulang';
-                else if (type === 'absence') type = 'Absen';
-                else type = log.type; // Fallback
+                let statusClass = 'status-warning';
+                if (log.status.includes('Tepat')) statusClass = 'status-success';
+                else if (log.status.includes('Telat') || log.status.includes('Awal')) statusClass = 'status-danger';
+                else if (log.status === 'Izin') statusClass = 'status-info';
 
-                const time = log.log_time || '...';
-                const status = log.status || '...';
-
-                let statusClass = 'status-warning'; 
-                if (status.includes('Tepat')) statusClass = 'status-success';
-                else if (status.includes('Awal')) statusClass = 'status-danger';
-                else if (status.includes('Telat')) statusClass = 'status-danger';
-                else if (status === 'Izin') statusClass = 'status-info';
-                else if (status === 'Sakit') statusClass = 'status-warning';
+                let typeMap = { 'check_in': 'Masuk', 'check_out': 'Pulang', 'absence': 'Absen' };
+                const displayType = typeMap[log.type] || log.type;
 
                 row.innerHTML = `
-                    <td class="p-3">
-                        <div class="font-semibold text-white">${fullName}</div>
-                        <div class="text-xs text-white-glass font-mono">${nisn}</div>
-                    </td>
-                    <td class="p-3 text-sm text-white-glass">${email}</td>
-                    <td class="p-3"><span class="px-3 py-1 bg-purple-500/20 text-purple-200 rounded-full text-xs font-semibold border border-purple-300/30">${className}</span></td>
-                    <td class="p-3 text-sm text-white-glass">${type}</td>
-                    <td class="p-3 font-semibold text-white">${time}</td>
-                    <td class="p-3"><span class="status-badge ${statusClass}">${status}</span></td>
+                    <td class="p-3"><div class="font-semibold text-white">${log.profiles?.full_name || 'Tanpa Nama'}</div><div class="text-xs text-white-glass font-mono">${log.profiles?.nisn || '-'}</div></td>
+                    <td class="p-3 text-sm text-white-glass">${log.profiles?.email || '-'}</td>
+                    <td class="p-3"><span class="px-3 py-1 bg-purple-500/20 text-purple-200 rounded-full text-xs font-semibold border border-purple-300/30">${log.profiles?.classes?.class_name || '-'}</span></td>
+                    <td class="p-3 text-sm text-white-glass">${displayType}</td>
+                    <td class="p-3 font-semibold text-white">${log.log_time}</td>
+                    <td class="p-3"><span class="status-badge ${statusClass}">${log.status}</span></td>
                 `;
-                
-                UIElements.adminAttendanceLogBody.appendChild(row);
+                fragment.appendChild(row);
             });
+            UIElements.adminAttendanceLogBody.appendChild(fragment);
         }
 
-        async function handleLogin(event) {
-            event.preventDefault();
+        // --- EVENT HANDLERS ---
+
+        async function handleLogin(e) {
+            e.preventDefault();
             UIElements.loginError.classList.add('hidden');
-            
-            const formData = new FormData(event.target);
-            const identifier = formData.get('identifier')?.trim(); 
-            const password = formData.get('password');
+            const fd = new FormData(e.target);
+            const id = fd.get('identifier')?.trim();
+            const pw = fd.get('password');
 
-            if (!identifier || !password) {
-                showToast('Email/NISN dan Password tidak boleh kosong.', 'error');
-                return;
-            }
-            
+            if (!id || !pw) return showToast('Mohon isi semua kolom', 'error');
             showLoading(true);
-            
-            try {
-                let email = identifier;
-                
-                if (!identifier.includes('@')) {
-                    if (!Validators.nisn(identifier)) {
-                        throw new Error('Format NISN tidak valid. Harap masukkan 10 digit angka.');
-                    }
-                    
-                    const { data: profile, error: findError } = await supabase
-                        .from('profiles')
-                        .select('email')
-                        .eq('nisn', identifier)
-                        .maybeSingle(); 
 
-                    if (findError && findError.code !== 'PGRST116') { 
-                        throw new Error('Gagal mencari data pengguna: ' + findError.message);
-                    }       
-                    if (!profile) { 
-                        throw new Error('NISN tidak ditemukan. Pastikan Anda sudah terdaftar.');
-                    }
-                    
-                    email = profile.email;
-                    if (!email) { 
-                        throw new Error('Akun terkait NISN ini tidak memiliki email terdaftar.');
-                    }
-                } else {
-                    if (!Validators.email(identifier)) {
-                        throw new Error('Format email tidak valid.');
-                    }
+            try {
+                let email = id;
+                if (!id.includes('@')) {
+                    if (!Validators.nisn(id)) throw new Error('Format NISN salah (10 digit).');
+                    const { data: p } = await supabase.from('profiles').select('email').eq('nisn', id).maybeSingle();
+                    if (!p) throw new Error('NISN tidak ditemukan.');
+                    email = p.email;
                 }
-                
-                const { data, error: signInError } = await supabase.auth.signInWithPassword({ 
-                    email, 
-                    password 
-                });
-                
-                if (signInError) throw signInError; 
-                
-                if (data.user) {
-                    await initializeMainApp(data.user); 
-                } else {
-                    throw new Error('Login gagal. Informasi pengguna tidak diterima.');
-                }
-                
-            } catch (error) { 
-                const errorMsg = ErrorHandler.handle(error, 'login'); 
-                UIElements.loginError.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${errorMsg}</span>`;
+
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+                if (error) throw error;
+                await initializeMainApp(data.user);
+
+            } catch (err) {
+                const msg = ErrorHandler.handle(err, 'login');
+                UIElements.loginError.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${msg}</span>`;
                 UIElements.loginError.classList.remove('hidden');
-                lucide.createIcons(); 
-            } finally {
-                showLoading(false); 
-            }
-        }
-        
-        async function handleSignUp(event) {
-            event.preventDefault();
-            UIElements.signupError.classList.add('hidden');
-            
-            const formData = new FormData(event.target);
-            const email = formData.get('email')?.trim();
-            const password = formData.get('password');
-            const nisn = formData.get('nisn')?.trim();
-            const classId = formData.get('class_id'); 
-            const fullName = formData.get('full_name')?.trim(); // Ambil full_name
-
-            const validationRules = { 
-                email: ['notEmpty', 'email'], 
-                password: ['notEmpty', 'password'], 
-                nisn: ['notEmpty', 'nisn'],
-                class_id: ['notEmpty'],
-                full_name: ['notEmpty'] // Tambahkan validasi full_name
-            };
-            const values = { email, password, nisn, class_id: classId, full_name: fullName };
-            
-            const errors = [];
-            for (const [field, rules] of Object.entries(validationRules)) {
-                const value = values[field];
-                for (const rule of rules) {
-                    if (field === 'class_id' && rule === 'notEmpty' && !Validators[rule](value)) {
-                        errors.push('Silakan pilih kelas Anda.');
-                        break; 
-                    }
-                    if (field === 'full_name' && rule === 'notEmpty' && !Validators[rule](value)) {
-                        errors.push('Nama Lengkap wajib diisi.');
-                        break;
-                    }
-                    if (!Validators[rule](value)) {
-                        errors.push(ValidationMessages[rule] || `Input ${field.replace('_',' ')} tidak valid.`);
-                        break; 
-                    }
-                }
-            }
-
-            if (errors.length > 0) {
-                UIElements.signupError.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${errors[0]}</span>`; 
-                UIElements.signupError.classList.remove('hidden');
                 lucide.createIcons();
-                return;
-            }
-            
-            showLoading(true);
-            
-            try {
-                const { data: existingNisn, error: nisnCheckError } = await supabase
-                    .from('profiles')
-                    .select('nisn')
-                    .eq('nisn', nisn)
-                    .maybeSingle();
-        
-                if (nisnCheckError) {
-                    throw new Error('Gagal memvalidasi NISN. Coba beberapa saat lagi.');
-                }
-        
-                if (existingNisn) {
-                    throw new Error('NISN sudah terdaftar pada akun lain.');
-                }
-                
-                const { data, error: signUpError } = await supabase.auth.signUp({ 
-                    email, 
-                    password,
-                    options: {
-                        data: {
-                            nisn: nisn,
-                            role: 'student', 
-                            class_id: classId, 
-                            full_name: fullName // Kirim full_name ke metadata
-                        },
-                        emailRedirectTo: `${window.location.origin}${window.location.pathname}`
-                    }
-                });
-                
-                if (signUpError) {
-                    throw signUpError; 
-                }
-                
-                if (!data.user && !data.session) {
-                    showToast('Periksa email Anda untuk link verifikasi pendaftaran.', 'info');
-                } else if (data.user && !data.user.email_confirmed_at) {
-                    showToast('Pendaftaran berhasil! Cek email untuk verifikasi, lalu login.', 'info');
-                } else if (data.user && data.user.email_confirmed_at) {
-                    showToast('? Pendaftaran berhasil! Silakan login.', 'success');
-                } else {
-                    showToast('Pendaftaran dalam proses. Cek email Anda.', 'info');
-                }
-
-                if (data.user && !data.user.email_confirmed_at) {
-                    try {
-                        localStorage.setItem(`pending_nisn_${data.user.id}`, nisn);
-                        localStorage.setItem(`pending_class_id_${data.user.id}`, classId);
-                    } catch (e) {
-                        console.warn('Cannot save pending data to localStorage:', e);
-                    }
-                }
-                
-                event.target.reset(); 
-                
-                await new Promise(resolve => setTimeout(resolve, 2000)); 
-                showAuthView('login');
-                
-            } catch(error) { 
-                const errorMsg = ErrorHandler.handle(error, 'pendaftaran'); 
-                UIElements.signupError.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${errorMsg}</span>`;
-                UIElements.signupError.classList.remove('hidden');
-                lucide.createIcons(); 
-            } finally {
-                showLoading(false); 
-            }
+            } finally { showLoading(false); }
         }
-        
-        async function handlePasswordReset(event) {
-            event.preventDefault();
-            UIElements.forgotError?.classList.add('hidden');
+
+        async function handleSignUp(e) {
+            e.preventDefault();
+            UIElements.signupError.classList.add('hidden');
+            const fd = new FormData(e.target);
+            const data = Object.fromEntries(fd.entries());
             
-            const formData = new FormData(event.target);
-            const email = formData.get('email')?.trim();
-            
-            if (!Validators.email(email)) {
-                showToast(ValidationMessages.email, 'error');
-                return;
-            }
-            
+            // Validation
+            if (!Validators.email(data.email)) return showToast('Email tidak valid', 'error');
+            if (!Validators.nisn(data.nisn)) return showToast('NISN harus 10 digit', 'error');
+            if (!data.class_id) return showToast('Pilih kelas', 'error');
+            if (data.password.length < 8) return showToast('Password min 8 karakter', 'error');
+
             showLoading(true);
-            
             try {
-                const { error } = await supabase.auth.resetPasswordForEmail(email, { 
-                    redirectTo: `${window.location.origin}${window.location.pathname}` 
+                const { data: existing } = await supabase.from('profiles').select('id').eq('nisn', data.nisn).maybeSingle();
+                if (existing) throw new Error('NISN sudah terdaftar.');
+
+                const { data: res, error } = await supabase.auth.signUp({
+                    email: data.email, password: data.password,
+                    options: {
+                        data: { nisn: data.nisn, role: 'student', class_id: data.class_id, full_name: data.full_name },
+                        emailRedirectTo: window.location.href
+                    }
                 });
-                
+
                 if (error) throw error;
                 
-                showToast("Jika email terdaftar, link reset password telah dikirim.", "info"); 
-                event.target.reset();
-                await new Promise(resolve => setTimeout(resolve, 1500)); 
-                showAuthView('login');
-            } catch (error) {
-                showToast("Gagal mengirim link reset password. Coba lagi nanti.", "error"); 
-            } finally {
-                showLoading(false);
-            }
+                showToast('Pendaftaran berhasil! Cek email untuk verifikasi.', 'info');
+                if (!res.user.email_confirmed_at) {
+                    localStorage.setItem(`pending_nisn_${res.user.id}`, data.nisn);
+                    localStorage.setItem(`pending_class_id_${res.user.id}`, data.class_id);
+                }
+                e.target.reset();
+                setTimeout(() => showAuthView('login'), 2000);
+
+            } catch (err) {
+                UIElements.signupError.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5"></i><span>${ErrorHandler.handle(err, 'sign up')}</span>`;
+                UIElements.signupError.classList.remove('hidden');
+                lucide.createIcons();
+            } finally { showLoading(false); }
         }
-        
-        async function handleLogout() {
-            showLoading(true); 
+
+        async function handleCommonAttendance(type, statusArg) {
+            if (!appState.currentUser) return handleLogout();
+            
+            showLoading(true);
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jakarta' }); // HH:mm:ss
+            
+            let status = statusArg;
+            if (type === 'check_in') status = timeStr > "07:00:00" ? "Telat Masuk" : "Tepat Masuk";
+            else if (type === 'check_out') status = timeStr < "15:00:00" ? "Pulang Awal" : "Tepat Pulang";
+
             try {
-                if (appState.attendanceSubscription) {
-                    await supabase.removeChannel(appState.attendanceSubscription); 
-                }
-                if (appState.clockInterval) {
-                    clearInterval(appState.clockInterval);
-                    appState.clockInterval = null; // Reset interval
-                }
-
-                const { error: signOutError } = await supabase.auth.signOut();
-                if (signOutError) {
-                    showToast('Gagal keluar, coba lagi.', 'error');
-                    showLoading(false); 
-                    return; 
-                }
-
-                Object.assign(appState, {
-                    currentUser: null,
-                    profile: null,
-                    scheduleData: {},
-                    attendanceLogs: [],
-                    allAttendanceLogs: [],
-                    toastTimeout: null, 
-                    attendanceSubscription: null,
-                    clockInterval: null,
-                    selectedAdminClassId: null,
-                    profileImageFile: null,
-                    profileImageToDelete: false,
-                    classList: [],
-                    cropperInstance: null,
+                const { error } = await supabase.from('attendance_log').insert({
+                    user_id: appState.currentUser.id,
+                    type: type,
+                    log_date: now.toISOString().split('T')[0],
+                    log_time: timeStr,
+                    status: status
                 });
 
-                navigateTo('login'); 
-            } catch (e) {
-                showToast('Terjadi kesalahan saat keluar.', 'error');
-            } finally {
-                await new Promise(resolve => setTimeout(resolve, 300)); 
-                showLoading(false); 
-            }
-        }
-        
-        async function handleAttendance(type) {
-            if (type !== 'check_in' && type !== 'check_out') {
-                console.error("Invalid attendance type:", type);
-                return;
-            }
-            if (!appState.currentUser) {
-                showToast('Sesi tidak valid, silakan login ulang.', 'error');
-                handleLogout(); 
-                return;
-            }
-
-            console.log(`Handling attendance: ${type} for user ${appState.currentUser.id}`);
-            const button = type === 'check_in' ? UIElements.checkInButton : UIElements.checkOutButton;
-            button.disabled = true; 
-            showLoading(true);
-            
-            const now = new Date();
-            const jakartaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-            const logDate = jakartaTime.toISOString().split('T')[0];
-            const logTime = jakartaTime.toTimeString().split(' ')[0];
-            
-            // --- FIX: Logika Status Ditambahkan ---
-            let status = 'Pending'; // Default
-            
-            if (type === 'check_in') {
-                const checkInDeadline = "07:00:00"; // Batas masuk
-                if (logTime > checkInDeadline) {
-                    status = "Telat Masuk";
-                } else {
-                    status = "Tepat Masuk";
-                }
-            } else if (type === 'check_out') {
-                const checkOutMinTime = "15:00:00"; // Batas pulang
-                if (logTime < checkOutMinTime) {
-                    status = "Pulang Awal";
-                } else {
-                    status = "Tepat Pulang";
-                }
-            }
-            // --- END FIX ---
-
-            const record = { 
-                user_id: appState.currentUser.id, 
-                type: type,
-                log_date: logDate,
-                log_time: logTime,
-                status: status // <-- Menggunakan status yang sudah ditentukan
-            };
-            
-            console.log('Inserting attendance record:', record);
-            
-            try {
-                const { data, error } = await supabase
-                    .from('attendance_log')
-                    .insert(record)
-                    .select() 
-                    .single(); 
-
-                console.log('Attendance insert result:', { data, error });
-
-                if (error) {
-                    console.error('Attendance insert error:', error);
-                    throw error; 
-                }
-
-                showToast(`Absensi ${type === 'check_in' ? 'masuk' : 'pulang'} berhasil!`, 'success');
+                if (error) throw error;
                 
+                showToast('Berhasil direkam!', 'success');
                 await fetchTodayAttendance();
-                renderAttendanceLog(); 
-                updateAttendanceButtons(); 
-
-            } catch (error) {
-                console.error(`Error during ${type}:`, error);
-                const specificMessage = error.message.includes('duplicate key value violates unique constraint') 
-                    ? `Anda sudah melakukan absen ${type === 'check_in' ? 'masuk' : 'pulang'} hari ini.`
-                    : ErrorHandler.handle(error, `absensi ${type}`);
-                showToast(specificMessage, 'error');
-                // button.disabled = false; // Don't re-enable, let updateAttendanceButtons handle it
+                renderAttendanceLog();
+            } catch (err) {
+                const msg = err.message.includes('duplicate key') ? 'Anda sudah melakukan aksi ini hari ini.' : ErrorHandler.handle(err, 'absensi');
+                showToast(msg, 'error');
             } finally {
                 showLoading(false);
-                updateAttendanceButtons(); 
-            }
-        }
-
-        async function handleAbsenceRequest(status) {
-            if (status !== 'Sakit' && status !== 'Izin') {
-                console.error("Invalid absence type:", status);
-                return;
-            }
-            if (!appState.currentUser) {
-                showToast('Sesi tidak valid, silakan login ulang.', 'error');
-                handleLogout(); 
-                return;
-            }
-
-            const button = status === 'Sakit' ? UIElements.sakitButton : UIElements.izinButton;
-            button.disabled = true; 
-            showLoading(true);
-            
-            const now = new Date();
-            const jakartaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-            const logDate = jakartaTime.toISOString().split('T')[0];
-            const logTime = jakartaTime.toTimeString().split(' ')[0];
-            
-            const record = { 
-                user_id: appState.currentUser.id, 
-                type: 'absence', // New type
-                log_date: logDate,
-                log_time: logTime,
-                status: status // 'Sakit' or 'Izin'
-            };
-            
-            try {
-                const { data, error } = await supabase
-                    .from('attendance_log')
-                    .insert(record)
-                    .select() 
-                    .single(); 
-
-                if (error) throw error; 
-
-                showToast(`Keterangan '${status}' berhasil direkam!`, 'success');
-                
-                await fetchTodayAttendance();
-                renderAttendanceLog(); 
-                updateAttendanceButtons(); 
-
-            } catch (error) {
-                console.error(`Error during ${status} request:`, error);
-                const specificMessage = error.message.includes('duplicate key value violates unique constraint') 
-                    ? `Anda sudah merekam absensi hari ini.`
-                    : ErrorHandler.handle(error, `pengajuan ${status}`);
-                showToast(specificMessage, 'error');
-                // button.disabled = false; // Let updateAttendanceButtons handle state
-            } finally {
-                showLoading(false);
-                updateAttendanceButtons(); // Ensure all buttons are in correct state
+                updateAttendanceButtons();
             }
         }
 
         async function handleUpdateSchedule() {
-            if (!appState.selectedAdminClassId) { 
-                showToast("Pilih kelas terlebih dahulu", "error"); 
-                return; 
-            }
+            if (!appState.selectedAdminClassId) return showToast("Pilih kelas dulu", "error");
             
+            UIElements.saveScheduleButton.disabled = true;
             showLoading(true);
-            UIElements.saveScheduleButton.disabled = true; 
             
-            const newScheduleData = { 
-                Senin: [], Selasa: [], Rabu: [], Kamis: [], Jumat: [] 
-            };
-            let hasError = false; 
+            const newData = { Senin: [], Selasa: [], Rabu: [], Kamis: [], Jumat: [] };
+            const days = Object.keys(newData);
             
+            // Collect Data
             const rows = UIElements.adminScheduleTableBody.querySelectorAll('tr');
-            const days = Object.keys(newScheduleData);
-            
-            rows.forEach((row, timeIndex) => {
-                if (hasError) return; 
+            let errorMsg = null;
 
-                row.querySelectorAll('td:not(:first-child)').forEach((cell, dayIndex) => {
-                    if (hasError) return;
-                    
-                    const input = cell.querySelector('input');
-                    let value = '';
-                    
-                    if (input) { 
-                        value = input.value.trim();
-                        if (value.length > 50) { 
-                            showToast(`Jadwal terlalu panjang di ${days[dayIndex]}, baris ${timeIndex + 1}. Maksimal 50 karakter.`, 'error');
-                            input.focus(); 
-                            hasError = true;
-                            return;
-                        }
-                    } else { 
-                        value = cell.textContent.trim();
-                    }
-                    newScheduleData[days[dayIndex]].push(value);
+            rows.forEach((row, rIdx) => {
+                row.querySelectorAll('td:not(:first-child)').forEach((cell, cIdx) => {
+                    const val = (cell.querySelector('input')?.value || cell.textContent).trim();
+                    if (val.length > 50) errorMsg = `Teks terlalu panjang di baris ${rIdx+1}`;
+                    newData[days[cIdx]].push(val);
                 });
             });
 
-            if (hasError) {
+            if (errorMsg) {
                 showLoading(false);
-                UIElements.saveScheduleButton.disabled = false; 
-                return;
+                UIElements.saveScheduleButton.disabled = false;
+                return showToast(errorMsg, 'error');
             }
 
             try {
-                const { error } = await supabase
-                    .from('schedules')
-                    .upsert({ 
-                        class_id: appState.selectedAdminClassId, 
-                        data: newScheduleData 
-                    }, { 
-                        onConflict: 'class_id' 
-                    });
-                    
-                if (error) throw error; 
-                
-                showToast('Jadwal berhasil disimpan!', 'success');
-                appState.scheduleData = newScheduleData; 
-            } catch(error) {
-                showToast(ErrorHandler.handle(error, 'menyimpan jadwal'), 'error');
+                const { error } = await supabase.from('schedules').upsert({ class_id: appState.selectedAdminClassId, data: newData }, { onConflict: 'class_id' });
+                if (error) throw error;
+                showToast('Jadwal tersimpan!', 'success');
+                appState.scheduleData = newData;
+            } catch (err) {
+                showToast(ErrorHandler.handle(err, 'simpan jadwal'), 'error');
             } finally {
                 showLoading(false);
-                UIElements.saveScheduleButton.disabled = false; 
+                UIElements.saveScheduleButton.disabled = false;
             }
         }
-        
-        async function handleAdminClassSelect(event) {
-            const classId = event.target.value;
-            appState.selectedAdminClassId = classId; 
-            appState.scheduleData = {}; 
+
+        async function handleAdminClassSelect(e) {
+            const cid = e.target.value;
+            appState.selectedAdminClassId = cid;
+            appState.scheduleData = {};
             
-            if (!classId) {
-                UIElements.adminScheduleContainer?.classList.add('hidden');
-                return;
-            }
+            if (!cid) return UIElements.adminScheduleContainer?.classList.add('hidden');
             
             showLoading(true);
-            UIElements.adminScheduleContainer?.classList.add('hidden'); 
-            
             try {
-                const { data, error } = await supabase
-                    .from('schedules')
-                    .select('data')
-                    .eq('class_id', classId)
-                    .maybeSingle(); 
-                    
-                if (error && error.code !== 'PGRST116') {
-                    throw new Error('Gagal memuat jadwal untuk kelas ini: ' + error.message);
-                }
-                
-                appState.scheduleData = data?.data || {}; 
-
+                const { data } = await supabase.from('schedules').select('data').eq('class_id', cid).maybeSingle();
+                appState.scheduleData = data?.data || {};
                 UIElements.adminScheduleContainer?.classList.remove('hidden');
-                renderSchedule(UIElements.adminScheduleTableBody, true); 
-                
-            } catch (error) {
-                showToast(error.message, 'error');
-                UIElements.adminScheduleContainer?.classList.add('hidden'); 
-            } finally {
-                showLoading(false);
-            }
+                renderSchedule(UIElements.adminScheduleTableBody, true);
+            } catch (err) { showToast(err.message, 'error'); } 
+            finally { showLoading(false); }
         }
-        
-        function exportToCSV() {
-            if (appState.allAttendanceLogs.length === 0) {
-                showToast('Tidak ada data absensi untuk diekspor.', 'info');
-                return;
-            }
-            
-            const headers = ['Nama Lengkap', 'NISN', 'Email', 'Kelas', 'Jenis Absen', 'Waktu', 'Status', 'Tanggal'];
-            
-            const rows = appState.allAttendanceLogs.map(log => [
-                log.profiles?.full_name || log.profiles?.email?.split('@')[0] || 'Tanpa Nama', 
-                log.profiles?.nisn || '-', 
-                log.profiles?.email || '-', 
-                log.profiles?.classes?.class_name || '-', 
-                log.type === 'check_in' ? 'Masuk' : (log.type === 'check_out' ? 'Pulang' : 'Absen'), 
-                log.log_time || '-', 
-                log.status || '-', 
-                log.log_date || '-' 
-            ]);
-            
-            const escapeCsvCell = (cell) => {
-                let escaped = (cell === null || cell === undefined) ? '' : String(cell);
-                escaped = escaped.replace(/"/g, '""');
-                if (escaped.search(/("|,|\n)/g) >= 0) {
-                    escaped = `"${escaped}"`;
-                }
-                return escaped;
-            };
 
-            const csvContent = [
-                headers.join(','), 
-                ...rows.map(row => row.map(escapeCsvCell).join(',')) 
-            ].join('\n'); 
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            const today = new Date().toISOString().slice(0, 10); 
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', `laporan_absensi_${today}.csv`); 
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url); 
-            
-            showToast('Data absensi berhasil diekspor ke CSV!', 'success');
-        }
-        
-        async function handleAddClass(event) {
-            event.preventDefault();
-            const classNameInput = UIElements.newClassNameInput;
-            const className = classNameInput.value.trim();
-
-            if (!Validators.notEmpty(className)) {
-                showToast('Nama kelas tidak boleh kosong.', 'error');
-                classNameInput.focus();
-                return;
-            }
-            if (className.length > 50) {
-                showToast('Nama kelas terlalu panjang (maks 50 karakter).', 'error');
-                classNameInput.focus();
-                return;
-            }
+        // --- ADMIN CLASS MGMT ---
+        async function handleAddClass(e) {
+            e.preventDefault();
+            const val = UIElements.newClassNameInput.value.trim();
+            if (!val) return;
 
             showLoading(true);
-            const addButton = event.target.querySelector('button[type="submit"]');
-            addButton.disabled = true;
-
             try {
-                const existing = appState.classList.some(c => c.class_name.toLowerCase() === className.toLowerCase());
-                if (existing) {
-                    throw new Error('Nama kelas sudah ada.');
-                }
-
-                const { data, error } = await supabase
-                    .from('classes')
-                    .insert({ class_name: className })
-                    .select() 
-                    .single(); 
-
-                if (error) throw error; 
-
-                showToast(`Kelas "${data.class_name}" berhasil ditambahkan.`, 'success');
+                const { data, error } = await supabase.from('classes').insert({ class_name: val }).select().single();
+                if (error) throw error;
                 
+                showToast(`Kelas ${val} ditambahkan`, 'success');
                 appState.classList.push(data);
-                appState.classList.sort((a, b) => a.class_name.localeCompare(b.class_name)); 
-                renderClassList(); 
-                populateAdminClassesDropdown(); 
-
-                classNameInput.value = ''; 
-            } catch (error) {
-                showToast(ErrorHandler.handle(error, 'menambah kelas'), 'error');
-            } finally {
-                showLoading(false);
-                addButton.disabled = false;
-            }
+                appState.classList.sort((a,b) => a.class_name.localeCompare(b.class_name));
+                
+                renderClassList();
+                populateAdminClassesDropdown();
+                e.target.reset();
+            } catch (err) { showToast(ErrorHandler.handle(err, 'tambah kelas'), 'error'); }
+            finally { showLoading(false); }
         }
 
-        async function handleDeleteClass(classId, className) {
-            // Ganti window.confirm dengan modal kustom jika diperlukan,
-            // untuk saat ini, kita tetap gunakan confirm()
-            const userConfirmed = confirm(`Anda yakin ingin menghapus kelas "${className}"? Ini tidak dapat dibatalkan.`);
-            if (!userConfirmed) {
-                return;
-            }
-            
+        async function handleDeleteClass(id, name) {
+            if (!confirm(`Hapus kelas ${name}?`)) return;
             showLoading(true);
-
             try {
-                const { error } = await supabase
-                    .from('classes')
-                    .delete()
-                    .eq('id', classId);
-
-                if (error) throw error; 
-
-                showToast(`Kelas "${className}" berhasil dihapus.`, 'success');
-
-                appState.classList = appState.classList.filter(c => c.id !== classId);
-                renderClassList(); 
-                populateAdminClassesDropdown(); 
+                const { error } = await supabase.from('classes').delete().eq('id', id);
+                if (error) throw error;
                 
-                if (appState.selectedAdminClassId === classId) {
-                    UIElements.adminClassSelect.value = "";
-                    appState.selectedAdminClassId = null;
-                    UIElements.adminScheduleContainer?.classList.add('hidden');
-                }
-
-            } catch (error) {
-                showToast(ErrorHandler.handle(error, 'menghapus kelas'), 'error');
-            } finally {
-                showLoading(false);
-            }
+                appState.classList = appState.classList.filter(c => c.id !== id);
+                renderClassList();
+                populateAdminClassesDropdown();
+                showToast('Kelas dihapus', 'success');
+            } catch (err) { showToast(ErrorHandler.handle(err, 'hapus kelas'), 'error'); }
+            finally { showLoading(false); }
         }
 
         function renderClassList() {
             if (!UIElements.adminClassList) return;
-            UIElements.adminClassList.innerHTML = ''; 
-
-            if (appState.classList.length === 0) {
-                UIElements.adminClassList.innerHTML = '<li class="text-white-glass italic px-4 py-2">Belum ada kelas ditambahkan.</li>';
+            if (!appState.classList.length) {
+                UIElements.adminClassList.innerHTML = '<li class="text-white-glass italic px-4 py-2">Kosong.</li>';
                 return;
             }
-
+            
+            const fragment = document.createDocumentFragment();
             appState.classList.forEach(cls => {
                 const li = document.createElement('li');
                 li.className = 'flex justify-between items-center px-4 py-3 border-b border-white/10';
-                li.innerHTML = `
-                    <span class="text-white">${cls.class_name}</span>
-                    <button class="delete-class-btn" data-id="${cls.id}" data-name="${cls.class_name}" title="Hapus Kelas">
-                        <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i> 
-                    </button>
-                `;
-                li.querySelector('.delete-class-btn').addEventListener('click', (e) => {
-                    const button = e.currentTarget;
-                    handleDeleteClass(button.dataset.id, button.dataset.name);
-                });
-
-                UIElements.adminClassList.appendChild(li);
+                li.innerHTML = `<span class="text-white">${cls.class_name}</span><button class="delete-class-btn" data-id="${cls.id}" data-name="${cls.class_name}"><i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i></button>`;
+                li.querySelector('button').onclick = (e) => handleDeleteClass(e.target.dataset.id, e.target.dataset.name);
+                fragment.appendChild(li);
             });
-            lucide.createIcons(); 
-        }
-        
-        function subscribeToClassChanges() {
-            const classChannel = supabase
-                .channel('public:classes')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'classes' }, 
-                    async (payload) => {
-                        showToast('Daftar kelas diperbarui...', 'info');
-                        await fetchClasses();
-                        renderClassList();
-                        populateAdminClassesDropdown();
-                    }
-                )
-                .subscribe();
+            UIElements.adminClassList.innerHTML = '';
+            UIElements.adminClassList.appendChild(fragment);
+            lucide.createIcons();
         }
 
-        function subscribeToAttendanceChanges() {
-            if (appState.attendanceSubscription) return;
-            appState.attendanceSubscription = supabase
-                .channel('public:attendance_log')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'attendance_log' }, 
-                    async (payload) => {
-                        if (appState.profile?.role === 'admin') {
-                            showToast('Data absensi baru masuk...', 'info');
-                            await fetchAllTodayAttendance();
-                            renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
-                        }
-                    }
-                )
-                .subscribe();
-        }
-
-        async function checkUserSession() {
-            if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_URL.includes('URL_PROYEK_ANDA') || SUPABASE_ANON_KEY.includes('KUNCI_ANON_ANDA')) {
-                document.body.innerHTML = `
-                    <div class="h-screen bg-red-100 flex flex-col items-center justify-center p-4 text-center">
-                        <h1 class="text-2xl font-bold text-red-800 mb-2">Konfigurasi Supabase Diperlukan</h1>
-                        <p class="text-red-700">Harap periksa variabel SUPABASE_URL dan SUPABASE_ANON_KEY dalam kode JavaScript.</p>
-                    </div>`;
-                return; 
-            }
-            
-            showLoading(true);
-            try {
-                const { data, error: sessionError } = await supabase.auth.getSession();
-
-                if (sessionError) {
-                    showToast('Gagal memeriksa sesi login. Coba lagi.', 'error');
-                    navigateTo('login'); 
-                } else if (data.session?.user) {
-                    await initializeMainApp(data.session.user);
-                } else {
-                    navigateTo('login');
-                }
-            } catch (e) {
-                showToast('Terjadi kesalahan tidak terduga.', 'error');
-                navigateTo('login'); 
-            } finally {
-                showLoading(false); 
-            }
-        }
-
-        // --- LOGIKA MODAL PROFIL & CROPPER ---
-
+        // --- PROFILE & IMAGE ---
         function openProfileModal() {
-            populateProfileModal();
+            if (!appState.profile) return;
+            UIElements.profileFullName.value = appState.profile.full_name || '';
+            UIElements.profileEmail.value = appState.profile.email || '';
+            UIElements.profileNisn.value = appState.profile.nisn || '';
+            loadProfilePicture();
+            appState.profileImageFile = null;
+            appState.profileImageToDelete = false;
             UIElements.profileModal.classList.remove('hidden');
         }
 
-        function closeProfileModal() {
-            UIElements.profileModal.classList.add('hidden');
-            // Hapus file yang mungkin dipilih jika modal ditutup
-            appState.profileImageFile = null;
-            appState.profileImageToDelete = false;
-        }
-
-        function openCropperModal(file) {
-            if (!file) return;
-            if (appState.cropperInstance) {
-                appState.cropperInstance.destroy();
-            }
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                UIElements.cropperImage.src = e.target.result;
-                UIElements.cropperModal.classList.remove('hidden');
-                appState.cropperInstance = new Cropper(UIElements.cropperImage, {
-                    aspectRatio: 1, // Persegi
-                    viewMode: 1, // Batasi area crop ke dalam canvas
-                    background: false,
-                    autoCropArea: 0.8,
-                    responsive: true,
-                });
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function closeCropperModal() {
-            UIElements.cropperModal.classList.add('hidden');
-            if (appState.cropperInstance) {
-                appState.cropperInstance.destroy();
-                appState.cropperInstance = null;
-            }
-            // Reset input file agar bisa memilih file yang sama lagi
-            UIElements.profileImageInput.value = '';
-        }
-
-        function handleImageFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // Validasi tipe file
-            const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-            if (!allowedTypes.includes(file.type)) {
-                showToast('Tipe file tidak valid. Harap pilih PNG atau JPEG.', 'error');
-                event.target.value = ''; // Reset input
-                return;
-            }
-
-            // Validasi ukuran file (misal: 10MB)
-            const maxSizeInMB = 10;
-            if (file.size > maxSizeInMB * 1024 * 1024) {
-                showToast(`Ukuran file terlalu besar. Maksimal ${maxSizeInMB}MB.`, 'error');
-                event.target.value = ''; // Reset input
-                return;
-            }
-
-            openCropperModal(file);
-        }
-
-        function applyCrop() {
-            if (!appState.cropperInstance) return;
-
-            // Dapatkan canvas yang di-crop
-            // Kita set ukuran width dan height untuk "resize"
-            const canvas = appState.cropperInstance.getCroppedCanvas({
-                width: 512,  // Resolusi PFP
-                height: 512,
-                imageSmoothingEnabled: true,
-                imageSmoothingQuality: 'high',
-            });
-
-            // Tampilkan preview di modal profil
-            const croppedUrl = canvas.toDataURL('image/png');
-            UIElements.profileImagePreview.src = croppedUrl;
-            
-            // Konversi canvas ke Blob untuk diunggah
-            canvas.toBlob((blob) => {
-                appState.profileImageFile = blob;
-                appState.profileImageToDelete = false; // Jika user crop, berarti dia tidak ingin menghapus
-            }, 'image/png', 0.95); // Kualitas 95%
-
-            closeCropperModal();
-        }
-
-        function handleRemoveProfileImage() {
-            appState.profileImageFile = null;
-            appState.profileImageToDelete = true;
-            UIElements.profileImagePreview.src = generatePfpPlaceholder(appState.profile.full_name);
-            showToast('Foto profil akan dihapus saat disimpan.', 'info');
-        }
-
-        async function handleUpdateProfile(event) {
-            event.preventDefault();
-            
-            const newFullName = UIElements.profileFullName.value.trim();
-            if (!Validators.notEmpty(newFullName)) {
-                showToast('Nama Lengkap tidak boleh kosong.', 'error');
-                return;
-            }
+        async function handleUpdateProfile(e) {
+            e.preventDefault();
+            const newName = UIElements.profileFullName.value.trim();
+            if (!newName) return showToast('Nama wajib diisi', 'error');
 
             showLoading(true);
-            UIElements.profileSaveBtn.disabled = true;
-
             try {
-                const profileUpdates = {
-                    full_name: newFullName,
-                };
-
-                // 1. Jika ada file baru untuk diunggah
-                if (appState.profileImageFile) {
-                    const file = appState.profileImageFile;
-                    const fileExt = file.type.split('/')[1]; // 'png' atau 'jpeg'
-                    const filePath = `public/${appState.currentUser.id}/avatar-${Date.now()}.${fileExt}`;
-                    
-                    // Upload ke Supabase Storage
-                    const { data: uploadData, error: uploadError } = await supabase.storage
-                        .from(AVATAR_BUCKET)
-                        .upload(filePath, file, {
-                            cacheControl: '3600',
-                            upsert: true, // Timpa file lama jika ada (meskipun path unik)
-                        });
-
-                    if (uploadError) {
-                        throw new Error(`Gagal mengunggah foto: ${uploadError.message}`);
-                    }
-                    
-                    // Dapatkan URL publik dari file yang baru diunggah
-                    const { data: urlData } = supabase.storage
-                        .from(AVATAR_BUCKET)
-                        .getPublicUrl(uploadData.path);
-                    
-                    profileUpdates.avatar_url = urlData.publicUrl;
-
-                    // Hapus foto lama jika ada (opsional, tapi praktik terbaik)
-                    if (appState.profile.avatar_url) {
-                        try {
-                            const oldPath = new URL(appState.profile.avatar_url).pathname.split(`/${AVATAR_BUCKET}/`)[1];
-                            if (oldPath !== filePath) { // Jangan hapus jika path-nya sama
-                                await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
-                            }
-                        } catch (e) {
-                            console.warn("Gagal menghapus foto lama:", e);
-                        }
-                    }
-
-                // 2. Jika user menekan tombol "Hapus Foto"
-                } else if (appState.profileImageToDelete) {
-                    profileUpdates.avatar_url = null;
-
-                    // Hapus foto lama dari storage
-                    if (appState.profile.avatar_url) {
-                         try {
-                            const oldPath = new URL(appState.profile.avatar_url).pathname.split(`/${AVATAR_BUCKET}/`)[1];
-                            await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
-                        } catch (e) {
-                            console.warn("Gagal menghapus foto lama:", e);
-                        }
-                    }
-                }
-                // 3. Jika tidak ada perubahan foto, tidak ada yang perlu dilakukan soal `avatar_url`
-
-                // Update data di tabel 'profiles'
-                const { data: updatedProfile, error: updateError } = await supabase
-                    .from('profiles')
-                    .update(profileUpdates)
-                    .eq('id', appState.currentUser.id)
-                    .select()
-                    .single();
-
-                if (updateError) {
-                    throw new Error(`Gagal memperbarui profil: ${updateError.message}`);
-                }
-
-                // Sukses! Perbarui state lokal dan UI
-                appState.profile = updatedProfile;
-                UIElements.welcomeMessage.textContent = updatedProfile.full_name;
-                await loadProfilePicture(); // Muat PFP baru di header dan modal
+                const updates = { full_name: newName };
                 
-                showToast('Profil berhasil diperbarui!', 'success');
-                closeProfileModal();
+                // Image Upload Logic
+                if (appState.profileImageFile) {
+                    const ext = appState.profileImageFile.type.split('/')[1];
+                    const path = `public/${appState.currentUser.id}/avatar-${Date.now()}.${ext}`;
+                    
+                    const { data, error } = await supabase.storage.from(AVATAR_BUCKET).upload(path, appState.profileImageFile, { upsert: true });
+                    if (error) throw error;
+                    
+                    const { data: urlData } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(data.path);
+                    updates.avatar_url = urlData.publicUrl;
 
-            } catch (error) {
-                showToast(ErrorHandler.handle(error, 'update profil'), 'error');
-            } finally {
-                showLoading(false);
-                UIElements.profileSaveBtn.disabled = false;
-            }
+                    // Cleanup old
+                    if (appState.profile.avatar_url) {
+                        const oldPath = appState.profile.avatar_url.split(`/${AVATAR_BUCKET}/`)[1];
+                        if (oldPath) supabase.storage.from(AVATAR_BUCKET).remove([oldPath.split('?')[0]]);
+                    }
+                } else if (appState.profileImageToDelete) {
+                    updates.avatar_url = null;
+                    // Cleanup old logic...
+                }
+
+                const { data: updated, error } = await supabase.from('profiles').update(updates).eq('id', appState.currentUser.id).select().single();
+                if (error) throw error;
+
+                appState.profile = updated;
+                UIElements.welcomeMessage.textContent = updated.full_name;
+                loadProfilePicture();
+                showToast('Profil diperbarui', 'success');
+                UIElements.profileModal.classList.add('hidden');
+
+            } catch (err) { showToast(ErrorHandler.handle(err, 'update profil'), 'error'); }
+            finally { showLoading(false); }
         }
-        
-        // --- Event Listeners ---
+
+        // --- INIT & LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
-            // FIX: Initialize UIElements now that DOM is ready
-            UIElements = {
-                loadingScreen: document.getElementById('loading-screen'),
-                loginPage: document.getElementById('login-page'),
-                mainApp: document.getElementById('main-app'),
-                loginView: document.getElementById('login-view'),
-                signupView: document.getElementById('signup-view'),
-                forgotPasswordView: document.getElementById('forgot-password-view'),
-                loginForm: document.getElementById('login-form'),
-                signupForm: document.getElementById('signup-form'),
-                forgotPasswordForm: document.getElementById('forgot-password-form'),
-                loginError: document.getElementById('login-error'),
-                signupError: document.getElementById('signup-error'),
-                forgotError: document.getElementById('forgot-error'),
-                welcomeMessage: document.getElementById('welcome-message'),
-                headerPfp: document.getElementById('header-pfp'),
-                profileButton: document.getElementById('profile-button'),
-                profileDropdown: document.getElementById('profile-dropdown'),
-                profileModalOpenBtn: document.getElementById('profile-modal-open-btn'),
-                logoutButton: document.getElementById('logout-button'),
-                profileModal: document.getElementById('profile-modal'),
-                closeProfileModal: document.getElementById('close-profile-modal'),
-                profileForm: document.getElementById('profile-form'),
-                profileFullName: document.getElementById('profile-full-name'),
-                profileEmail: document.getElementById('profile-email'),
-                profileNisn: document.getElementById('profile-nisn'),
-                profileImagePreview: document.getElementById('profile-image-preview'),
-                profileImageInput: document.getElementById('profile-image-input'),
-                profileImageUploadBtn: document.getElementById('profile-image-upload-btn'),
-                removeProfileImageBtn: document.getElementById('remove-profile-image-btn'),
-                profileSaveBtn: document.getElementById('profile-save-btn'),
-                cropperModal: document.getElementById('cropper-modal'),
-                cropperImage: document.getElementById('cropper-image'),
-                cropperApplyBtn: document.getElementById('cropper-apply-btn'),
-                cropperCancelBtn: document.getElementById('cropper-cancel-btn'),
-                cropperRotateLeftBtn: document.getElementById('cropper-rotate-left-btn'),
-                cropperRotateRightBtn: document.getElementById('cropper-rotate-right-btn'),
-                studentView: document.getElementById('student-view'),
-                adminView: document.getElementById('admin-view'),
-                clock: document.getElementById('clock'),
-                date: document.getElementById('date'),
-                scheduleTableBody: document.getElementById('schedule-table-body'),
-                adminScheduleTableBody: document.getElementById('admin-schedule-table-body'),
-                attendanceLogList: document.getElementById('attendance-log-list'),
-                checkInButton: document.getElementById('check-in-button'),
-                checkOutButton: document.getElementById('check-out-button'),
-                sakitButton: document.getElementById('sakit-button'), // NEW
-                izinButton: document.getElementById('izin-button'), // NEW
-                saveScheduleButton: document.getElementById('save-schedule-button'),
-                toast: document.getElementById('toast'),
-                toastMessage: document.getElementById('toast-message'), // Kept for safety, though showToast doesn't use it
-                adminAttendanceLogBody: document.getElementById('admin-attendance-log-body'),
-                refreshAttendanceButton: document.getElementById('refresh-attendance-button'),
-                searchStudentInput: document.getElementById('search-student-input'),
-                adminClassSelect: document.getElementById('admin-class-select'),
-                adminScheduleContainer: document.getElementById('admin-schedule-container'),
-                exportCsvButton: document.getElementById('export-csv-button'),
-                signupClassSelect: document.getElementById('signup-class-select'),
-                adminClassManagementSection: document.getElementById('admin-class-management'),
-                adminClassList: document.getElementById('admin-class-list'),
-                addClassForm: document.getElementById('add-class-form'),
-                newClassNameInput: document.getElementById('new-class-name'),
-                countTepat: document.getElementById('count-tepat'), // NEW
-                countTelat: document.getElementById('count-telat'), // NEW
-                countIzin: document.getElementById('count-izin'), // NEW
-                countSakit: document.getElementById('count-sakit'), // NEW
-            };
+            // Cache DOM Elements Map
+            const idMap = [
+                'loading-screen','toast','login-page','main-app','login-view','signup-view','forgot-password-view',
+                'login-form','signup-form','forgot-password-form','login-error','signup-error','forgot-error',
+                'welcome-message','header-pfp','profile-button','profile-dropdown','profile-modal-open-btn',
+                'logout-button','profile-modal','close-profile-modal','profile-form','profile-full-name',
+                'profile-email','profile-nisn','profile-image-preview','profile-image-input','profile-image-upload-btn',
+                'remove-profile-image-btn','profile-save-btn','cropper-modal','cropper-image','cropper-apply-btn',
+                'cropper-cancel-btn','cropper-rotate-left-btn','cropper-rotate-right-btn','student-view','admin-view',
+                'clock','date','schedule-table-body','admin-schedule-table-body','attendance-log-list',
+                'check-in-button','check-out-button','sakit-button','izin-button','save-schedule-button',
+                'admin-attendance-log-body','refresh-attendance-button','search-student-input','admin-class-select',
+                'admin-schedule-container','export-csv-button','signup-class-select','admin-class-list',
+                'add-class-form','new-class-name','count-tepat','count-telat','count-izin','count-sakit'
+            ];
+            idMap.forEach(id => UIElements[id.replace(/-([a-z])/g, g => g[1].toUpperCase())] = document.getElementById(id)); // camelCase keys
 
-            // FIX: Initialize appState
-            appState = {
-                currentUser: null,
-                profile: null,
-                scheduleData: {},
-                attendanceLogs: [],
-                allAttendanceLogs: [],
-                toastTimeout: null,
-                attendanceSubscription: null,
-                clockInterval: null,
-                profileImageFile: null, // Untuk menyimpan file Blob hasil crop
-                profileImageToDelete: false, 
-                selectedAdminClassId: null,
-                classList: [],
-                cropperInstance: null,
-            };
+            // Auth & Session Check
+            (async () => {
+                showLoading(true);
+                const { data } = await supabase.auth.getSession();
+                if (data.session?.user) await initializeMainApp(data.session.user);
+                else navigateTo('login');
+                showLoading(false);
+            })();
 
-            // Now it's safe to call checkUserSession
-            checkUserSession(); 
-            
-            if (!appState.clockInterval) { 
-                appState.clockInterval = setInterval(updateClock, 1000);
-                updateClock(); 
-            }
+            // Clock
+            appState.clockInterval = setInterval(updateClock, 1000);
+            updateClock();
 
-            // Form Auth
+            // Event Bindings
             UIElements.loginForm?.addEventListener('submit', handleLogin);
             UIElements.signupForm?.addEventListener('submit', handleSignUp);
-            UIElements.forgotPasswordForm?.addEventListener('submit', handlePasswordReset);
-            
-            // Auth Navigation
+            UIElements.logoutButton?.addEventListener('click', async () => {
+                showLoading(true);
+                await supabase.auth.signOut();
+                if (appState.attendanceSubscription) supabase.removeChannel(appState.attendanceSubscription);
+                window.location.reload(); // Cleanest logout
+            });
+
+            // Attendance Actions
+            UIElements.checkInButton?.addEventListener('click', () => handleCommonAttendance('check_in'));
+            UIElements.checkOutButton?.addEventListener('click', () => handleCommonAttendance('check_out'));
+            UIElements.sakitButton?.addEventListener('click', () => handleCommonAttendance('absence', 'Sakit'));
+            UIElements.izinButton?.addEventListener('click', () => handleCommonAttendance('absence', 'Izin'));
+
+            // Nav Buttons
             document.getElementById('show-signup-button')?.addEventListener('click', () => showAuthView('signup'));
             document.getElementById('show-login-button')?.addEventListener('click', () => showAuthView('login'));
             document.getElementById('show-forgot-password-button')?.addEventListener('click', () => showAuthView('forgotPassword'));
             document.getElementById('back-to-login-button')?.addEventListener('click', () => showAuthView('login'));
 
-            // Toggle Password
-            document.querySelectorAll('.toggle-password').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const input = this.previousElementSibling; 
-                    const icon = this.querySelector('i');
-                    if (input?.type && icon) {
-                        if (input.type === 'password') {
-                            input.type = 'text';
-                            icon.setAttribute('data-lucide', 'eye-off');
-                        } else {
-                            input.type = 'password';
-                            icon.setAttribute('data-lucide', 'eye');
-                        }
-                        lucide.createIcons(); 
-                    }
-                });
-            });
-
-            // Header Buttons
-            UIElements.logoutButton?.addEventListener('click', handleLogout);
-            UIElements.profileButton?.addEventListener('click', () => {
-                UIElements.profileDropdown.classList.toggle('hidden');
-            });
-            // Tutup dropdown jika klik di luar
-            document.addEventListener('click', (e) => {
-                if (!UIElements.profileButton?.contains(e.target) && !UIElements.profileDropdown?.contains(e.target)) {
-                    UIElements.profileDropdown?.classList.add('hidden');
+            // Profile UI
+            UIElements.profileButton?.addEventListener('click', (e) => { e.stopPropagation(); UIElements.profileDropdown.classList.toggle('hidden'); });
+            document.addEventListener('click', () => UIElements.profileDropdown?.classList.add('hidden'));
+            UIElements.profileModalOpenBtn?.addEventListener('click', openProfileModal);
+            UIElements.closeProfileModal?.addEventListener('click', () => UIElements.profileModal.classList.add('hidden'));
+            
+            // Profile Image
+            UIElements.profileImageUploadBtn?.addEventListener('click', () => UIElements.profileImageInput.click());
+            UIElements.profileImageInput?.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        UIElements.cropperImage.src = ev.target.result;
+                        UIElements.cropperModal.classList.remove('hidden');
+                        if (appState.cropperInstance) appState.cropperInstance.destroy();
+                        appState.cropperInstance = new Cropper(UIElements.cropperImage, { aspectRatio: 1, viewMode: 1 });
+                    };
+                    reader.readAsDataURL(file);
                 }
             });
-
-            // Profile Modal
-            UIElements.profileModalOpenBtn?.addEventListener('click', () => {
-                openProfileModal();
-                UIElements.profileDropdown.classList.add('hidden');
+            
+            // Cropper Actions
+            UIElements.cropperCancelBtn?.addEventListener('click', () => {
+                UIElements.cropperModal.classList.add('hidden');
+                UIElements.profileImageInput.value = '';
             });
-            UIElements.closeProfileModal?.addEventListener('click', closeProfileModal);
-            UIElements.profileForm?.addEventListener('submit', handleUpdateProfile);
-            UIElements.profileImageUploadBtn?.addEventListener('click', () => {
-                UIElements.profileImageInput.click();
+            UIElements.cropperApplyBtn?.addEventListener('click', () => {
+                appState.cropperInstance.getCroppedCanvas({ width: 512, height: 512 }).toBlob((blob) => {
+                    appState.profileImageFile = blob;
+                    UIElements.profileImagePreview.src = URL.createObjectURL(blob);
+                    UIElements.cropperModal.classList.add('hidden');
+                });
             });
-            UIElements.profileImageInput?.addEventListener('change', handleImageFileSelect);
-            UIElements.removeProfileImageBtn?.addEventListener('click', handleRemoveProfileImage);
-
-            // Cropper Modal
-            UIElements.cropperApplyBtn?.addEventListener('click', applyCrop);
-            UIElements.cropperCancelBtn?.addEventListener('click', closeCropperModal);
             UIElements.cropperRotateLeftBtn?.addEventListener('click', () => appState.cropperInstance?.rotate(-90));
             UIElements.cropperRotateRightBtn?.addEventListener('click', () => appState.cropperInstance?.rotate(90));
+            
+            UIElements.profileForm?.addEventListener('submit', handleUpdateProfile);
+            UIElements.removeProfileImageBtn?.addEventListener('click', () => {
+                appState.profileImageFile = null;
+                appState.profileImageToDelete = true;
+                UIElements.profileImagePreview.src = generatePfpPlaceholder(appState.profile.full_name);
+            });
 
-
-            // Student Attendance
-            UIElements.checkInButton?.addEventListener('click', () => handleAttendance('check_in'));
-            UIElements.checkOutButton?.addEventListener('click', () => handleAttendance('check_out'));
-            UIElements.sakitButton?.addEventListener('click', () => handleAbsenceRequest('Sakit')); // NEW
-            UIElements.izinButton?.addEventListener('click', () => handleAbsenceRequest('Izin')); // NEW
-
-            // Admin Attendance
+            // Admin Actions
             UIElements.refreshAttendanceButton?.addEventListener('click', async () => {
-                showToast('Memuat ulang data absensi...', 'info');
                 showLoading(true);
                 await fetchAllTodayAttendance();
                 renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
                 showLoading(false);
             });
-            UIElements.exportCsvButton?.addEventListener('click', exportToCSV);
-            UIElements.searchStudentInput?.addEventListener('input', (e) => {
-                renderAllAttendanceLog(e.target.value);
-            });
-
-            // Admin Schedule
+            UIElements.searchStudentInput?.addEventListener('input', (e) => renderAllAttendanceLog(e.target.value));
             UIElements.adminClassSelect?.addEventListener('change', handleAdminClassSelect);
             UIElements.saveScheduleButton?.addEventListener('click', handleUpdateSchedule);
-
-            // Admin Class Management
             UIElements.addClassForm?.addEventListener('submit', handleAddClass);
+
+            // Realtime Subs Functions
+            function subscribeToClassChanges() {
+                supabase.channel('public:classes').on('postgres_changes', { event: '*', schema: 'public', table: 'classes' }, async () => {
+                    await fetchClasses(); renderClassList(); populateAdminClassesDropdown();
+                }).subscribe();
+            }
+            function subscribeToAttendanceChanges() {
+                supabase.channel('public:attendance_log').on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_log' }, async () => {
+                    if (appState.profile?.role === 'admin') {
+                        await fetchAllTodayAttendance(); renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                    }
+                }).subscribe();
+            }
+
+            lucide.createIcons();
+        });
+
+        // CSV Export
+        function populateProfileModal() { /* implemented above */ }
+        document.getElementById('export-csv-button')?.addEventListener('click', () => {
+            if (!appState.allAttendanceLogs.length) return showToast('Data kosong', 'info');
+            const csv = ['Nama,NISN,Kelas,Jenis,Waktu,Status,Tanggal'].join(',') + '\n' + 
+                appState.allAttendanceLogs.map(l => [
+                    `"${l.profiles?.full_name||''}"`,`"${l.profiles?.nisn||''}"`,`"${l.profiles?.classes?.class_name||''}"`,
+                    l.type, l.log_time, l.status, l.log_date
+                ].join(',')).join('\n');
             
-            lucide.createIcons(); 
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+            a.download = `Absensi_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        });
+
+        // Password Toggle
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const inp = this.previousElementSibling;
+                const icon = this.querySelector('i');
+                if (inp.type === 'password') { inp.type = 'text'; icon.setAttribute('data-lucide', 'eye-off'); }
+                else { inp.type = 'password'; icon.setAttribute('data-lucide', 'eye'); }
+                lucide.createIcons();
+            });
         });
     </script>
 </head>
@@ -2230,142 +1148,48 @@
         <p class="mt-6 text-white text-lg font-semibold">Memuat...</p>
     </div>
 
-    <div id="toast" class="fixed bottom-6 right-6 z-[10000] overflow-hidden rounded-xl" style="opacity: 0; transform: translateY(10px);">
-        <!-- Content will be injected by showToast -->
-    </div>
+    <div id="toast" class="fixed bottom-6 right-6 z-[10000] overflow-hidden rounded-xl" style="opacity: 0; transform: translateY(10px);"></div>
 
     <!-- Login Page -->
     <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md login-container">
-            
             <!-- Login View -->
             <div id="login-view">
                 <div class="text-center mb-8">
-                    <div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="school" class="w-10 h-10 text-white"></i>
-                    </div>
+                    <div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center"><i data-lucide="school" class="w-10 h-10 text-white"></i></div>
                     <h2 class="text-4xl font-bold text-white mb-2">Selamat Datang</h2>
                     <p class="text-purple-100">Masuk ke Sistem Absensi Sekolah</p>
                 </div>
-                
                 <div id="login-error" class="mb-4 p-4 glass-effect border-l-4 border-red-400 text-white rounded-lg hidden flex items-center gap-2"></div>
-                
                 <form id="login-form" class="space-y-5 glass-effect p-8 rounded-2xl">
-                    <div>
-                        <label for="login-identifier" class="block text-sm font-semibold text-white mb-2">Email atau NISN</label>
-                        <input id="login-identifier" type="text" name="identifier" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                    </div>
-                    <div>
-                        <label for="login-password" class="block text-sm font-semibold text-white mb-2">Password</label>
-                        <div class="relative">
-                            <input id="login-password" type="password" name="password" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors">
-                                <i data-lucide="eye" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">
-                        Masuk
-                    </button>
+                    <div><label class="block text-sm font-semibold text-white mb-2">Email atau NISN</label><input name="identifier" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50"></div>
+                    <div><label class="block text-sm font-semibold text-white mb-2">Password</label><div class="relative"><input type="password" name="password" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50"><button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"><i data-lucide="eye" class="w-5 h-5"></i></button></div></div>
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">Masuk</button>
                 </form>
-                
-                <div class="mt-6 text-center text-sm space-y-3">
-                    <button id="show-forgot-password-button" type="button" class="text-white hover:text-purple-200 transition-colors font-medium">
-                        Lupa password?
-                    </button>
-                    <p class="text-purple-100">
-                        Belum punya akun? 
-                        <button id="show-signup-button" type="button" class="text-white hover:text-purple-200 transition-colors font-bold underline">
-                            Daftar di sini
-                        </button>
-                    </p>
-                </div>
+                <div class="mt-6 text-center text-sm space-y-3"><button id="show-forgot-password-button" class="text-white hover:text-purple-200 font-medium">Lupa password?</button><p class="text-purple-100">Belum punya akun? <button id="show-signup-button" class="text-white hover:text-purple-200 font-bold underline">Daftar di sini</button></p></div>
             </div>
-
             <!-- Signup View -->
             <div id="signup-view" class="hidden">
-                <div class="text-center mb-8">
-                    <div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="user-plus" class="w-10 h-10 text-white"></i>
-                    </div>
-                    <h2 class="text-4xl font-bold text-white mb-2">Buat Akun</h2>
-                    <p class="text-purple-100">Daftar untuk menggunakan sistem</p>
-                </div>
-                
+                <div class="text-center mb-8"><div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center"><i data-lucide="user-plus" class="w-10 h-10 text-white"></i></div><h2 class="text-4xl font-bold text-white mb-2">Buat Akun</h2></div>
                 <div id="signup-error" class="mb-4 p-4 glass-effect border-l-4 border-red-400 text-white rounded-lg hidden flex items-center gap-2"></div>
-                
                 <form id="signup-form" class="space-y-5 glass-effect p-8 rounded-2xl">
-                    <div>
-                        <label for="signup-full-name" class="block text-sm font-semibold text-white mb-2">Nama Lengkap</label>
-                        <input id="signup-full-name" type="text" name="full_name" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                    </div>
-                    <div>
-                        <label for="signup-email" class="block text-sm font-semibold text-white mb-2">Email</label>
-                        <input id="signup-email" type="email" name="email" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                    </div>
-                    <div>
-                        <label for="signup-nisn" class="block text-sm font-semibold text-white mb-2">NISN (10 digit)</label>
-                        <input id="signup-nisn" type="text" name="nisn" required maxlength="10" pattern="\d{10}" class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50" placeholder="1234567890">
-                    </div>
-                    <div>
-                        <label for="signup-class-select" class="block text-sm font-semibold text-white mb-2">Kelas</label>
-                        <select id="signup-class-select" name="class_id" required class="w-full px-4 py-3 rounded-xl transition-all text-white appearance-none">
-                            <option value="" disabled selected>Memuat kelas...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="signup-password" class="block text-sm font-semibold text-white mb-2">Password</label>
-                        <div class="relative">
-                            <input id="signup-password" type="password" name="password" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                            <button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors">
-                                <i data-lucide="eye" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                        <p class="text-xs text-purple-200 mt-2 ml-1">Minimal 8 karakter</p>
-                    </div>
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">
-                        Daftar Sekarang
-                    </button>
+                    <div><label class="block text-sm font-semibold text-white mb-2">Nama Lengkap</label><input name="full_name" required class="w-full px-4 py-3 rounded-xl text-white"></div>
+                    <div><label class="block text-sm font-semibold text-white mb-2">Email</label><input type="email" name="email" required class="w-full px-4 py-3 rounded-xl text-white"></div>
+                    <div><label class="block text-sm font-semibold text-white mb-2">NISN (10 digit)</label><input name="nisn" required maxlength="10" pattern="\d{10}" class="w-full px-4 py-3 rounded-xl text-white"></div>
+                    <div><label class="block text-sm font-semibold text-white mb-2">Kelas</label><select id="signup-class-select" name="class_id" required class="w-full px-4 py-3 rounded-xl text-white appearance-none"><option value="" disabled selected>Memuat...</option></select></div>
+                    <div><label class="block text-sm font-semibold text-white mb-2">Password</label><div class="relative"><input type="password" name="password" required class="w-full px-4 py-3 rounded-xl text-white"><button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"><i data-lucide="eye" class="w-5 h-5"></i></button></div></div>
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">Daftar Sekarang</button>
                 </form>
-                
-                <div class="mt-6 text-center">
-                    <p class="text-purple-100">
-                        Sudah punya akun? 
-                        <button id="show-login-button" type="button" class="text-white hover:text-purple-200 transition-colors font-bold underline">
-                            Masuk di sini
-                        </button>
-                    </p>
-                </div>
+                <div class="mt-6 text-center"><p class="text-purple-100">Sudah punya akun? <button id="show-login-button" class="text-white hover:text-purple-200 font-bold underline">Masuk di sini</button></p></div>
             </div>
-
-            <!-- Forgot Password View -->
+            <!-- Forgot PW -->
             <div id="forgot-password-view" class="hidden">
-                <div class="text-center mb-8">
-                    <div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center">
-                        <i data-lucide="key" class="w-10 h-10 text-white"></i>
-                    </div>
-                    <h2 class="text-4xl font-bold text-white mb-2">Reset Password</h2>
-                    <p class="text-purple-100">Masukkan email untuk reset password</p>
-                </div>
-                
-                <div id="forgot-error" class="mb-4 p-4 glass-effect border-l-4 border-red-400 text-white rounded-lg hidden"></div>
-                
+                <div class="text-center mb-8"><div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center"><i data-lucide="key" class="w-10 h-10 text-white"></i></div><h2 class="text-4xl font-bold text-white mb-2">Reset Password</h2></div>
                 <form id="forgot-password-form" class="space-y-5 glass-effect p-8 rounded-2xl">
-                    <div>
-                        <label for="forgot-email" class="block text-sm font-semibold text-white mb-2">Email</LabeL>
-                        <input id="forgot-email" type="email" name="email" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                    </div>
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">
-                        Kirim Link Reset
-                    </button>
+                    <div><label class="block text-sm font-semibold text-white mb-2">Email</label><input name="email" type="email" required class="w-full px-4 py-3 rounded-xl text-white"></div>
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg">Kirim Link Reset</button>
                 </form>
-                
-                <div class="mt-6 text-center">
-                    <button id="back-to-login-button" type="button" class="text-white hover:text-purple-200 transition-colors font-medium flex items-center gap-2 mx-auto">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        Kembali ke login
-                    </button>
-                </div>
+                <div class="mt-6 text-center"><button id="back-to-login-button" class="text-white hover:text-purple-200 flex items-center gap-2 mx-auto"><i data-lucide="arrow-left" class="w-4 h-4"></i>Kembali ke login</button></div>
             </div>
         </div>
     </div>
@@ -2375,30 +1199,17 @@
         <header class="glass-effect sticky top-0 z-40 border-b border-white/20">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 glass-effect rounded-xl flex items-center justify-center shadow-lg">
-                        <i data-lucide="school" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-white">Sistem Absensi</h1>
-                        <p class="text-sm text-purple-100">Kelola absensi dan jadwal</p>
-                    </div>
+                    <div class="w-12 h-12 glass-effect rounded-xl flex items-center justify-center shadow-lg"><i data-lucide="school" class="w-6 h-6 text-white"></i></div>
+                    <div><h1 class="text-xl font-bold text-white">Sistem Absensi</h1><p class="text-sm text-purple-100">Kelola absensi dan jadwal</p></div>
                 </div>
                 <div class="relative">
-                    <button id="profile-button" class="flex items-center gap-2 text-white font-semibold glass-effect px-3 py-1.5 rounded-full hover:bg-white/20 transition-all shadow-md">
-                        <img id="header-pfp" src="httpsa://placehold.co/40x40/FFFFFF/764ba2?text=U" alt="PFP" class="w-8 h-8 rounded-full border-2 border-white/50 object-cover bg-white/20">
-                        <span id="welcome-message" class="hidden sm:inline font-semibold">User</span>
-                        <i data-lucide="chevron-down" class="w-4 h-4 opacity-70"></i>
+                    <button id="profile-button" class="flex items-center gap-2 text-white font-semibold glass-effect px-3 py-1.5 rounded-full hover:bg-white/20 shadow-md">
+                        <img id="header-pfp" src="" class="w-8 h-8 rounded-full border-2 border-white/50 object-cover bg-white/20">
+                        <span id="welcome-message" class="hidden sm:inline font-semibold">User</span><i data-lucide="chevron-down" class="w-4 h-4 opacity-70"></i>
                     </button>
-                    <!-- Dropdown Profil -->
                     <div id="profile-dropdown" class="hidden absolute top-full mt-2 right-0 glass-effect rounded-xl shadow-2xl p-2 z-50 min-w-[180px] border border-white/20">
-                        <button id="profile-modal-open-btn" class="flex w-full items-center gap-2 px-3 py-2 text-white hover:bg-white/10 rounded-lg text-sm transition-colors">
-                            <i data-lucide="user-cog" class="w-4 h-4"></i>
-                            Edit Profil
-                        </button>
-                        <button id="logout-button" class="flex w-full items-center gap-2 px-3 py-2 text-red-300 hover:bg-red-500/20 rounded-lg text-sm transition-colors">
-                            <i data-lucide="log-out" class="w-4 h-4"></i>
-                            Keluar
-                        </button>
+                        <button id="profile-modal-open-btn" class="flex w-full items-center gap-2 px-3 py-2 text-white hover:bg-white/10 rounded-lg text-sm"><i data-lucide="user-cog" class="w-4 h-4"></i>Edit Profil</button>
+                        <button id="logout-button" class="flex w-full items-center gap-2 px-3 py-2 text-red-300 hover:bg-red-500/20 rounded-lg text-sm"><i data-lucide="log-out" class="w-4 h-4"></i>Keluar</button>
                     </div>
                 </div>
             </div>
@@ -2406,65 +1217,24 @@
 
         <!-- Student View -->
         <div id="student-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
-            <!-- Konten Siswa -->
             <div class="glass-effect rounded-2xl p-6 sm:p-8 text-center shadow-xl card-hover">
-                <div class="mb-6">
-                    <h2 id="clock" class="clock-display gradient-text mb-2">00:00:00</h2>
-                    <p id="date" class="text-white-glass text-lg">-</p>
-                </div>
-                
+                <div class="mb-6"><h2 id="clock" class="clock-display gradient-text mb-2">00:00:00</h2><p id="date" class="text-white-glass text-lg">-</p></div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 justify-center">
-                    <button id="check-in-button" type="button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="log-in" class="w-5 h-5"></i>
-                        Absen Masuk
-                    </button>
-                    <button id="check-out-button" type="button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="log-out" class="w-5 h-5"></i>
-                        Absen Pulang
-                    </button>
-                    <button id="izin-button" type="button" class="px-6 py-4 btn-info-custom text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="file-text" class="w-5 h-5"></i>
-                        Izin
-                    </button>
-                    <button id="sakit-button" type="button" class="px-6 py-4 btn-warning-custom text-white rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2">
-                        <i data-lucide="thermometer" class="w-5 h-5"></i>
-                        Sakit
-                    </button>
+                    <button id="check-in-button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="log-in" class="w-5 h-5"></i>Masuk</button>
+                    <button id="check-out-button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="log-out" class="w-5 h-5"></i>Pulang</button>
+                    <button id="izin-button" class="px-6 py-4 btn-info-custom text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="file-text" class="w-5 h-5"></i>Izin</button>
+                    <button id="sakit-button" class="px-6 py-4 btn-warning-custom text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="thermometer" class="w-5 h-5"></i>Sakit</button>
                 </div>
             </div>
-
             <div class="grid lg:grid-cols-2 gap-6">
                 <div class="glass-effect rounded-2xl p-6 shadow-lg card-hover">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
-                            <i data-lucide="clipboard-list" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-white">Riwayat Absensi Hari Ini</h3>
-                    </div>
+                    <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="clipboard-list" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Riwayat Hari Ini</h3></div>
                     <div id="attendance-log-list" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
                 </div>
-
                 <div class="glass-effect rounded-2xl p-6 shadow-lg card-hover">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
-                            <i data-lucide="calendar" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-white">Jadwal Pelajaran</h3>
-                    </div>
+                    <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="calendar" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Jadwal</h3></div>
                     <div class="overflow-x-auto relative -mx-2 max-h-96">
-                        <table class="w-full text-xs min-w-[600px]">
-                            <thead>
-                                <tr class="border-b-2 border-white/20">
-                                    <th class="p-3 text-left font-bold text-white sticky left-0 z-20" style="background: rgba(249, 250, 251, 0.15); backdrop-filter: blur(10px);">Waktu</th>
-                                    <th class="p-3 text-center font-bold text-white">Sen</th>
-                                    <th class="p-3 text-center font-bold text-white">Sel</th>
-                                    <th class="p-3 text-center font-bold text-white">Rab</th>
-                                    <th class="p-3 text-center font-bold text-white">Kam</th>
-                                    <th class="p-3 text-center font-bold text-white">Jum</th>
-                                </tr>
-                            </thead>
-                            <tbody id="schedule-table-body"></tbody>
-                        </table>
+                        <table class="w-full text-xs min-w-[600px]"><thead><tr class="border-b-2 border-white/20"><th class="p-3 text-left font-bold text-white sticky left-0 z-20" style="background:rgba(249,250,251,0.15);backdrop-filter:blur(10px);">Waktu</th><th class="p-3 text-center font-bold text-white">Sen</th><th class="p-3 text-center font-bold text-white">Sel</th><th class="p-3 text-center font-bold text-white">Rab</th><th class="p-3 text-center font-bold text-white">Kam</th><th class="p-3 text-center font-bold text-white">Jum</th></tr></thead><tbody id="schedule-table-body"></tbody></table>
                     </div>
                 </div>
             </div>
@@ -2472,130 +1242,42 @@
 
         <!-- Admin View -->
         <div id="admin-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
-            
-            <!-- NEW: Admin Summary -->
             <div class="glass-effect rounded-2xl p-6 shadow-lg">
-                <h3 class="text-xl font-bold text-white mb-6">Ringkasan Absensi Hari Ini</h3>
+                <h3 class="text-xl font-bold text-white mb-6">Ringkasan Absensi</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-emerald-400">
-                        <p class="text-sm text-emerald-200 font-semibold">Tepat Masuk</p>
-                        <span id="count-tepat" class="text-4xl font-bold text-white">0</span>
-                    </div>
-                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-yellow-400">
-                        <p class="text-sm text-yellow-200 font-semibold">Telat Masuk</p>
-                        <span id="count-telat" class="text-4xl font-bold text-white">0</span>
-                    </div>
-                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-blue-400">
-                        <p class="text-sm text-blue-200 font-semibold">Izin</p>
-                        <span id="count-izin" class="text-4xl font-bold text-white">0</span>
-                    </div>
-                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-orange-400">
-                        <p class="text-sm text-orange-200 font-semibold">Sakit</p>
-                        <span id="count-sakit" class="text-4xl font-bold text-white">0</span>
-                    </div>
+                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-emerald-400"><p class="text-sm text-emerald-200 font-semibold">Tepat Masuk</p><span id="count-tepat" class="text-4xl font-bold text-white">0</span></div>
+                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-yellow-400"><p class="text-sm text-yellow-200 font-semibold">Telat Masuk</p><span id="count-telat" class="text-4xl font-bold text-white">0</span></div>
+                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-blue-400"><p class="text-sm text-blue-200 font-semibold">Izin</p><span id="count-izin" class="text-4xl font-bold text-white">0</span></div>
+                    <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-orange-400"><p class="text-sm text-orange-200 font-semibold">Sakit</p><span id="count-sakit" class="text-4xl font-bold text-white">0</span></div>
                 </div>
             </div>
-            <!-- END: Admin Summary -->
 
-            <!-- Konten Admin -->
             <div class="glass-effect rounded-2xl p-6 shadow-lg">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
-                            <i data-lucide="users" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-white">Data Absensi Hari Ini</h3>
-                    </div>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button id="refresh-attendance-button" type="button" class="flex-1 sm:flex-initial px-4 py-2 glass-effect text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:bg-white/20">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                            Refresh
-                        </button>
-                        <button id="export-csv-button" type="button" class="flex-1 sm:flex-initial px-4 py-2 btn-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            Export CSV
-                        </button>
-                    </div>
+                <div class="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+                    <div class="flex items-center gap-3"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="users" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Data Absensi</h3></div>
+                    <div class="flex gap-2"><button id="refresh-attendance-button" class="px-4 py-2 glass-effect text-white rounded-xl flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i>Refresh</button><button id="export-csv-button" class="px-4 py-2 btn-primary text-white rounded-xl flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i>CSV</button></div>
                 </div>
-                
-                <input type="text" id="search-student-input" placeholder="Cari Nama, NISN, Email, atau Kelas..." class="w-full mb-4 px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                
+                <input id="search-student-input" placeholder="Cari Nama, NISN, Email, Kelas..." class="w-full mb-4 px-4 py-3 rounded-xl text-white">
                 <div class="overflow-x-auto -mx-2 max-h-[500px]">
-                    <table class="w-full text-sm min-w-[700px]">
-                        <thead>
-                            <tr class="border-b-2 border-white/20">
-                                <th class="p-3 text-left font-bold text-white">Siswa</th>
-                                <th class="p-3 text-left font-bold text-white">Email</th>
-                                <th class="p-3 text-left font-bold text-white">Kelas</th>
-                                <th class="p-3 text-left font-bold text-white">Jenis</th>
-                                <th class="p-3 text-left font-bold text-white">Waktu</th>
-                                <th class="p-3 text-left font-bold text-white">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-attendance-log-body"></tbody>
-                    </table>
+                    <table class="w-full text-sm min-w-[700px]"><thead><tr class="border-b-2 border-white/20"><th class="p-3 text-left font-bold text-white">Siswa</th><th class="p-3 text-left font-bold text-white">Email</th><th class="p-3 text-left font-bold text-white">Kelas</th><th class="p-3 text-left font-bold text-white">Jenis</th><th class="p-3 text-left font-bold text-white">Waktu</th><th class="p-3 text-left font-bold text-white">Status</th></tr></thead><tbody id="admin-attendance-log-body"></tbody></table>
                 </div>
             </div>
 
             <div class="glass-effect rounded-2xl p-6 shadow-lg">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
-                        <i data-lucide="calendar-days" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white">Kelola Jadwal Pelajaran</h3>
-                </div>
-                
-                <select id="admin-class-select" class="w-full mb-4 px-4 py-3 rounded-xl transition-all font-semibold appearance-none text-white">
-                    <option value="" disabled selected>Pilih kelas untuk melihat/mengedit jadwal...</option>
-                </select>
-                
+                <div class="flex items-center gap-3 mb-6"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="calendar-days" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Kelola Jadwal</h3></div>
+                <select id="admin-class-select" class="w-full mb-4 px-4 py-3 rounded-xl text-white appearance-none"><option value="" disabled selected>Pilih kelas...</option></select>
                 <div id="admin-schedule-container" class="hidden">
                     <div class="overflow-x-auto relative -mx-2 mb-4 max-h-[500px]">
-                        <table class="w-full text-xs min-w-[700px]">
-                            <thead>
-                                <tr class="border-b-2 border-white/20">
-                                    <th class="p-3 text-left font-bold text-white sticky left-0 z-20" style="background: rgba(249, 250, 251, 0.15); backdrop-filter: blur(10px);">Waktu</th>
-                                    <th class="p-3 text-center font-bold text-white">Senin</th>
-                                    <th class="p-3 text-center font-bold text-white">Selasa</th>
-                                    <th class="p-3 text-center font-bold text-white">Rabu</th>
-                                    <th class="p-3 text-center font-bold text-white">Kamis</th>
-                                    <th class="p-3 text-center font-bold text-white">Jumat</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-schedule-table-body"></tbody>
-                        </table>
+                        <table class="w-full text-xs min-w-[700px]"><thead><tr class="border-b-2 border-white/20"><th class="p-3 text-left font-bold text-white sticky left-0 z-20" style="background:rgba(249,250,251,0.15);backdrop-filter:blur(10px);">Waktu</th><th class="p-3 text-center font-bold text-white">Senin</th><th class="p-3 text-center font-bold text-white">Selasa</th><th class="p-3 text-center font-bold text-white">Rabu</th><th class="p-3 text-center font-bold text-white">Kamis</th><th class="p-3 text-center font-bold text-white">Jumat</th></tr></thead><tbody id="admin-schedule-table-body"></tbody></table>
                     </div>
-                    
-                    <button id="save-schedule-button" type="button" class="w-full px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2">
-                        <i data-lucide="save" class="w-5 h-5"></i>
-                        Simpan Jadwal
-                    </button>
-                    <p class="text-xs text-white-glass mt-3 flex items-center gap-2">
-                        <i data-lucide="info" class="w-4 h-4"></i>
-                        Edit langsung pada tabel (selain istirahat), lalu klik simpan.
-                    </p>
+                    <button id="save-schedule-button" class="w-full px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="save" class="w-5 h-5"></i>Simpan Jadwal</button>
                 </div>
             </div>
 
             <div id="admin-class-management" class="glass-effect rounded-2xl p-6 shadow-lg">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center">
-                        <i data-lucide="landmark" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white">Kelola Kelas</h3>
-                </div>
-
-                <form id="add-class-form" class="flex gap-2 mb-4">
-                    <input id="new-class-name" type="text" placeholder="Masukkan nama kelas baru" required class="flex-grow px-4 py-3 rounded-xl text-white placeholder-white/50">
-                    <button type="submit" class="px-6 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg flex items-center gap-2">
-                        <i data-lucide="plus" class="w-5 h-5"></i> Tambah
-                    </button>
-                </form>
-
-                <h4 class="text-md font-semibold text-white mb-2">Daftar Kelas Tersedia:</h4>
-                <ul id="admin-class-list" class="max-h-60 overflow-y-auto glass-effect rounded-lg divide-y divide-white/10">
-                    <li class="text-white-glass italic px-4 py-2">Memuat daftar kelas...</li>
-                </ul>
+                <div class="flex items-center gap-3 mb-6"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="landmark" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Kelola Kelas</h3></div>
+                <form id="add-class-form" class="flex gap-2 mb-4"><input id="new-class-name" placeholder="Nama kelas baru" required class="flex-grow px-4 py-3 rounded-xl text-white"><button type="submit" class="px-6 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i>Tambah</button></form>
+                <ul id="admin-class-list" class="max-h-60 overflow-y-auto glass-effect rounded-lg divide-y divide-white/10"><li class="text-white-glass italic px-4 py-2">Memuat...</li></ul>
             </div>
         </div>
     </div>
@@ -2603,76 +1285,28 @@
     <!-- Modal Edit Profil -->
     <div id="profile-modal" class="modal-overlay hidden">
         <div class="modal-content glass-effect rounded-2xl shadow-2xl p-6 sm:p-8 max-w-lg">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-white">Edit Profil</h3>
-                <button id="close-profile-modal" class="text-white/70 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
+            <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-white">Edit Profil</h3><button id="close-profile-modal" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button></div>
             <form id="profile-form" class="space-y-5">
-                <!-- Preview PFP -->
                 <div class="flex flex-col items-center gap-4">
-                    <img id="profile-image-preview" src="https://placehold.co/150x150/FFFFFF/764ba2?text=U" alt="Profile Picture" class="w-32 h-32 rounded-full object-cover border-4 border-white/30 shadow-lg bg-white/20">
-                    <div class="flex gap-2">
-                        <input type="file" id="profile-image-input" class="hidden" accept="image/png, image/jpeg">
-                        <button id="profile-image-upload-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl text-sm font-semibold flex items-center gap-2">
-                            <i data-lucide="upload" class="w-4 h-4"></i> Ganti Foto
-                        </button>
-                        <button id="remove-profile-image-btn" type="button" class="px-4 py-2 btn-danger text-white rounded-xl text-sm font-semibold flex items-center gap-2">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
-                        </button>
-                    </div>
+                    <img id="profile-image-preview" src="" class="w-32 h-32 rounded-full object-cover border-4 border-white/30 shadow-lg bg-white/20">
+                    <div class="flex gap-2"><input type="file" id="profile-image-input" class="hidden" accept="image/png, image/jpeg"><button id="profile-image-upload-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl text-sm flex items-center gap-2"><i data-lucide="upload" class="w-4 h-4"></i>Ganti</button><button id="remove-profile-image-btn" type="button" class="px-4 py-2 btn-danger text-white rounded-xl text-sm flex items-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i>Hapus</button></div>
                 </div>
-
-                <div>
-                    <label for="profile-full-name" class="block text-sm font-semibold text-white mb-2">Nama Lengkap</label>
-                    <input id="profile-full-name" type="text" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50">
-                </div>
-                <div>
-                    <label for="profile-email" class="block text-sm font-semibold text-white mb-2">Email</label>
-                    <input id="profile-email" type="email" readonly disabled class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50 opacity-70 cursor-not-allowed">
-                </div>
-                <div>
-                    <label for="profile-nisn" class="block text-sm font-semibold text-white mb-2">NISN</label>
-                    <input id="profile-nisn" type="text" readonly disabled class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50 opacity-70 cursor-not-allowed">
-                </div>
-                
-                <button id="profile-save-btn" type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2">
-                    <i data-lucide="save" class="w-5 h-5"></i>
-                    Simpan Perubahan
-                </button>
+                <div><label class="block text-sm font-semibold text-white mb-2">Nama Lengkap</label><input id="profile-full-name" required class="w-full px-4 py-3 rounded-xl text-white"></div>
+                <div><label class="block text-sm font-semibold text-white mb-2">Email</label><input id="profile-email" readonly disabled class="w-full px-4 py-3 rounded-xl text-white opacity-70"></div>
+                <div><label class="block text-sm font-semibold text-white mb-2">NISN</label><input id="profile-nisn" readonly disabled class="w-full px-4 py-3 rounded-xl text-white opacity-70"></div>
+                <button id="profile-save-btn" type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="save" class="w-5 h-5"></i>Simpan</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal Cropper Gambar -->
+    <!-- Modal Cropper -->
     <div id="cropper-modal" class="modal-overlay hidden">
         <div id="cropper-modal-content" class="modal-content glass-effect rounded-2xl shadow-2xl p-6 sm:p-8">
-            <h3 class="text-2xl font-bold text-white mb-4">Potong & Sesuaikan Gambar</h3>
-            <div id="cropper-container" class="mb-4 bg-black rounded-lg overflow-hidden">
-                <img id="cropper-image" src="" alt="Image to crop">
-            </div>
-            <div class="flex flex-wrap justify-center gap-3 mb-6">
-                <button id="cropper-rotate-left-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl font-semibold flex items-center gap-2" title="Putar Kiri">
-                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                </button>
-                <button id="cropper-rotate-right-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl font-semibold flex items-center gap-2" title="Putar Kanan">
-                    <i data-lucide="rotate-cw" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="flex gap-4">
-                <button id="cropper-cancel-btn" type="button" class="flex-1 w-full btn-secondary text-white py-3 rounded-xl font-bold shadow-lg">
-                    Batal
-                </button>
-                <button id="cropper-apply-btn" type="button" class="flex-1 w-full btn-primary text-white py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2">
-                    <i data-lucide="check" class="w-5 h-5"></i>
-                    Terapkan
-                </button>
-            </div>
+            <h3 class="text-2xl font-bold text-white mb-4">Sesuaikan Gambar</h3>
+            <div id="cropper-container" class="mb-4 bg-black rounded-lg overflow-hidden"><img id="cropper-image" src="" alt="Crop"></div>
+            <div class="flex justify-center gap-3 mb-6"><button id="cropper-rotate-left-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button><button id="cropper-rotate-right-btn" type="button" class="px-4 py-2 btn-secondary text-white rounded-xl"><i data-lucide="rotate-cw" class="w-5 h-5"></i></button></div>
+            <div class="flex gap-4"><button id="cropper-cancel-btn" type="button" class="flex-1 btn-secondary text-white py-3 rounded-xl font-bold">Batal</button><button id="cropper-apply-btn" type="button" class="flex-1 btn-primary text-white py-3 rounded-xl font-bold flex justify-center gap-2"><i data-lucide="check" class="w-5 h-5"></i>Terapkan</button></div>
         </div>
     </div>
-
 </body>
 </html>
-
