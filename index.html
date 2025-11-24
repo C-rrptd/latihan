@@ -67,32 +67,100 @@
         }
         
         /* --- BUTTONS --- */
+        /* Common Liquid Effect Styles for Primary, Info (Izin), and Warning (Sakit) */
+        .btn-primary, .btn-info-custom, .btn-warning-custom {
+            position: relative; 
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            /* Default variables for cursor position */
+            --x: 50%;
+            --y: 50%;
+            /* Ensure text sits on top of pseudo elements */
+            isolation: isolate;
+        }
+
+        /* Ensure content (text/icons) stays on top of the ripple */
+        .btn-primary > *, .btn-info-custom > *, .btn-warning-custom > * {
+            position: relative;
+            z-index: 20; /* Increased Z-Index to be safe */
+            pointer-events: none; /* Let clicks pass through text to button */
+        }
+
+        /* The Ripple Element */
+        .btn-primary::before, .btn-info-custom::before, .btn-warning-custom::before {
+            content: ''; 
+            position: absolute;
+            top: var(--y); 
+            left: var(--x); 
+            width: 0; 
+            height: 0;
+            border-radius: 50%; 
+            transform: translate(-50%, -50%); 
+            transition: width 0.6s ease, height 0.6s ease;
+            pointer-events: none; 
+            z-index: 1; /* Explicit low z-index */
+        }
+
+        /* Expansion on Hover */
+        .btn-primary:hover::before, .btn-info-custom:hover::before, .btn-warning-custom:hover::before { 
+            width: 400px; 
+            height: 400px; 
+        }
+
+        /* Hover Elevation */
+        .btn-primary:hover, .btn-info-custom:hover, .btn-warning-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-primary:active, .btn-info-custom:active, .btn-warning-custom:active { 
+            transform: translateY(0); 
+        }
+
+        /* --- SPECIFIC BUTTON COLORS --- */
+        
+        /* Primary (Masuk/Pulang) */
         .btn-primary {
             background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: white; font-weight: 600;
-            transition: all 0.3s ease;
-            position: relative; overflow: hidden;
         }
-        
         .btn-primary::before {
-            content: ''; position: absolute;
-            top: 50%; left: 50%; width: 0; height: 0;
-            border-radius: 50%; background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s;
+            background: rgba(255, 255, 255, 0.3); /* White Ripple */
         }
-        
-        .btn-primary:hover::before { width: 300px; height: 300px; }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-        
-        .btn-primary:active { transform: translateY(0); }
 
+        /* Info Custom (Izin) - Liquid Glass Style */
+        .btn-info-custom {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3); 
+            color: #dbeafe;
+            font-weight: 600;
+        }
+        .btn-info-custom::before {
+            background: rgba(59, 130, 246, 0.5); /* Blue Ripple */
+        }
+        .btn-info-custom:hover {
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Warning Custom (Sakit) - Liquid Glass Style */
+        .btn-warning-custom {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.3); 
+            color: #fef3c7;
+            font-weight: 600;
+        }
+        .btn-warning-custom::before {
+            background: rgba(245, 158, 11, 0.5); /* Orange/Amber Ripple */
+        }
+        .btn-warning-custom:hover {
+            border-color: rgba(245, 158, 11, 0.6);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+        }
+
+        /* --- OTHER BUTTONS --- */
         .btn-secondary {
             background: rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
@@ -105,20 +173,6 @@
             border: 1px solid rgba(239, 68, 68, 0.3); color: #fee2e2;
         }
         .btn-danger:hover { background: rgba(239, 68, 68, 0.4); }
-
-        .btn-warning-custom {
-            background: rgba(245, 158, 11, 0.2);
-            border: 1px solid rgba(245, 158, 11, 0.3); color: #fef3c7;
-            font-weight: 600; transition: all 0.3s ease;
-        }
-        .btn-warning-custom:hover { background: rgba(245, 158, 11, 0.4); }
-        
-        .btn-info-custom {
-            background: rgba(59, 130, 246, 0.2);
-            border: 1px solid rgba(59, 130, 246, 0.3); color: #dbeafe;
-            font-weight: 600; transition: all 0.3s ease;
-        }
-        .btn-info-custom:hover { background: rgba(59, 130, 246, 0.4); }
         
         /* --- UTILITIES & ANIMATIONS --- */
         .spinner {
@@ -307,6 +361,23 @@
             }
         }
         
+        // --- UTILS FOR DATE ---
+        function getLogicalDate() {
+            // Logika: Reset jam 01:00 AM.
+            // Jika sekarang jam 00:30, masih dianggap hari sebelumnya.
+            // Jika jam 01:00 ke atas, dianggap hari baru.
+            // Cara: Menggunakan waktu UTC+6 (WIB-1).
+            // WIB adalah UTC+7. Jika kita kurangi 1 jam agar pergantian hari mundur ke jam 1 pagi,
+            // Maka kita seolah-olah menggunakan zona waktu UTC+6.
+            
+            const now = new Date();
+            const offset = 6; // UTC+6 (WIB - 1 jam)
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const logicalTime = new Date(utc + (3600000 * offset));
+            
+            return logicalTime.toISOString().split('T')[0];
+        }
+
         // --- UI UTILITIES ---
         function showLoading(isLoading) { 
             if (UIElements.loadingScreen) UIElements.loadingScreen.classList.toggle('hidden', !isLoading); 
@@ -459,14 +530,14 @@
                 // Role-based initialization
                 if (profile.role === 'admin') {
                     await Promise.all([
-                        fetchAllTodayAttendance().then(() => renderAllAttendanceLog()),
+                        fetchAllAttendanceHistory().then(() => renderAllAttendanceLog()),
                         fetchClasses().then(() => { populateAdminClassesDropdown(); renderClassList(); })
                     ]);
                     subscribeToAttendanceChanges();
                     subscribeToClassChanges();
                 } else {
                     await Promise.all([
-                        fetchTodayAttendance().then(() => renderAttendanceLog()),
+                        fetchStudentHistory().then(() => renderAttendanceLog()),
                         fetchSchedule().then(() => renderSchedule(UIElements.scheduleTableBody, false))
                     ]);
                     updateAttendanceButtons();
@@ -565,12 +636,14 @@
             tbody.appendChild(fragment);
         }
 
-        async function fetchTodayAttendance() {
+        async function fetchStudentHistory() {
             if (!appState.currentUser) return;
+            // Diubah: Mengambil SEMUA history, bukan cuma hari ini
             const { data } = await supabase.from('attendance_log').select('*')
                 .eq('user_id', appState.currentUser.id)
-                .eq('log_date', new Date().toISOString().split('T')[0])
-                .order('log_time', { ascending: false });
+                .order('log_date', { ascending: false })
+                .order('log_time', { ascending: false })
+                .limit(100); // Limit untuk performa, tapi cukup banyak untuk history
             appState.attendanceLogs = data || [];
         }
 
@@ -579,7 +652,7 @@
             UIElements.attendanceLogList.innerHTML = '';
 
             if (!appState.attendanceLogs.length) {
-                UIElements.attendanceLogList.innerHTML = `<div class="text-center py-8"><i data-lucide="calendar-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i><p class="text-white-glass">Belum ada riwayat absensi hari ini</p></div>`;
+                UIElements.attendanceLogList.innerHTML = `<div class="text-center py-8"><i data-lucide="calendar-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i><p class="text-white-glass">Belum ada riwayat absensi</p></div>`;
                 lucide.createIcons();
                 return;
             }
@@ -588,7 +661,7 @@
             appState.attendanceLogs.forEach((log, i) => {
                 const div = document.createElement('div');
                 div.className = 'flex items-center justify-between p-4 rounded-lg glass-effect hover:bg-white/10 transition-colors animate-slide-in';
-                div.style.animationDelay = `${i * 0.1}s`;
+                div.style.animationDelay = `${i * 0.05}s`;
                 
                 let meta = { title: 'Log Absensi', icon: 'help-circle', class: 'status-warning' };
                 if (log.type === 'check_in') {
@@ -604,7 +677,10 @@
                 div.innerHTML = `
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full glass-effect flex items-center justify-center shadow"><i data-lucide="${meta.icon}" class="w-5 h-5 text-white"></i></div>
-                        <div><p class="font-semibold text-white">${meta.title}</p><p class="text-sm text-white-glass">${log.log_time}</p></div>
+                        <div>
+                            <p class="font-semibold text-white">${meta.title}</p>
+                            <p class="text-xs text-white-glass">${log.log_date} • ${log.log_time}</p>
+                        </div>
                     </div>
                     <span class="status-badge ${meta.class}">${log.status}</span>
                 `;
@@ -617,10 +693,13 @@
         function updateAttendanceButtons() {
             if (!UIElements.checkInButton) return;
             
-            const logs = appState.attendanceLogs;
-            const hasCheckIn = logs.some(l => l.type === 'check_in');
-            const hasCheckOut = logs.some(l => l.type === 'check_out');
-            const hasAbsence = logs.some(l => l.type === 'absence' || l.status === 'Sakit' || l.status === 'Izin');
+            // Filter hanya log hari ini (berdasarkan reset jam 1 pagi)
+            const todayLogical = getLogicalDate();
+            const todayLogs = appState.attendanceLogs.filter(l => l.log_date === todayLogical);
+            
+            const hasCheckIn = todayLogs.some(l => l.type === 'check_in');
+            const hasCheckOut = todayLogs.some(l => l.type === 'check_out');
+            const hasAbsence = todayLogs.some(l => l.type === 'absence' || l.status === 'Sakit' || l.status === 'Izin');
             const hasDayLog = hasCheckIn || hasAbsence;
 
             // Helper to set button state
@@ -636,19 +715,22 @@
             setBtn(UIElements.checkOutButton, !hasCheckIn || hasCheckOut);
         }
 
-        async function fetchAllTodayAttendance() {
+        async function fetchAllAttendanceHistory() {
+            // Diubah: Fetch semua log, tidak difilter tanggal, tapi tetap limit agar tidak crash
             const { data } = await supabase
                 .from('attendance_log')
                 .select('*, profiles(*, classes(class_name))')
-                .eq('log_date', new Date().toISOString().split('T')[0])
-                .order('log_time', { ascending: false });
+                .order('log_date', { ascending: false })
+                .order('log_time', { ascending: false })
+                .limit(200); // Admin lihat 200 terakhir
             appState.allAttendanceLogs = data || [];
         }
 
         function renderAllAttendanceLog(filter = '') {
             if (!UIElements.adminAttendanceLogBody) return;
             
-            // Stats Calculation
+            // Stats Calculation - Masih menampilkan TOTAL dari data yang di-fetch (default 200 terakhir)
+            // Ini sesuai request "Rekam rekor absen dari hari pertama"
             let stats = { tepat: 0, telat: 0, izin: 0, sakit: 0 };
             appState.allAttendanceLogs.forEach(l => {
                 const s = l.status || '';
@@ -673,11 +755,12 @@
                 return (l.profiles.nisn || '').includes(term) || 
                        (l.profiles.email || '').toLowerCase().includes(term) || 
                        (l.profiles.classes?.class_name || '').toLowerCase().includes(term) ||
-                       (l.profiles.full_name || '').toLowerCase().includes(term);
+                       (l.profiles.full_name || '').toLowerCase().includes(term) ||
+                       (l.log_date || '').includes(term);
             });
 
             if (!filtered.length) {
-                UIElements.adminAttendanceLogBody.innerHTML = `<tr><td colspan="6" class="text-center p-8"><i data-lucide="search-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i><p class="text-white-glass">Tidak ada data.</p></td></tr>`;
+                UIElements.adminAttendanceLogBody.innerHTML = `<tr><td colspan="7" class="text-center p-8"><i data-lucide="search-x" class="w-12 h-12 mx-auto text-white/30 mb-2"></i><p class="text-white-glass">Tidak ada data.</p></td></tr>`;
                 lucide.createIcons();
                 return;
             }
@@ -699,6 +782,7 @@
                     <td class="p-3"><div class="font-semibold text-white">${log.profiles?.full_name || 'Tanpa Nama'}</div><div class="text-xs text-white-glass font-mono">${log.profiles?.nisn || '-'}</div></td>
                     <td class="p-3 text-sm text-white-glass">${log.profiles?.email || '-'}</td>
                     <td class="p-3"><span class="px-3 py-1 bg-purple-500/20 text-purple-200 rounded-full text-xs font-semibold border border-purple-300/30">${log.profiles?.classes?.class_name || '-'}</span></td>
+                    <td class="p-3 text-sm text-white-glass font-mono">${log.log_date}</td>
                     <td class="p-3 text-sm text-white-glass">${displayType}</td>
                     <td class="p-3 font-semibold text-white">${log.log_time}</td>
                     <td class="p-3"><span class="status-badge ${statusClass}">${log.status}</span></td>
@@ -790,6 +874,9 @@
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Jakarta' }); // HH:mm:ss
             
+            // Gunakan Logical Date (Reset 1 AM)
+            const logDate = getLogicalDate();
+
             let status = statusArg;
             if (type === 'check_in') status = timeStr > "07:00:00" ? "Telat Masuk" : "Tepat Masuk";
             else if (type === 'check_out') status = timeStr < "15:00:00" ? "Pulang Awal" : "Tepat Pulang";
@@ -798,7 +885,7 @@
                 const { error } = await supabase.from('attendance_log').insert({
                     user_id: appState.currentUser.id,
                     type: type,
-                    log_date: now.toISOString().split('T')[0],
+                    log_date: logDate, // Menggunakan tanggal yang sudah disesuaikan
                     log_time: timeStr,
                     status: status
                 });
@@ -806,10 +893,10 @@
                 if (error) throw error;
                 
                 showToast('Berhasil direkam!', 'success');
-                await fetchTodayAttendance();
+                await fetchStudentHistory(); // Refresh history
                 renderAttendanceLog();
             } catch (err) {
-                const msg = err.message.includes('duplicate key') ? 'Anda sudah melakukan aksi ini hari ini.' : ErrorHandler.handle(err, 'absensi');
+                const msg = err.message.includes('duplicate key') ? 'Anda sudah melakukan aksi ini untuk sesi hari ini.' : ErrorHandler.handle(err, 'absensi');
                 showToast(msg, 'error');
             } finally {
                 showLoading(false);
@@ -1005,6 +1092,18 @@
             ];
             idMap.forEach(id => UIElements[id.replace(/-([a-z])/g, g => g[1].toUpperCase())] = document.getElementById(id)); // camelCase keys
 
+            // Add Mouse Move Listener for Liquid Buttons
+            const liquidButtons = document.querySelectorAll('.btn-primary, .btn-info-custom, .btn-warning-custom');
+            liquidButtons.forEach(btn => {
+                btn.addEventListener('mousemove', (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    btn.style.setProperty('--x', x + 'px');
+                    btn.style.setProperty('--y', y + 'px');
+                });
+            });
+
             // Auth & Session Check
             (async () => {
                 showLoading(true);
@@ -1087,7 +1186,7 @@
             // Admin Actions
             UIElements.refreshAttendanceButton?.addEventListener('click', async () => {
                 showLoading(true);
-                await fetchAllTodayAttendance();
+                await fetchAllAttendanceHistory();
                 renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
                 showLoading(false);
             });
@@ -1105,7 +1204,7 @@
             function subscribeToAttendanceChanges() {
                 supabase.channel('public:attendance_log').on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_log' }, async () => {
                     if (appState.profile?.role === 'admin') {
-                        await fetchAllTodayAttendance(); renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
+                        await fetchAllAttendanceHistory(); renderAllAttendanceLog(UIElements.searchStudentInput?.value || '');
                     }
                 }).subscribe();
             }
@@ -1125,7 +1224,7 @@
             
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-            a.download = `Absensi_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `Absensi_Full_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
         });
 
@@ -1164,7 +1263,7 @@
                 <form id="login-form" class="space-y-5 glass-effect p-8 rounded-2xl">
                     <div><label class="block text-sm font-semibold text-white mb-2">Email atau NISN</label><input name="identifier" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50"></div>
                     <div><label class="block text-sm font-semibold text-white mb-2">Password</label><div class="relative"><input type="password" name="password" required class="w-full px-4 py-3 rounded-xl transition-all text-white placeholder-white/50"><button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"><i data-lucide="eye" class="w-5 h-5"></i></button></div></div>
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">Masuk</button>
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg"><span>Masuk</span></button>
                 </form>
                 <div class="mt-6 text-center text-sm space-y-3"><button id="show-forgot-password-button" class="text-white hover:text-purple-200 font-medium">Lupa password?</button><p class="text-purple-100">Belum punya akun? <button id="show-signup-button" class="text-white hover:text-purple-200 font-bold underline">Daftar di sini</button></p></div>
             </div>
@@ -1178,7 +1277,7 @@
                     <div><label class="block text-sm font-semibold text-white mb-2">NISN (10 digit)</label><input name="nisn" required maxlength="10" pattern="\d{10}" class="w-full px-4 py-3 rounded-xl text-white"></div>
                     <div><label class="block text-sm font-semibold text-white mb-2">Kelas</label><select id="signup-class-select" name="class_id" required class="w-full px-4 py-3 rounded-xl text-white appearance-none"><option value="" disabled selected>Memuat...</option></select></div>
                     <div><label class="block text-sm font-semibold text-white mb-2">Password</label><div class="relative"><input type="password" name="password" required class="w-full px-4 py-3 rounded-xl text-white"><button type="button" class="toggle-password absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"><i data-lucide="eye" class="w-5 h-5"></i></button></div></div>
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg">Daftar Sekarang</button>
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg"><span>Daftar Sekarang</span></button>
                 </form>
                 <div class="mt-6 text-center"><p class="text-purple-100">Sudah punya akun? <button id="show-login-button" class="text-white hover:text-purple-200 font-bold underline">Masuk di sini</button></p></div>
             </div>
@@ -1187,7 +1286,7 @@
                 <div class="text-center mb-8"><div class="w-20 h-20 mx-auto mb-4 glass-effect rounded-2xl shadow-lg flex items-center justify-center"><i data-lucide="key" class="w-10 h-10 text-white"></i></div><h2 class="text-4xl font-bold text-white mb-2">Reset Password</h2></div>
                 <form id="forgot-password-form" class="space-y-5 glass-effect p-8 rounded-2xl">
                     <div><label class="block text-sm font-semibold text-white mb-2">Email</label><input name="email" type="email" required class="w-full px-4 py-3 rounded-xl text-white"></div>
-                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg">Kirim Link Reset</button>
+                    <button type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg"><span>Kirim Link Reset</span></button>
                 </form>
                 <div class="mt-6 text-center"><button id="back-to-login-button" class="text-white hover:text-purple-200 flex items-center gap-2 mx-auto"><i data-lucide="arrow-left" class="w-4 h-4"></i>Kembali ke login</button></div>
             </div>
@@ -1220,15 +1319,15 @@
             <div class="glass-effect rounded-2xl p-6 sm:p-8 text-center shadow-xl card-hover">
                 <div class="mb-6"><h2 id="clock" class="clock-display gradient-text mb-2">00:00:00</h2><p id="date" class="text-white-glass text-lg">-</p></div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 justify-center">
-                    <button id="check-in-button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="log-in" class="w-5 h-5"></i>Masuk</button>
-                    <button id="check-out-button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="log-out" class="w-5 h-5"></i>Pulang</button>
-                    <button id="izin-button" class="px-6 py-4 btn-info-custom text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="file-text" class="w-5 h-5"></i>Izin</button>
-                    <button id="sakit-button" class="px-6 py-4 btn-warning-custom text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="thermometer" class="w-5 h-5"></i>Sakit</button>
+                    <button id="check-in-button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="log-in" class="w-5 h-5"></i><span>Masuk</span></button>
+                    <button id="check-out-button" class="px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="log-out" class="w-5 h-5"></i><span>Pulang</span></button>
+                    <button id="izin-button" class="px-6 py-4 btn-info-custom text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="file-text" class="w-5 h-5"></i><span>Izin</span></button>
+                    <button id="sakit-button" class="px-6 py-4 btn-warning-custom text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="thermometer" class="w-5 h-5"></i><span>Sakit</span></button>
                 </div>
             </div>
             <div class="grid lg:grid-cols-2 gap-6">
                 <div class="glass-effect rounded-2xl p-6 shadow-lg card-hover">
-                    <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="clipboard-list" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Riwayat Hari Ini</h3></div>
+                    <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="clipboard-list" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Riwayat Absensi</h3></div>
                     <div id="attendance-log-list" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
                 </div>
                 <div class="glass-effect rounded-2xl p-6 shadow-lg card-hover">
@@ -1243,7 +1342,7 @@
         <!-- Admin View -->
         <div id="admin-view" class="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 hidden">
             <div class="glass-effect rounded-2xl p-6 shadow-lg">
-                <h3 class="text-xl font-bold text-white mb-6">Ringkasan Absensi</h3>
+                <h3 class="text-xl font-bold text-white mb-6">Ringkasan Total (Semua Waktu)</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-emerald-400"><p class="text-sm text-emerald-200 font-semibold">Tepat Masuk</p><span id="count-tepat" class="text-4xl font-bold text-white">0</span></div>
                     <div class="glass-effect p-4 rounded-xl text-center border-l-4 border-yellow-400"><p class="text-sm text-yellow-200 font-semibold">Telat Masuk</p><span id="count-telat" class="text-4xl font-bold text-white">0</span></div>
@@ -1254,12 +1353,12 @@
 
             <div class="glass-effect rounded-2xl p-6 shadow-lg">
                 <div class="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-                    <div class="flex items-center gap-3"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="users" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Data Absensi</h3></div>
-                    <div class="flex gap-2"><button id="refresh-attendance-button" class="px-4 py-2 glass-effect text-white rounded-xl flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i>Refresh</button><button id="export-csv-button" class="px-4 py-2 btn-primary text-white rounded-xl flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i>CSV</button></div>
+                    <div class="flex items-center gap-3"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="users" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Data Absensi (History)</h3></div>
+                    <div class="flex gap-2"><button id="refresh-attendance-button" class="px-4 py-2 glass-effect text-white rounded-xl flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i>Refresh</button><button id="export-csv-button" class="px-4 py-2 btn-primary text-white rounded-xl flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i><span>CSV</span></button></div>
                 </div>
-                <input id="search-student-input" placeholder="Cari Nama, NISN, Email, Kelas..." class="w-full mb-4 px-4 py-3 rounded-xl text-white">
+                <input id="search-student-input" placeholder="Cari Nama, NISN, Email, Tanggal (YYYY-MM-DD)..." class="w-full mb-4 px-4 py-3 rounded-xl text-white">
                 <div class="overflow-x-auto -mx-2 max-h-[500px]">
-                    <table class="w-full text-sm min-w-[700px]"><thead><tr class="border-b-2 border-white/20"><th class="p-3 text-left font-bold text-white">Siswa</th><th class="p-3 text-left font-bold text-white">Email</th><th class="p-3 text-left font-bold text-white">Kelas</th><th class="p-3 text-left font-bold text-white">Jenis</th><th class="p-3 text-left font-bold text-white">Waktu</th><th class="p-3 text-left font-bold text-white">Status</th></tr></thead><tbody id="admin-attendance-log-body"></tbody></table>
+                    <table class="w-full text-sm min-w-[800px]"><thead><tr class="border-b-2 border-white/20"><th class="p-3 text-left font-bold text-white">Siswa</th><th class="p-3 text-left font-bold text-white">Email</th><th class="p-3 text-left font-bold text-white">Kelas</th><th class="p-3 text-left font-bold text-white">Tanggal</th><th class="p-3 text-left font-bold text-white">Jenis</th><th class="p-3 text-left font-bold text-white">Waktu</th><th class="p-3 text-left font-bold text-white">Status</th></tr></thead><tbody id="admin-attendance-log-body"></tbody></table>
                 </div>
             </div>
 
@@ -1270,13 +1369,13 @@
                     <div class="overflow-x-auto relative -mx-2 mb-4 max-h-[500px]">
                         <table class="w-full text-xs min-w-[700px]"><thead><tr class="border-b-2 border-white/20"><th class="p-3 text-left font-bold text-white sticky left-0 z-20" style="background:rgba(249,250,251,0.15);backdrop-filter:blur(10px);">Waktu</th><th class="p-3 text-center font-bold text-white">Senin</th><th class="p-3 text-center font-bold text-white">Selasa</th><th class="p-3 text-center font-bold text-white">Rabu</th><th class="p-3 text-center font-bold text-white">Kamis</th><th class="p-3 text-center font-bold text-white">Jumat</th></tr></thead><tbody id="admin-schedule-table-body"></tbody></table>
                     </div>
-                    <button id="save-schedule-button" class="w-full px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="save" class="w-5 h-5"></i>Simpan Jadwal</button>
+                    <button id="save-schedule-button" class="w-full px-6 py-4 btn-primary text-white rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="save" class="w-5 h-5"></i><span>Simpan Jadwal</span></button>
                 </div>
             </div>
 
             <div id="admin-class-management" class="glass-effect rounded-2xl p-6 shadow-lg">
                 <div class="flex items-center gap-3 mb-6"><div class="w-10 h-10 glass-effect rounded-lg flex items-center justify-center"><i data-lucide="landmark" class="w-5 h-5 text-white"></i></div><h3 class="text-xl font-bold text-white">Kelola Kelas</h3></div>
-                <form id="add-class-form" class="flex gap-2 mb-4"><input id="new-class-name" placeholder="Nama kelas baru" required class="flex-grow px-4 py-3 rounded-xl text-white"><button type="submit" class="px-6 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i>Tambah</button></form>
+                <form id="add-class-form" class="flex gap-2 mb-4"><input id="new-class-name" placeholder="Nama kelas baru" required class="flex-grow px-4 py-3 rounded-xl text-white"><button type="submit" class="px-6 py-3 btn-primary text-white rounded-xl font-semibold shadow-lg flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i><span>Tambah</span></button></form>
                 <ul id="admin-class-list" class="max-h-60 overflow-y-auto glass-effect rounded-lg divide-y divide-white/10"><li class="text-white-glass italic px-4 py-2">Memuat...</li></ul>
             </div>
         </div>
@@ -1294,7 +1393,7 @@
                 <div><label class="block text-sm font-semibold text-white mb-2">Nama Lengkap</label><input id="profile-full-name" required class="w-full px-4 py-3 rounded-xl text-white"></div>
                 <div><label class="block text-sm font-semibold text-white mb-2">Email</label><input id="profile-email" readonly disabled class="w-full px-4 py-3 rounded-xl text-white opacity-70"></div>
                 <div><label class="block text-sm font-semibold text-white mb-2">NISN</label><input id="profile-nisn" readonly disabled class="w-full px-4 py-3 rounded-xl text-white opacity-70"></div>
-                <button id="profile-save-btn" type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="save" class="w-5 h-5"></i>Simpan</button>
+                <button id="profile-save-btn" type="submit" class="w-full btn-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="save" class="w-5 h-5"></i><span>Simpan</span></button>
             </form>
         </div>
     </div>
