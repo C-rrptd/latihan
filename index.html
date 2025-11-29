@@ -293,6 +293,12 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
+        /* !!! PENTING UNTUK DATABASE !!!
+           Jalankan SQL ini di Supabase untuk mengupdate tabel announcements (tambahkan attachment_url):
+
+           alter table public.announcements add column if not exists attachment_url text;
+        */
+
         // --- KONFIGURASI SUPABASE ---
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
@@ -512,19 +518,41 @@
                 if (a.target_type === 'specific' && Array.isArray(a.target_classes)) return a.target_classes.includes(myClassId);
                 return false;
             });
+
+            // Logic for Red Dot
             const dot = document.getElementById('announcement-dot');
-            if (dot) dot.style.display = relevant.length > 0 ? 'block' : 'none';
+            const latestAnnouncement = relevant[0];
+            const lastSeenId = localStorage.getItem('last_seen_announcement_id');
+            
+            if (relevant.length > 0 && latestAnnouncement && latestAnnouncement.id !== lastSeenId) {
+                if (dot) dot.style.display = 'block';
+            } else {
+                if (dot) dot.style.display = 'none';
+            }
+
             const list = document.getElementById('announcement-list');
             if (!list) return;
             if (relevant.length === 0) {
                 list.innerHTML = `<div class="text-center py-10"><i data-lucide="bell-off" class="w-12 h-12 mx-auto text-white/20 mb-3"></i><p class="text-white/50">Tidak ada pengumuman saat ini.</p></div>`;
             } else {
-                list.innerHTML = relevant.map(a => `
-                    <div class="announcement-card p-4 rounded-xl mb-3 glass-effect">
-                        <h4 class="font-bold text-white text-lg mb-1">${a.title}</h4>
-                        <p class="text-white/80 text-sm whitespace-pre-wrap">${a.content}</p>
-                        <div class="mt-3 pt-3 border-t border-white/10 flex justify-between items-center text-xs text-white/50"><span>Admin Sekolah</span><span>Berlaku s.d. ${a.expires_at}</span></div>
-                    </div>`).join('');
+                list.innerHTML = relevant.map(a => {
+                    let attachmentHtml = '';
+                    if (a.attachment_url) {
+                        attachmentHtml = `
+                            <a href="${a.attachment_url}" target="_blank" class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs rounded-lg transition-all border border-white/20">
+                                <i data-lucide="paperclip" class="w-4 h-4 text-blue-300"></i> Buka Lampiran
+                            </a>
+                        `;
+                    }
+                    
+                    return `
+                        <div class="announcement-card p-4 rounded-xl mb-3 glass-effect">
+                            <h4 class="font-bold text-white text-lg mb-1">${a.title}</h4>
+                            <p class="text-white/80 text-sm whitespace-pre-wrap">${a.content}</p>
+                            ${attachmentHtml}
+                            <div class="mt-3 pt-3 border-t border-white/10 flex justify-between items-center text-xs text-white/50"><span>Admin Sekolah</span><span>Berlaku s.d. ${a.expires_at}</span></div>
+                        </div>`;
+                }).join('');
             }
             lucide.createIcons();
         }
@@ -539,9 +567,11 @@
             tbody.innerHTML = appState.announcements.map(a => {
                 const targetText = a.target_type === 'all' ? 'Semua Kelas' : `${(a.target_classes||[]).length} Kelas`;
                 const isExpired = new Date(a.expires_at) < new Date(new Date().toISOString().split('T')[0]);
+                const attachIcon = a.attachment_url ? `<i data-lucide="paperclip" class="w-3 h-3 text-blue-300 ml-1 inline"></i>` : '';
+                
                 return `
                     <tr class="hover:bg-white/5">
-                        <td class="p-3 text-white font-semibold">${a.title}</td>
+                        <td class="p-3 text-white font-semibold">${a.title} ${attachIcon}</td>
                         <td class="p-3 text-white-glass text-sm truncate max-w-[200px]">${a.content}</td>
                         <td class="p-3 text-white-glass text-sm">${targetText}</td>
                         <td class="p-3"><span class="status-badge ${isExpired ? 'status-danger' : 'status-success'}">${a.expires_at}</span></td>
@@ -796,16 +826,35 @@
             const content = fd.get('content');
             const expires_at = fd.get('expires_at');
             const target_type = fd.get('target_type');
-            let target_classes = [];
-            if (target_type === 'specific') {
-                const checkboxes = document.querySelectorAll('input[name="target_classes"]:checked');
-                checkboxes.forEach(cb => target_classes.push(cb.value));
-                if (target_classes.length === 0) return showToast('Pilih minimal satu kelas', 'error');
-            }
+            
+            // Handle File Upload
+            const file = fd.get('attachment');
+            let attachment_url = null;
+
             showLoading(true);
             try {
-                const { error } = await supabase.from('announcements').insert({ title, content, expires_at, target_type, target_classes });
+                if (file && file.size > 0) {
+                    const ext = file.name.split('.').pop();
+                    const path = `announcements/${Date.now()}.${ext}`;
+                    const { error: uploadError } = await supabase.storage.from(ATTACHMENT_BUCKET).upload(path, file);
+                    if (uploadError) throw uploadError;
+                    
+                    const { data: urlData } = supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(path);
+                    attachment_url = urlData.publicUrl;
+                }
+
+                let target_classes = [];
+                if (target_type === 'specific') {
+                    const checkboxes = document.querySelectorAll('input[name="target_classes"]:checked');
+                    checkboxes.forEach(cb => target_classes.push(cb.value));
+                    if (target_classes.length === 0) throw new Error('Pilih minimal satu kelas');
+                }
+
+                const { error } = await supabase.from('announcements').insert({ 
+                    title, content, expires_at, target_type, target_classes, attachment_url 
+                });
                 if (error) throw error;
+                
                 showToast('Pengumuman dibuat!', 'success');
                 e.target.reset(); document.getElementById('target-classes-container').classList.add('hidden');
                 await fetchAnnouncements(); renderAdminAnnouncements();
@@ -909,7 +958,28 @@
             });
 
             // Announcement Events
-            UIElements.openAnnouncementBtn?.addEventListener('click', () => { renderStudentAnnouncements(); UIElements.announcementModal.classList.remove('hidden'); });
+            UIElements.openAnnouncementBtn?.addEventListener('click', () => { 
+                // Render List
+                renderStudentAnnouncements();
+                
+                // Logic: Mark as read
+                if (appState.announcements.length > 0) {
+                    const myClassId = appState.profile.class_id;
+                    const relevant = appState.announcements.filter(a => {
+                        if (a.target_type === 'all') return true;
+                        if (a.target_type === 'specific' && Array.isArray(a.target_classes)) return a.target_classes.includes(myClassId);
+                        return false;
+                    });
+                    
+                    if (relevant.length > 0) {
+                        localStorage.setItem('last_seen_announcement_id', relevant[0].id);
+                        const dot = document.getElementById('announcement-dot');
+                        if(dot) dot.style.display = 'none';
+                    }
+                }
+                
+                UIElements.announcementModal.classList.remove('hidden'); 
+            });
             UIElements.closeAnnouncementBtn?.addEventListener('click', () => { UIElements.announcementModal.classList.add('hidden'); });
             UIElements.createAnnouncementForm?.addEventListener('submit', handleCreateAnnouncement);
             document.querySelectorAll('input[name="target_type"]').forEach(r => r.addEventListener('change', (e) => { document.getElementById('target-classes-container').classList.toggle('hidden', e.target.value !== 'specific'); }));
@@ -1082,6 +1152,10 @@
                     <form id="create-announcement-form" class="space-y-4">
                         <div><label class="block text-xs font-semibold text-white/80 mb-1">Judul Pengumuman</label><input name="title" required class="w-full px-4 py-2 rounded-lg text-white bg-white/10 text-sm" placeholder="Contoh: Libur Nasional"></div>
                         <div><label class="block text-xs font-semibold text-white/80 mb-1">Isi Pesan</label><textarea name="content" required rows="3" class="w-full px-4 py-2 rounded-lg text-white bg-white/10 text-sm" placeholder="Isi detail pengumuman..."></textarea></div>
+                        <div>
+                            <label class="block text-xs font-semibold text-white/80 mb-1">Lampiran (PDF/Gambar - Opsional)</label>
+                            <input type="file" name="attachment" accept=".pdf,image/*" class="w-full text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20">
+                        </div>
                         <div><label class="block text-xs font-semibold text-white/80 mb-1">Berlaku Sampai</label><input type="date" name="expires_at" required class="w-full px-4 py-2 rounded-lg text-white bg-white/10 text-sm"></div>
                         <div>
                             <label class="block text-xs font-semibold text-white/80 mb-2">Target Penerima</label>
