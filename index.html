@@ -293,27 +293,6 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        /* !!! PENTING UNTUK DATABASE !!!
-           Jalankan SQL ini di Supabase untuk fitur Pengumuman:
-
-create table if not exists public.announcements (
-  id uuid default gen_random_uuid() primary key,
-  created_at timestamptz default now(),
-  title text not null,
-  content text not null,
-  expires_at date not null,
-  target_type text check (target_type in ('all', 'specific')),
-  target_classes jsonb default '[]'::jsonb, 
-  author_id uuid references auth.users(id)
-);
-
-alter table public.announcements enable row level security;
-create policy "Public announcements are viewable by everyone" on public.announcements for select using (true);
-create policy "Authenticated users can insert announcements" on public.announcements for insert to authenticated with check (true);
-create policy "Authenticated users can delete announcements" on public.announcements for delete to authenticated using (true);
-
-        */
-
         // --- KONFIGURASI SUPABASE ---
         const SUPABASE_URL = 'https://qvunfkabbhulwqfnkren.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2dW5ma2FiYmh1bHdxZm5rcmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNzkyOTksImV4cCI6MjA3NDg1NTI5OX0.2x_cwD11T4birj0NnAqzCqS_AtfZLqr65yb7ioV04IY';
@@ -447,6 +426,25 @@ create policy "Authenticated users can delete announcements" on public.announcem
             setImg(UIElements.headerPfp); setImg(UIElements.profileImagePreview);
         }
 
+        // --- REALTIME SUBSCRIPTION FUNCTIONS (Moved to Module Scope) ---
+        function subscribeToClassChanges() { 
+            supabase.channel('public:classes').on('postgres_changes', { event: '*', schema: 'public', table: 'classes' }, async () => { 
+                await fetchClasses(); 
+                renderClassList(); 
+                populateAdminClassesDropdown(); 
+                renderTargetClassCheckboxes(); 
+            }).subscribe(); 
+        }
+
+        function subscribeToAttendanceChanges() { 
+            supabase.channel('public:attendance_log').on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_log' }, async () => { 
+                if (appState.profile?.role === 'admin') { 
+                    await fetchAllAttendanceHistory(); 
+                    renderAllAttendanceLog(UIElements.searchStudentInput?.value || ''); 
+                } 
+            }).subscribe(); 
+        }
+
         // --- CORE APP LOGIC ---
         async function initializeMainApp(user) {
             appState.currentUser = user;
@@ -473,7 +471,7 @@ create policy "Authenticated users can delete announcements" on public.announcem
                 appState.profile = profile;
                 UIElements.welcomeMessage.textContent = profile.full_name || profile.email;
                 loadProfilePicture();
-                // Removed populateProfileModal() call as it was causing ReferenceError
+                // populateProfileModal call removed as it's now handled by openProfileModal
 
                 if (profile.role === 'admin') {
                     await Promise.all([
@@ -481,11 +479,12 @@ create policy "Authenticated users can delete announcements" on public.announcem
                         fetchClasses().then(() => { populateAdminClassesDropdown(); renderClassList(); renderTargetClassCheckboxes(); }),
                         fetchAnnouncements().then(() => renderAdminAnnouncements())
                     ]);
-                    subscribeToAttendanceChanges(); subscribeToClassChanges();
+                    subscribeToAttendanceChanges(); 
+                    subscribeToClassChanges();
                 } else {
                     await Promise.all([
                         fetchStudentHistory().then(() => renderAttendanceLog()),
-                        fetchSchedule().then(() => renderStudentTodaySchedule()), // Updated: Render today's only
+                        fetchSchedule().then(() => renderStudentTodaySchedule()),
                         fetchAnnouncements().then(() => renderStudentAnnouncements())
                     ]);
                     updateAttendanceButtons();
@@ -854,11 +853,6 @@ create policy "Authenticated users can delete announcements" on public.announcem
 
         function openProfileModal() { if (!appState.profile) return; UIElements.profileFullName.value = appState.profile.full_name || ''; UIElements.profileEmail.value = appState.profile.email || ''; UIElements.profileNisn.value = appState.profile.nisn || ''; loadProfilePicture(); appState.profileImageFile = null; appState.profileImageToDelete = false; UIElements.profileModal.classList.remove('hidden'); }
 
-        // Added this dummy function to prevent ReferenceError if called elsewhere, though openProfileModal handles the logic now.
-        function populateProfileModal() {
-            // No-op as openProfileModal handles population
-        }
-
         async function handleUpdateProfile(e) {
             e.preventDefault(); const newName = UIElements.profileFullName.value.trim(); if (!newName) return showToast('Nama wajib diisi', 'error');
             showLoading(true);
@@ -946,9 +940,6 @@ create policy "Authenticated users can delete announcements" on public.announcem
             UIElements.adminClassSelect?.addEventListener('change', handleAdminClassSelect);
             UIElements.saveScheduleButton?.addEventListener('click', handleUpdateSchedule);
             UIElements.addClassForm?.addEventListener('submit', handleAddClass);
-
-            function subscribeToClassChanges() { supabase.channel('public:classes').on('postgres_changes', { event: '*', schema: 'public', table: 'classes' }, async () => { await fetchClasses(); renderClassList(); populateAdminClassesDropdown(); renderTargetClassCheckboxes(); }).subscribe(); }
-            function subscribeToAttendanceChanges() { supabase.channel('public:attendance_log').on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_log' }, async () => { if (appState.profile?.role === 'admin') { await fetchAllAttendanceHistory(); renderAllAttendanceLog(UIElements.searchStudentInput?.value || ''); } }).subscribe(); }
 
             document.querySelectorAll('.toggle-password').forEach(btn => { btn.addEventListener('click', function() { const inp = this.previousElementSibling; const icon = this.querySelector('i'); if (inp.type === 'password') { inp.type = 'text'; icon.setAttribute('data-lucide', 'eye-off'); } else { inp.type = 'password'; icon.setAttribute('data-lucide', 'eye'); } lucide.createIcons(); }); });
             lucide.createIcons();
