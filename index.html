@@ -294,7 +294,7 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
         /* !!! PENTING UNTUK DATABASE !!!
-           Jalankan SQL ini di Supabase untuk mengupdate tabel announcements (tambahkan attachment_url):
+           Jalankan SQL ini di Supabase SQL Editor untuk memperbaiki error "Could not find attachment_url":
 
            alter table public.announcements add column if not exists attachment_url text;
         */
@@ -347,6 +347,7 @@
             static handle(error, context = '') {
                 console.error(`Error in ${context}:`, error);
                 const msg = error.message || '';
+                if (msg.includes('attachment_url') && msg.includes('column')) return 'Database belum diupdate. Jalankan SQL: alter table announcements add column attachment_url text;';
                 if (msg.includes('Invalid login') || msg.includes('invalid_grant')) return 'Email/NISN atau password salah.';
                 if (msg.includes('Email not confirmed')) return 'Email belum diverifikasi. Cek inbox Anda.';
                 if (msg.includes('already registered')) return 'Email sudah terdaftar';
@@ -498,7 +499,7 @@
                 navigateTo('app');
             } catch (err) {
                 showToast(ErrorHandler.handle(err, 'inisialisasi'), "error");
-                setTimeout(async () => { await supabase.auth.signOut(); window.location.reload(); }, 3000);
+                setTimeout(async () => { await supabase.auth.signOut(); window.location.reload(); }, 5000);
             } finally { showLoading(false); }
         }
 
@@ -858,7 +859,7 @@
                 showToast('Pengumuman dibuat!', 'success');
                 e.target.reset(); document.getElementById('target-classes-container').classList.add('hidden');
                 await fetchAnnouncements(); renderAdminAnnouncements();
-            } catch (err) { showToast(err.message, 'error'); } finally { showLoading(false); }
+            } catch (err) { showToast(ErrorHandler.handle(err, 'buat pengumuman'), 'error'); } finally { showLoading(false); }
         }
 
         async function handleUpdateSchedule() {
